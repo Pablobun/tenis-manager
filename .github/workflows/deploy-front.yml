@@ -24,7 +24,7 @@ jobs:
       - name: 4. Instalar dependencias y compilar frontend
         run: |
           cd frontend
-          npm ci
+          npm install
           npm run build
 
       - name: 5. Crear carpeta en el servidor

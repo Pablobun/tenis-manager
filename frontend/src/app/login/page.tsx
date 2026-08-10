@@ -37,10 +37,10 @@ export default function LoginPage() {
         case 'admin':
           router.push('/admin');
           break;
-        case 'professor':
+        case 'profesor':
           router.push('/dashboard');
           break;
-        case 'student':
+        case 'alumno':
           router.push('/mis-clases');
           break;
         default:

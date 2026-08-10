@@ -61,7 +61,16 @@ export default function AdminPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h2 className="text-lg font-semibold mb-4">Panel de Administración</h2>
-        <p className="text-gray-500">Panel en construcción...</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a
+            href="/alumnos"
+            className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition"
+          >
+            <h3 className="font-semibold text-lg mb-2">Alumnos</h3>
+            <p className="text-sm text-gray-500">Gestionar perfiles de alumnos</p>
+          </a>
+        </div>
       </div>
     </main>
   );

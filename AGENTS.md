@@ -8,6 +8,6 @@ Local markdown, migrando a GitHub. Issues viven en `.scratch/<feature>/`. Ver `d
 
 Los 5 roles canónicos con strings por defecto. Ver `docs/agents/triage-labels.md`.
 
-### Domain docs
+### Domain docs.
 
 Single-context (raíz). `CONTEXT.md` + `docs/adr/` aún no existen; se crean lazy con `/grill-with-docs`. Ver `docs/agents/domain.md`.

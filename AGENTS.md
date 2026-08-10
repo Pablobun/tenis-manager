@@ -1,6 +1,6 @@
 # Agent skills
 
-### Issue tracker
+### Issue tracker.
 
 Local markdown, migrando a GitHub. Issues viven en `.scratch/<feature>/`. Ver `docs/agents/issue-tracker.md`.
 

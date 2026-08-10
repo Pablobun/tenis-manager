@@ -4,7 +4,7 @@
 
 **Blocked by:** 01-auth-scaffolding
 
-**Status:** ready-for-agent
+**Status:** completed
 
 - [ ] Profesora puede crear alumno (nombre, email, teléfono, nivel)
 - [ ] Profesora puede editar alumno (nombre, teléfono, nivel)

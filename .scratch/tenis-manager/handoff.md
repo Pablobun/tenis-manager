@@ -1,133 +1,151 @@
-# Handoff — Sistema de Gestión de Clases de Tenis
+# Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
-**Fecha**: 2026-08-08
-**Estado**: Planificación completa. No se escribió código.
-**Próxima acción**: Implementar ticket01 (Auth + Scaffolding)
+**Fecha**: 2026-08-10
+**Estado**: Ticket01 completado. Frontend deployado. Backend pendiente de verificar.
+**Próxima acción**: Verificar backend en Render + ejecutar schema SQL en SQLyog
 
 ---
 
 ## Qué es este proyecto
 
-Web app responsive (mobile-first) para una profesora de tenis que administra clases, inscripciones y deudas. Actualmente lo hace en Excel/CSV manualmente.
+Web app responsive (mobile-first) para una profesora de tenis que administra clases, inscripciones y deudas.
 
 **Usuarios**: profesora(s), alumnos, admin
 **Plataforma**: web responsive, la mayoría usa celular
+**Dominio**: `riversideclases.portaltorneos-riocuarto.com.ar`
+
+---
+
+## Stack actualizado
+
+| Capa | Tecnología | Dónde corre |
+|------|-----------|-------------|
+| Frontend | Next.js (React) + Tailwind + output: 'export' | Droplet DigitalOcean (`/var/www/tenis-manager/`) |
+| Backend | Node.js + Express (plain JS) + mysql2 + JWT | Render (`tenis-manager.onrender.com`) |
+| DB | MySQL (`tenisriverside`) | Droplet DigitalOcean |
+| Auth | JWT + bcrypt, cookie httpOnly, roles en payload | Backend |
+| Deploy Front | GitHub Actions → SSH + rsync | Automático en push a main |
+| Deploy Back | Render (conectado al repo) | Automático en push a main |
+| Nginx | `riversideclases.conf` en el droplet | SSL via certbot |
+
+---
+
+## Arquitectura de deploy
+
+```
+GitHub (repo: Pablobun/tenis-manager)
+  ├─ push a main ──► GitHub Actions → rsync frontend/out/ → droplet /var/www/tenis-manager/
+  └─ push a main ──► Render → npm install + node server.js → tenis-manager.onrender.com
+```
+
+**Mismo patrón que `torneos-jc`**: git push → deploy automático. Front en droplet, back en Render.
+
+---
+
+## Estructura del monorepo
+
+```
+C:\GesttionSoftware\
+├── .github/workflows/deploy-front.yml
+├── .gitignore
+├── AGENTS.md
+├── CONTEXT.md
+├── .opencode/
+├── .scratch/tenis-manager/     ← docs, issues, spec, PRD
+├── docs/
+├── backend/
+│   ├── server.js               ← Express API (raíz para Render)
+│   ├── package.json
+│   ├── src/
+│   │   ├── db.js               ← pool mysql2
+│   │   ├── middleware/auth.js  ← JWT + authorize
+│   │   └── routes/auth.js     ← login, register, logout, me, password
+│   └── sql/
+│       ├── schema.sql          ← DDL MySQL (10 tablas, sin RLS)
+│       └── seed-admin.sql      ← INSERT admin inicial
+└── frontend/
+    ├── package.json
+    ├── next.config.js          ← output: 'export'
+    ├── tailwind.config.js
+    └── src/app/
+        ├── layout.tsx
+        ├── page.tsx            ← redirect
+        ├── globals.css
+        ├── login/page.tsx      ← login funcional
+        ├── dashboard/page.tsx  ← panel profesor
+        ├── admin/page.tsx      ← panel admin
+        └── mis-clases/page.tsx ← vista alumno
+```
+
+---
+
+## Credenciales
+
+| Credencial | Valor |
+|-----------|-------|
+| Admin email | `admin@tenismanager.com` |
+| Admin password | `admin123` (cambiar después) |
+| DB host | `137.184.178.21` (mismo que jockey) |
+| DB user | (mismos que jockey) |
+| DB password | (mismos que jockey) |
+| DB name | `tenisriverside` |
+| Render URL | `https://tenis-manager.onrender.com` |
+| Dominio front | `https://riversideclases.portaltorneos-riocuarto.com.ar` |
+| Repo GitHub | `https://github.com/Pablobun/tenis-manager` |
 
 ---
 
 ## Qué se hizo en esta sesión
 
-Todo fue planificación. No se creó código.
-
-1. **Instalar skills** — 31 skills de Matt Pocock copiados de `github.com/mattpocock/skills` a `.opencode/skills/`
-2. **Setup issue tracker** — `AGENTS.md`, `docs/agents/issue-tracker.md`, `docs/agents/triage-labels.md`, `docs/agents/domain.md`
-3. **Modelo de dominio** — `CONTEXT.md` con 27 términos canónicos y 20+ decisiones registradas
-4. **Wayfinder** — 7 rondas de grilling, 7 tickets de decisión resueltos en `.scratch/tenis-manager/research/`
-5. **Spec/PRD** — 50 user stories en `.scratch/tenis-manager/PRD.md`
-6. **Schema de DB** — DDL completo con RLS en `.scratch/tenis-manager/tickets/07-database-schema.md`
-7. **12 tickets de implementación** — en `.scratch/tenis-manager/issues/`
+1. **Planificación** — Cambio de stack: Supabase → Express + MySQL + JWT
+2. **Ticket01 implementado** — Scaffolding completo (backend + frontend + workflow)
+3. **Schema MySQL** — Adaptado desde Postgres (sin RLS, ENUM types, BIGINT IDs)
+4. **Frontend** — Next.js estático con 4 pantallas (login, dashboard, admin, mis-clases)
+5. **Backend** — Express + JWT + middleware por rol + 5 endpoints auth
+6. **GitHub Actions** — Workflow deploy-front.yml funcional (npm install + rsync)
+7. **Deploy** — Frontend llegando al droplet vía GitHub Actions
 
 ---
 
-## Stack
+## Estado de los tickets
 
-### Fase 1 — Prototipo (arrancar aquí)
-
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | Next.js (React 19) + TypeScript |
-| UI | shadcn/ui + Tailwind CSS |
-| Backend | Supabase (PostgreSQL + Auth + Realtime) |
-| Hosting | Vercel (gratis) |
-| Auth | Supabase Auth (roles en `app_metadata`) |
-| Tests | Vitest + Testing Library (unit) + Playwright (E2E) |
-
-Costo estimado: $0-25/mo
-
-### Fase 2 — Self-hosted (futuro)
-
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | React (se mantiene) |
-| Backend | Python (FastAPI o Django REST) |
-| BD | MySQL en droplet DigitalOcean |
-| Deploy | GitHub → pull en droplet |
-| Auth | JWT custom en Python |
+| # | Ticket | Estado | Notas |
+|---|--------|--------|-------|
+| 01 | Auth + scaffolding | **EN PROGRESO** | Front deployado, back en Render pendiente verificar |
+| 02 | Gestión de alumnos | pendiente | |
+| 03 | Plantillas de clases | pendiente | |
+| 04 | Generación de instancias | pendiente | |
+| 05 | Vista diaria del tablero | pendiente | |
+| 06 | Reasignación de alumnos | pendiente | |
+| 07 | Clases abiertas/rotativas | pendiente | |
+| 08 | Dashboard del alumno | pendiente | |
+| 09 | Flujo de postulaciones | pendiente | |
+| 10 | Clases extras | pendiente | |
+| 11 | Facturación mensual | pendiente | |
+| 12 | Pagos | pendiente | |
 
 ---
 
-## Dominio (resumen rápido)
+## Pendiente para la próxima sesión
 
-**3 roles**: admin, profesora, alumno
-
-**3 modalidades de clase**:
-- **Fija** — alumnos alistados por la profe, cobro mensual (precio × clases del mes)
-- **Abierta/rotativa** — postulación de alumnos, cobro por asistencia
-- **Extra** — para fijos y visitantes, 50% precio, postulación
-
-**Grupos**: parejas (2) o grupos de 4, con nivel asignado (avanzado/intermedio/principiante)
-
-**Deuda**: semi-automática (sistema calcula, profe aprueba). Bloquea postulación (con excepción manual). Pagos: individual + por lote, monto personalizado.
-
-**Reasignación**: tap + menú "Mover a..." (no drag en celular). Confirmación si destino queda completo.
-
-**Vista profesor**: grilla diaria (swipe entre días) + toggle semanal. Bottom sheet por tap. Indicador: nombres + nivel + cupo.
-
-**Vista alumno**: "Mis clases" + "Clases disponibles" + saldo de deuda. Puede postularse y cancelar postulación pendiente.
+1. **Ejecutar schema SQL** — Abrir SQLyog → conectarse al droplet → base `tenisriverside` → ejecutar `backend/sql/schema.sql`
+2. **Ejecutar seed admin** — Ejecutar `backend/sql/seed-admin.sql`
+3. **Verificar backend** — Probar `https://tenis-manager.onrender.com/api/health`
+4. **Probar login** — Abrir `https://riversideclases.portaltorneos-riocuarto.com.ar/login` → `admin@tenismanager.com` / `admin123`
+5. **Verificar Render env vars** — Confirmar que `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE=tenisriverside`, `JWT_SECRET`, `PORT` estén en Render
+6. **Continuar con ticket02** — Gestión de alumnos (CRUD perfiles, nivel, teléfono)
 
 ---
 
-## 12 tickets de implementación
+## Notas importantes
 
-| # | Ticket | Bloqueado por | Qué entrega |
-|---|--------|---------------|-------------|
-| 01 | Auth + scaffolding | — | Proyecto Next.js, Supabase, login, roles, middleware |
-| 02 | Gestión de alumnos | 01 | CRUD perfiles, nivel, teléfono, invitación |
-| 03 | Plantillas de clases | 01, 02 | Crear/editar plantillas de clases fijas |
-| 04 | Generación de instancias | 03 | Edge Function genera instancias del mes |
-| 05 | Vista diaria del tablero | 04 | Grilla, swipe, bottom sheet, indicadores |
-| 06 | Reasignación de alumnos | 05 | "Mover a..." con lista y confirmación |
-| 07 | Clases abiertas/rotativas | 01, 02 | Crear clases abiertas, ver para alumnos |
-| 08 | Dashboard del alumno | 01, 02, 04 | Mis clases, disponibles, deuda |
-| 09 | Flujo de postulaciones | 07, 08 | Postular, aceptar/rechazar, waitlist, override |
-| 10 | Clases extras | 07 | Crear extra, postular, asistencia |
-| 11 | Facturación mensual | 04 | Generación semi-automática de deuda |
-| 12 | Pagos | 11 | Individual + lote, historial, resumen global |
-
-**Frontier actual**: solo ticket01 (sin bloqueos)
-
----
-
-## Archivos importantes
-
-| Ruta | Qué es |
-|------|--------|
-| `AGENTS.md` | Config de agent skills |
-| `CONTEXT.md` | Glosario del dominio (27 términos + 20+ decisiones) |
-| `.scratch/tenis-manager/map.md` | Mapa de wayfinder (destino + 7 decisiones) |
-| `.scratch/tenis-manager/PRD.md` | Spec completo (50 user stories) |
-| `.scratch/tenis-manager/tickets/07-database-schema.md` | Schema DDL con RLS |
-| `.scratch/tenis-manager/research/01-tech-stack.md` | Research de stack |
-| `.scratch/tenis-manager/research/06-auth-approach.md` | Research de auth |
-| `.scratch/tenis-manager/issues/01-*.md` a `12-*.md` | Tickets de implementación |
-
----
-
-## Qué hacer en la próxima sesión
-
-1. Leer este handoff
-2. Leer `CONTEXT.md` para el glosario
-3. Leer el ticket01 en `.scratch/tenis-manager/issues/01-auth-scaffolding.md`
-4. Ejecutar `/implement` en ticket01:
-   - Crear proyecto Next.js (TypeScript, App Router, Tailwind)
-   - Instalar shadcn/ui
-   - Crear proyecto Supabase y configurar variables de entorno
-   - Crear tablas según schema DDL
-   - Configurar auth (login, middleware, routing por rol)
-   - Tests básicos
-5. Cuando ticket01 esté listo, seguir con ticket02
-
-**NOTA**: El ticket01 dice "Status: completed" pero es incorrecto — no se escribió código. Hay que reabrirlo.
+- El workflow de GitHub Actions funciona con `known_hosts: unnecessary` (no `just-a-placeholder`)
+- El `npm ci` no funciona sin `package-lock.json` — usar `npm install` en el workflow
+- La public key SSH debe estar en `~/.ssh/authorized_keys` del droplet
+- El backend en Render usa Root Directory = `backend`
+- Nginx config: `root /var/www/tenis-manager;` con `try_files $uri $uri/ /index.html;`
+- El dominio del front es `riversideclases.portaltorneos-riocuarto.com.ar`
+- El dominio del back es `tenis-manager.onrender.com`
 
 ---
 
@@ -140,14 +158,3 @@ Costo estimado: $0-25/mo
 - App móvil nativa
 - Paginación avanzada
 - Exportación a PDF/Excel
-
----
-
-## Notas técnicas
-
-- El schema DDL usa PostgreSQL — en Fase 2 se adapta a MySQL
-- RLS policies para 3 roles — alumnos solo ven sus datos
-- Supabase Auth con roles en `app_metadata` — verificar JWT en middleware
-- Edge Functions para generación de instancias y facturación
-- shadcn/ui: usar componentes existentes (grilla, bottom sheet, swipe)
-- Cada pantalla se diseña primero para 375px (mobile-first)

@@ -70,6 +70,13 @@ export default function AdminPage() {
             <h3 className="font-semibold text-lg mb-2">Alumnos</h3>
             <p className="text-sm text-gray-500">Gestionar perfiles de alumnos</p>
           </a>
+          <a
+            href="/plantillas"
+            className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition"
+          >
+            <h3 className="font-semibold text-lg mb-2">Plantillas de Clases</h3>
+            <p className="text-sm text-gray-500">Crear y gestionar clases recurrentes</p>
+          </a>
         </div>
       </div>
     </main>

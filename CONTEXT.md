@@ -28,7 +28,7 @@ Sistema para una profesora de tenis que administra clases, inscripciones y deuda
 
 ## Decisiones registradas
 
-- La clase **no** se clasifica por día de la semana; la modalidad (fija/abierta) es independiente del día. Una clase fija puede caer un sábado; una abierta, cualquier día.
+- La clase **no** se clasifica por día de la semana; la modalidad (fija/abierta) es independiente del día. Una clase fija puede caer un sábado; una abierta, cualquier día. En la **plantilla** de clase fija, `day_of_week` define la **recurrencia** semanal; las instancias de un mes se generan todas juntas (ticket 04).
 - **Aceptación de candidato**: al aceptar, el postulado **ocupa cupo automáticamente**. Los no aceptados/incluidos quedan en **lista de espera**.
 - **Revoloteo diario**: la profesora **arrastra** alumnos entre grupos; si el grupo excede el cupo, la interfaz lo avisa y ella decide a quién saca. Incluye cambios de horario, reemplazos y altas.
 - **La profesora crea las clases** desde una **plantilla** (día, franja horaria, nivel, modalidad, cupo, precio, frecuencia). El sistema **genera las instancias del mes automáticamente** para las fijas.

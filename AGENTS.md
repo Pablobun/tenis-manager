@@ -1,5 +1,9 @@
 # Agent skills
 
+### Reglas de commit y push.
+
+Nunca hacer commit ni push sin que el usuario lo pida explícitamente. Solo guardar cambios en archivos. El usuario es quien ejecuta git add, commit y push.
+
 ### Issue tracker.
 
 Local markdown, migrando a GitHub. Issues viven en `.scratch/<feature>/`. Ver `docs/agents/issue-tracker.md`.

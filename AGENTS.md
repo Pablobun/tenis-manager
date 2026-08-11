@@ -15,3 +15,15 @@ Los 5 roles canónicos con strings por defecto. Ver `docs/agents/triage-labels.m
 ### Domain docs.
 
 Single-context (raíz). `CONTEXT.md` + `docs/adr/` aún no existen; se crean lazy con `/grill-with-docs`. Ver `docs/agents/domain.md`.
+
+### Verificación local (no hay framework de tests).
+
+Convención del proyecto: verificación **manual** + build. Backend: `node --check` por archivo, arrancar `node server.js` y probar auth/validaciones con un JWT firmado localmente (`node -e "console.log(require('jsonwebtoken').sign({id:1,role:'admin'},'test'))"` en `backend/`). Frontend: `npm run build`. En Windows la Execution Policy bloquea `npm.ps1` → usar `npm.cmd run build`.
+
+### BD real.
+
+Los credenciales de la BD (de jockey) **no están en el repo**. Sin `.env` real, las rutas que tocan datos devuelven 500 (esperado). Los flujos contra la BD se verifican en Render tras el push del usuario. El schema ya está ejecutado (`backend/sql/schema.sql`).
+
+### Handoff.
+
+El estado vivo del proyecto está en `.scratch/tenis-manager/handoff.md` (actualizarlo al cerrar sesión). Issues en `.scratch/tenis-manager/issues/`, tickets/decisiones en `.scratch/tenis-manager/tickets/`.

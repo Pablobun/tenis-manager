@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
-**Fecha**: 2026-08-10
-**Estado**: Ticket01 completado. Ticket02 completado. Backend verificado y funcionando.
-**Próxima acción**: Ticket03 — Plantillas de clases
+**Fecha**: 2026-08-11
+**Estado**: Tickets 01-03 COMMITEADOS (último commit `ticket3`). Tickets 04-05 implementados, SIN commitear y SIN deployar. Backend verificado localmente (auth/validaciones), build de frontend OK.
+**Próxima acción**: Ticket 06 — Reasignación de Alumnos
 
 ---
 
@@ -42,44 +42,61 @@ GitHub (repo: Pablobun/tenis-manager)
 
 ---
 
-## Estructura del monorepo
+## Estructura del monorepo (al día)
 
 ```
 C:\GesttionSoftware\
 ├── .github/workflows/deploy-front.yml
-├── .gitignore
+├── .gitignore                 ← cubre node_modules/, .next/, out/, .env
 ├── AGENTS.md
-├── CONTEXT.md
+├── CONTEXT.md                 ← dominio + decisiones (ver §Decisiones nuevas)
 ├── .opencode/
-├── .scratch/tenis-manager/     ← docs, issues, spec, PRD
+├── .scratch/tenis-manager/     ← docs, issues, spec, PRD, handoff
 ├── docs/
 ├── backend/
-│   ├── server.js               ← Express API (raíz para Render)
+│   ├── server.js              ← Express API (raíz para Render). Monta auth, students, templates, instances, board
 │   ├── package.json
 │   ├── .env.example
-│   ├── src/
-│   │   ├── db.js               ← pool mysql2
-│   │   ├── middleware/auth.js  ← JWT + authorize
-│   │   └── routes/
-│   │       ├── auth.js         ← login, register, logout, me, password
-│   │       └── students.js     ← CRUD alumnos (list, get, create, update, profile)
-│   └── sql/
-│       ├── schema.sql          ← DDL MySQL (10 tablas, sin RLS)
-│       └── seed-admin.sql      ← INSERT admin inicial
+│   ├── sql/schema.sql         ← 10 tablas ya ejecutadas en la BD (incluye class_templates, class_instances)
+│   └── src/
+│       ├── db.js
+│       ├── middleware/auth.js
+│       ├── services/instances.js      ← NUEVO: generación/actualización/cancelación de instancias
+│       └── routes/
+│           ├── auth.js
+│           ├── students.js
+│           ├── templates.js           ← CRUD plantillas + triggers de generación
+│           ├── instances.js           ← NUEVO: GET ?month + POST /generate
+│           └── board.js               ← NUEVO: GET /day + GET /week
 └── frontend/
-    ├── package.json
-    ├── next.config.js          ← output: 'export' + trailingSlash: true
-    ├── tailwind.config.js
+    ├── package.json / next.config.js
+    ├── node_modules/          ← INSTALADO en sesión 3 (gitignored)
     └── src/app/
-        ├── layout.tsx
-        ├── page.tsx            ← redirect por rol
-        ├── globals.css
-        ├── login/page.tsx      ← login funcional
-        ├── dashboard/page.tsx  ← panel profesor (con card Alumnos)
-        ├── admin/page.tsx      ← panel admin (con card Alumnos)
-        ├── alumnos/page.tsx    ← CRUD alumnos (lista, crear, editar)
-        └── mis-clases/page.tsx ← vista alumno (ver/editar perfil)
+        ├── page.tsx / layout.tsx / globals.css / login/page.tsx
+        ├── dashboard/page.tsx  ← cards: Tablero, Alumnos, Plantillas, Instancias
+        ├── admin/page.tsx      ← idem
+        ├── alumnos/page.tsx
+        ├── mis-clases/page.tsx
+        ├── plantillas/page.tsx ← NUEVO (ticket 03)
+        ├── instancias/page.tsx ← NUEVO (ticket 04)
+        └── tablero/page.tsx    ← NUEVO (ticket 05)
 ```
+
+---
+
+## Endpoints (todo bajo `/api`, auth por cookie/Bearer JWT)
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | /auth/login, logout, register, password | varios | Auth |
+| GET | /auth/me | cualquiera | Perfil propio |
+| CRUD | /students | admin/profesor | Alumnos |
+| CRUD | /templates | admin/profesor | Plantillas (+ genera instancias al crear/editar/activar/desactivar) |
+| GET | /instances?month=YYYY-MM | admin/profesor | Instancias del mes |
+| POST | /instances/generate?month=YYYY-MM | admin/profesor | Regenera un mes desde plantillas activas |
+| GET | /board/day?date=YYYY-MM-DD | admin/profesor | Instancias del día + alumnos |
+| GET | /board/week?date=YYYY-MM-DD | admin/profesor | 7 días de la semana + alumnos |
+| GET | /health | público | Health check |
 
 ---
 
@@ -90,38 +107,31 @@ C:\GesttionSoftware\
 | Admin email | `admin@tenismanager.com` |
 | Admin password | `admin123` (cambiar después) |
 | DB host | `137.184.178.21` (mismo que jockey) |
-| DB user | (mismos que jockey) |
-| DB password | (mismos que jockey) |
+| DB user/password | (mismos que jockey — NO están en el repo; pedirlos al user para probar contra BD local) |
 | DB name | `tenisriverside` |
 | Render URL | `https://tenis-manager.onrender.com` |
-| Render env vars | `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE=tenisriverside`, `JWT_SECRET=ts_riverside_2026_secret`, `PORT=10000` |
-| Dominio front | `https://riversideclases.portaltorneos-riocuarto.com.ar` |
+| JWT_SECRET | `ts_riverside_2026_secret` (env var de Render) |
 | Repo GitHub | `https://github.com/Pablobun/tenis-manager` |
 
 ---
 
 ## Qué se hizo en esta sesión
 
-### Sesión 1 — Scaffolding
-1. **Planificación** — Cambio de stack: Supabase → Express + MySQL + JWT
-2. **Ticket01 implementado** — Scaffolding completo (backend + frontend + workflow)
-3. **Schema MySQL** — Adaptado desde Postgres (sin RLS, ENUM types, BIGINT IDs)
-4. **Frontend** — Next.js estático con 4 pantallas (login, dashboard, admin, mis-clases)
-5. **Backend** — Express + JWT + middleware por rol + 5 endpoints auth
-6. **GitHub Actions** — Workflow deploy-front.yml funcional (npm install + rsync)
-7. **Deploy** — Frontend llegando al droplet vía GitHub Actions
+### Ticket 03 — Plantillas de Clases (commit `ticket3`)
+- Backend: `routes/templates.js` (CRUD + toggle `is_active` + validación de **solapamiento** entre activas del mismo día y modalidad → 409).
+- Frontend: `plantillas/page.tsx` (form con las 3 modalidades, lista con badges, Desactivar/Activar).
+- Cards de acceso en dashboard/admin. Aclaración de `day_of_week` en CONTEXT.md.
 
-### Sesión 2 — Verificación + Ticket02
-1. **BD verificada** — Schema ejecutado en SQLyog, admin seed correcto
-2. **Backend verificado** — JWT_SECRET configurado en Render, login funcionando
-3. **Ticket02 implementado** — CRUD de alumnos completo:
-   - Backend: `routes/students.js` con 5 endpoints (list, get, create, update, profile)
-   - Frontend: `/alumnos` con lista, formulario crear/editar
-   - Frontend: `/mis-clases` con perfil editable por el alumno
-   - Navegación: cards en admin y dashboard para acceder a Alumnos
-4. **Fix de roles** — Login corregido: `profesor`/`alumno` (antes decía `professor`/`student`)
-5. **Fix de Nginx** — `try_files` actualizado para soportar archivos `.html` planos de Next.js
-6. **Fix de deploy** — Agregado `trailingSlash: true` para generar carpetas en vez de archivos planos
+### Ticket 04 — Generación de Instancias (SIN commitear)
+- `services/instances.js`: genera 1 instancia por aparición del `day_of_week` en el mes (solo `fixed` activas), `INSERT IGNORE` + UNIQUE `uk_template_date`.
+- Disparadores en `templates.js`: crear → genera mes; editar → in-place si no cambia el día, borra+regenera si cambia; desactivar → cancela futuras (`status='cancelled'`).
+- `routes/instances.js`: `GET /api/instances?month=` + `POST /api/instances/generate?month=`.
+- Frontend: `instancias/page.tsx` (calendario mensual con ◀ ▶ y botón "Generar mes").
+
+### Ticket 05 — Vista Diaria del Tablero (SIN commitear)
+- `routes/board.js`: `GET /board/day` y `GET /board/week`, enriqueciendo instancias con alumnos vía `groups → group_students → profiles`.
+- Frontend: `tablero/page.tsx` (grilla por franjas, swipe + ◀ ▶, toggle Día/Semana, bottom sheet con **Ver alumnos** funcional y Agregar/Mover/Borrar deshabilitados hasta ticket 06, indicador de cupo por color).
+- Login de profesor → `/tablero`. Card "Tablero" en dashboard/admin.
 
 ---
 
@@ -129,12 +139,12 @@ C:\GesttionSoftware\
 
 | # | Ticket | Estado | Notas |
 |---|--------|--------|-------|
-| 01 | Auth + scaffolding | **COMPLETADO** | Login, JWT, roles, middleware, deploy |
-| 02 | Gestión de alumnos | **COMPLETADO** | CRUD completo, perfil alumno, navegación |
-| 03 | Plantillas de clases | pendiente | Próximo |
-| 04 | Generación de instancias | pendiente | |
-| 05 | Vista diaria del tablero | pendiente | |
-| 06 | Reasignación de alumnos | pendiente | |
+| 01 | Auth + scaffolding | **COMMITEADO** | |
+| 02 | Gestión de alumnos | **COMMITEADO** | |
+| 03 | Plantillas de clases | **COMMITEADO** | commit `ticket3` |
+| 04 | Generación de instancias | **IMPLEMENTADO, SIN PUSH** | backend + frontend listos |
+| 05 | Vista diaria del tablero | **IMPLEMENTADO, SIN PUSH** | backend + frontend listos |
+| 06 | Reasignación de alumnos | pendiente | **PRÓXIMO** |
 | 07 | Clases abiertas/rotativas | pendiente | |
 | 08 | Dashboard del alumno | pendiente | |
 | 09 | Flujo de postulaciones | pendiente | |
@@ -146,24 +156,42 @@ C:\GesttionSoftware\
 
 ## Pendiente para la próxima sesión
 
-1. **Ticket03** — Plantillas de clases (CRUD de clases recurrentes: día, hora, nivel, modalidad, precio)
-2. Continuar con tickets 04-12 según prioridad
+1. **Commit + push de tickets 04 y 05** (los hace el usuario, nunca el agente). Con el push salen a producción 03-05.
+2. **Verificación contra la BD real en Render** tras el push: crear plantilla → genera instancias del mes; editar/desactivar; grilla del tablero con alumnos (aún no hay inscripciones → celdas vacías "0/cupo").
+3. **Ticket 06 — Reasignación de Alumnos**: conectar las acciones del bottom sheet (`Agregar`, `Mover a...`, `Borrar`). Requiere decisiones de modelo: `groups` por instancia, endpoint de inscripción/desinscripción, mover con confirmación "Queda 4/4. ¿Mover?" y optimistic update.
+
+---
+
+## Decisiones nuevas registradas (CONTEXT.md)
+
+- `day_of_week` define la **recurrencia** semanal de la plantilla; la modalidad es independiente del día. Las instancias de un mes se generan juntas.
+- **Generación de instancias**: 1 por aparición del día en el mes; `frequency` es metadata (más clases = más plantillas). Solo `fixed` activas.
+- **Edición de plantilla**: día cambiado → borra futuras y regenera; solo campos → in-place.
+- **Desactivar plantilla**: futuras pasan a `status='cancelled'`.
+- Bottom sheet del tablero: "Ver alumnos" funcional; Agregar/Mover/Borrar → ticket 06.
 
 ---
 
 ## Notas importantes
 
-- El workflow de GitHub Actions funciona con `known_hosts: unnecessary` (no `just-a-placeholder`)
-- El `npm ci` no funciona sin `package-lock.json` — usar `npm install` en el workflow
-- La public key SSH debe estar en `~/.ssh/authorized_keys` del droplet
-- El backend en Render usa Root Directory = `backend`
-- **Nginx config**: `root /var/www/tenis-manager;` con `try_files $uri $uri.html $uri/ /index.html;`
-- **Nginx path**: `/etc/nginx/conf.d/riversideclases.conf` (NO `sites-enabled/`)
-- **Next.js**: `trailingSlash: true` genera `alumnos/index.html` en vez de `alumnos.html`
-- **Roles en BD**: `admin`, `profesor`, `alumno` (NO `professor`, `student`)
-- **JWT_SECRET en Render**: `ts_riverside_2026_secret`
-- El dominio del front es `riversideclases.portaltorneos-riocuarto.com.ar`
-- El dominio del back es `tenis-manager.onrender.com`
+- **Nunca hacer commit/push**: es el usuario quien ejecuta git add/commit/push (regla AGENTS.md).
+- El workflow de GitHub Actions usa `npm install` (NO `npm ci`, no hay package-lock en frontend).
+- **Windows**: la Execution Policy bloquea `npm.ps1` → usar `npm.cmd run build` (o `npm run build` falla). Igual con backend.
+- Backend local: para probar contra BD real hace falta `.env` con los credenciales de jockey (no están en el repo). Sin DB, las rutas con datos devuelven 500 (esperado); auth (401) y validaciones (400) se prueban con un JWT firmado localmente con el mismo secret.
+- **Verificación local sin framework de tests**: `node --check` + arranque + curl con JWT firmado (backend); `npm.cmd run build` (frontend). Convención del proyecto: verificación manual, sin framework de tests.
+- Nginx config: `root /var/www/tenis-manager;` con `try_files $uri $uri.html $uri/ /index.html;` — path `/etc/nginx/conf.d/riversideclases.conf`.
+- **Next.js**: `trailingSlash: true` genera carpetas (`plantillas/index.html`).
+- **Roles en BD**: `admin`, `profesor`, `alumno` (NO `professor`/`student`).
+- Frontend `node_modules` fue instalado en esta sesión (gitignored, no subir).
+
+---
+
+## Suggested skills
+
+- **code-review** — para revisar el diff de los tickets 04-05 (y 03) antes de pushear: estándares del repo vs. spec del ticket.
+- **implement** — para arrancar el ticket 06 (Reasignación de Alumnos) siguiendo el mismo patrón de las sesiones anteriores.
+- **grill-with-docs** — si antes del ticket 06 querés definir bien el modelo de `groups` (uno por instancia vs. varios), inscripción/desinscripción y mover con cupos, y dejarlo registrado en CONTEXT.md/ADRs.
+- **to-spec / to-issues** — si el ticket 06 necesita desglosarse en pasos más finos.
 
 ---
 

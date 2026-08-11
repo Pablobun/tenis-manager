@@ -52,6 +52,9 @@ Sistema para una profesora de tenis que administra clases, inscripciones y deuda
 - **Histórico de pagos**: en el perfil del alumno → pestaña "Deuda" con desglose por mes. Además, un **resumen global por fecha** (todos los alumnos, por día de pago).
 - **Excepciones de deuda/pago**: la profe tiene control total — puede mantener alumno con deuda, liberar cupo, o ajustar montos.
 - **Apertura de mes**: el sistema avisa "hay alumnos sin pago", la profe decide si libera o mantiene cupos.
+- **Generación de instancias**: cada plantilla fija genera **una instancia por cada aparición de su día de la semana en el mes** (ej. Lunes → 4-5 instancias). El campo `frequency` es metadata; para más clases por semana se crean más plantillas. Se genera solo para plantillas `fixed` activas.
+- **Edición de plantilla**: si cambia el día de la semana se borran las instancias futuras y se regenera el mes; si solo cambian hora/precio/cupo/nivel se **actualizan in-place** las instancias futuras sin tocar fechas.
+- **Desactivar plantilla**: las instancias futuras pasan a `status = cancelled` (quedan como historial) y deja de generar nuevas.
 
 ## Términos en disputa
 

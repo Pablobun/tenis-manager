@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db');
 const { authenticate, authorize } = require('../middleware/auth');
+const { generateForTemplate, updateFutureInPlace, cancelFuture, regenFuture, currentMonth } = require('../services/instances');
 
 const router = express.Router();
 
@@ -153,6 +154,23 @@ router.post('/', authenticate, authorize('admin', 'profesor'), async (req, res) 
       [req.user.id, day_of_week, start_hour, end_hour, level || null, normalizedModality, max_students, price_per_class, frequency || 1]
     );
 
+    const newTemplate = {
+      id: result.insertId,
+      professor_id: req.user.id,
+      day_of_week,
+      start_hour,
+      end_hour,
+      level: level || null,
+      modality: normalizedModality,
+      max_students,
+      price_per_class,
+      is_active: 1
+    };
+
+    if (normalizedModality === 'fixed') {
+      await generateForTemplate(connection, newTemplate, currentMonth());
+    }
+
     await connection.commit();
 
     res.status(201).json({
@@ -221,6 +239,20 @@ router.put('/:id', authenticate, authorize('admin', 'profesor'), async (req, res
          WHERE id = ?`,
         [next.day_of_week === null ? null : next.day_of_week, next.start_hour, next.end_hour, next.level || null, next.modality, next.max_students, next.price_per_class, next.frequency, next.is_active, templateId]
       );
+
+      const dayChanged = Number(next.day_of_week) !== Number(current.day_of_week);
+      const reactivated = Number(current.is_active) === 0 && Number(next.is_active) === 1;
+      const deactivated = Number(current.is_active) === 1 && Number(next.is_active) === 0;
+
+      if (next.modality === 'fixed' && Number(next.is_active) === 1) {
+        if (reactivated || dayChanged) {
+          await regenFuture(connection, { ...next, id: templateId, professor_id: current.professor_id }, currentMonth());
+        } else {
+          await updateFutureInPlace(connection, templateId, { ...next, level: next.level || null });
+        }
+      } else if (deactivated) {
+        await cancelFuture(connection, templateId);
+      }
 
       await connection.commit();
 

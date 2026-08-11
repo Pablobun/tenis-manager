@@ -1,155 +1,158 @@
 -- =============================================
 -- SCHEMA: tenisriverside (MySQL)
+-- Convención: TODO en castellano (nadie dijo que debía ser inglés).
+-- Valores ENUM en español: admin/profesor/alumno, principiante/intermedio/avanzado,
+-- fija/extra/abierta, pendiente/aceptada/rechazada/lista_espera/cancelada, etc.
 -- =============================================
 
--- Profiles (usuarios)
-CREATE TABLE IF NOT EXISTS profiles (
+-- Usuarios (profesoras, alumnos, admin)
+CREATE TABLE IF NOT EXISTS perfiles (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  full_name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
-  role ENUM('admin', 'professor', 'student') NOT NULL DEFAULT 'student',
-  level ENUM('avanzado', 'intermedio', 'principiante'),
-  is_active TINYINT(1) DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  nombre_completo VARCHAR(255) NOT NULL,
+  telefono VARCHAR(20),
+  rol ENUM('admin', 'profesor', 'alumno') NOT NULL DEFAULT 'alumno',
+  nivel ENUM('principiante', 'intermedio', 'avanzado'),
+  activo TINYINT(1) DEFAULT 1,
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Plantillas de clases (fijas, abiertas, extras)
-CREATE TABLE IF NOT EXISTS class_templates (
+CREATE TABLE IF NOT EXISTS plantillas_clases (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  professor_id BIGINT UNSIGNED NOT NULL,
-  day_of_week TINYINT CHECK (day_of_week BETWEEN 0 AND 6),
-  start_hour TIME NOT NULL,
-  end_hour TIME NOT NULL,
-  level ENUM('avanzado', 'intermedio', 'principiante'),
-  modality ENUM('fixed', 'extra', 'open') NOT NULL,
-  max_students INT NOT NULL DEFAULT 4,
-  price_per_class DECIMAL(10,2) NOT NULL,
-  frequency INT DEFAULT 1,
-  month_start INT DEFAULT 1,
-  month_end INT DEFAULT 31,
-  is_active TINYINT(1) DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (professor_id) REFERENCES profiles(id) ON DELETE CASCADE
+  profesor_id BIGINT UNSIGNED NOT NULL,
+  dia_semana TINYINT CHECK (dia_semana BETWEEN 0 AND 6),
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL,
+  nivel ENUM('principiante', 'intermedio', 'avanzado'),
+  modalidad ENUM('fija', 'extra', 'abierta') NOT NULL,
+  cupo_maximo INT NOT NULL DEFAULT 4,
+  precio_por_clase DECIMAL(10,2) NOT NULL,
+  frecuencia INT DEFAULT 1,
+  inicio_mes INT DEFAULT 1,
+  fin_mes INT DEFAULT 31,
+  activa TINYINT(1) DEFAULT 1,
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (profesor_id) REFERENCES perfiles(id) ON DELETE CASCADE
 );
 
--- Instancias de clases (generadas mensualmente)
-CREATE TABLE IF NOT EXISTS class_instances (
+-- Instancias de clases (generadas mensualmente desde las plantillas)
+CREATE TABLE IF NOT EXISTS instancias_clases (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  template_id BIGINT UNSIGNED NOT NULL,
-  professor_id BIGINT UNSIGNED NOT NULL,
-  instance_date DATE NOT NULL,
-  start_hour TIME NOT NULL,
-  end_hour TIME NOT NULL,
-  level VARCHAR(50) NOT NULL,
-  modality ENUM('fixed', 'extra', 'open') NOT NULL,
-  max_students INT NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
-  status ENUM('scheduled', 'completed', 'cancelled') DEFAULT 'scheduled',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_template_date (template_id, instance_date),
-  FOREIGN KEY (template_id) REFERENCES class_templates(id) ON DELETE CASCADE,
-  FOREIGN KEY (professor_id) REFERENCES profiles(id) ON DELETE CASCADE
+  plantilla_id BIGINT UNSIGNED NOT NULL,
+  profesor_id BIGINT UNSIGNED NOT NULL,
+  fecha DATE NOT NULL,
+  hora_inicio TIME NOT NULL,
+  hora_fin TIME NOT NULL,
+  nivel ENUM('principiante', 'intermedio', 'avanzado') NOT NULL,
+  modalidad ENUM('fija', 'extra', 'abierta') NOT NULL,
+  cupo_maximo INT NOT NULL,
+  precio DECIMAL(10,2) NOT NULL,
+  estado ENUM('programada', 'completada', 'cancelada') DEFAULT 'programada',
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_plantilla_fecha (plantilla_id, fecha),
+  FOREIGN KEY (plantilla_id) REFERENCES plantillas_clases(id) ON DELETE CASCADE,
+  FOREIGN KEY (profesor_id) REFERENCES perfiles(id) ON DELETE CASCADE
 );
 
--- Grupos
-CREATE TABLE IF NOT EXISTS groups (
+-- Grupos (alumnos asignados a una misma franja de una instancia)
+CREATE TABLE IF NOT EXISTS grupos (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  instance_id BIGINT UNSIGNED NOT NULL,
-  name VARCHAR(100),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (instance_id) REFERENCES class_instances(id) ON DELETE CASCADE
+  instancia_id BIGINT UNSIGNED NOT NULL,
+  nombre VARCHAR(100),
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (instancia_id) REFERENCES instancias_clases(id) ON DELETE CASCADE
 );
 
 -- Alumnos en grupos
-CREATE TABLE IF NOT EXISTS group_students (
+CREATE TABLE IF NOT EXISTS grupo_alumnos (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  group_id BIGINT UNSIGNED NOT NULL,
-  student_id BIGINT UNSIGNED NOT NULL,
-  enrolled_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_group_student (group_id, student_id),
-  FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-  FOREIGN KEY (student_id) REFERENCES profiles(id) ON DELETE CASCADE
+  grupo_id BIGINT UNSIGNED NOT NULL,
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  inscripto_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_grupo_alumno (grupo_id, alumno_id),
+  FOREIGN KEY (grupo_id) REFERENCES grupos(id) ON DELETE CASCADE,
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE
 );
 
--- Postulaciones de alumnos
-CREATE TABLE IF NOT EXISTS applications (
+-- Postulaciones de alumnos a clases (candidatos)
+CREATE TABLE IF NOT EXISTS postulaciones (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  student_id BIGINT UNSIGNED NOT NULL,
-  instance_id BIGINT UNSIGNED NOT NULL,
-  status ENUM('pending', 'accepted', 'rejected', 'waitlisted', 'cancelled') DEFAULT 'pending',
-  applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  responded_at DATETIME,
-  UNIQUE KEY uk_student_instance (student_id, instance_id),
-  FOREIGN KEY (student_id) REFERENCES profiles(id) ON DELETE CASCADE,
-  FOREIGN KEY (instance_id) REFERENCES class_instances(id) ON DELETE CASCADE
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  instancia_id BIGINT UNSIGNED NOT NULL,
+  estado ENUM('pendiente', 'aceptada', 'rechazada', 'lista_espera', 'cancelada') DEFAULT 'pendiente',
+  postulada_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  respondida_en DATETIME,
+  UNIQUE KEY uk_alumno_instancia (alumno_id, instancia_id),
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE,
+  FOREIGN KEY (instancia_id) REFERENCES instancias_clases(id) ON DELETE CASCADE
 );
 
 -- Asistencia
-CREATE TABLE IF NOT EXISTS attendance (
+CREATE TABLE IF NOT EXISTS asistencias (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  student_id BIGINT UNSIGNED NOT NULL,
-  instance_id BIGINT UNSIGNED NOT NULL,
-  attended TINYINT(1) NOT NULL DEFAULT 1,
-  recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_student_instance_att (student_id, instance_id),
-  FOREIGN KEY (student_id) REFERENCES profiles(id) ON DELETE CASCADE,
-  FOREIGN KEY (instance_id) REFERENCES class_instances(id) ON DELETE CASCADE
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  instancia_id BIGINT UNSIGNED NOT NULL,
+  asistio TINYINT(1) NOT NULL DEFAULT 1,
+  registrada_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_alumno_instancia_asist (alumno_id, instancia_id),
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE,
+  FOREIGN KEY (instancia_id) REFERENCES instancias_clases(id) ON DELETE CASCADE
 );
 
 -- Deudas
-CREATE TABLE IF NOT EXISTS debts (
+CREATE TABLE IF NOT EXISTS deudas (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  student_id BIGINT UNSIGNED NOT NULL,
-  instance_id BIGINT UNSIGNED,
-  debt_type ENUM('fixed_monthly', 'extra_class', 'open_class') NOT NULL,
-  billing_month VARCHAR(7),
-  amount DECIMAL(10,2) NOT NULL,
-  paid_amount DECIMAL(10,2) DEFAULT 0,
-  status ENUM('pending', 'partial', 'paid', 'overridden') DEFAULT 'pending',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_id) REFERENCES profiles(id) ON DELETE CASCADE,
-  FOREIGN KEY (instance_id) REFERENCES class_instances(id) ON DELETE SET NULL
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  instancia_id BIGINT UNSIGNED,
+  tipo_deuda ENUM('mensualidad', 'clase_extra', 'clase_abierta') NOT NULL,
+  mes_facturacion VARCHAR(7),
+  monto DECIMAL(10,2) NOT NULL,
+  monto_pagado DECIMAL(10,2) DEFAULT 0,
+  estado ENUM('pendiente', 'parcial', 'pagada', 'anulada') DEFAULT 'pendiente',
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE,
+  FOREIGN KEY (instancia_id) REFERENCES instancias_clases(id) ON DELETE SET NULL
 );
 
 -- Pagos
-CREATE TABLE IF NOT EXISTS payments (
+CREATE TABLE IF NOT EXISTS pagos (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  student_id BIGINT UNSIGNED NOT NULL,
-  debt_id BIGINT UNSIGNED,
-  amount DECIMAL(10,2) NOT NULL,
-  payment_date DATE NOT NULL,
-  note TEXT,
-  recorded_by BIGINT UNSIGNED,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_id) REFERENCES profiles(id) ON DELETE CASCADE,
-  FOREIGN KEY (debt_id) REFERENCES debts(id) ON DELETE SET NULL,
-  FOREIGN KEY (recorded_by) REFERENCES profiles(id) ON DELETE SET NULL
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  deuda_id BIGINT UNSIGNED,
+  monto DECIMAL(10,2) NOT NULL,
+  fecha_pago DATE NOT NULL,
+  nota TEXT,
+  registrado_por BIGINT UNSIGNED,
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE,
+  FOREIGN KEY (deuda_id) REFERENCES deudas(id) ON DELETE SET NULL,
+  FOREIGN KEY (registrado_por) REFERENCES perfiles(id) ON DELETE SET NULL
 );
 
--- Ciclos de facturacion mensual
-CREATE TABLE IF NOT EXISTS billing_cycles (
+-- Ciclos de facturación mensual
+CREATE TABLE IF NOT EXISTS ciclos_facturacion (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  month_year VARCHAR(7) NOT NULL UNIQUE,
-  status ENUM('open', 'closed') DEFAULT 'open',
-  opened_at DATETIME,
-  closed_at DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  mes_anio VARCHAR(7) NOT NULL UNIQUE,
+  estado ENUM('abierto', 'cerrado') DEFAULT 'abierto',
+  abierto_en DATETIME,
+  cerrado_en DATETIME,
+  creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =============================================
--- INDEXES
+-- ÍNDICES
 -- =============================================
 
-CREATE INDEX idx_class_instances_date ON class_instances(instance_date);
-CREATE INDEX idx_class_instances_professor ON class_instances(professor_id);
-CREATE INDEX idx_group_students_student ON group_students(student_id);
-CREATE INDEX idx_applications_student ON applications(student_id);
-CREATE INDEX idx_applications_instance ON applications(instance_id);
-CREATE INDEX idx_debts_student ON debts(student_id);
-CREATE INDEX idx_debts_month ON debts(billing_month);
-CREATE INDEX idx_payments_student ON payments(student_id);
-CREATE INDEX idx_payments_date ON payments(payment_date);
+CREATE INDEX idx_instancias_fecha ON instancias_clases(fecha);
+CREATE INDEX idx_instancias_profesor ON instancias_clases(profesor_id);
+CREATE INDEX idx_grupo_alumnos_alumno ON grupo_alumnos(alumno_id);
+CREATE INDEX idx_postulaciones_alumno ON postulaciones(alumno_id);
+CREATE INDEX idx_postulaciones_instancia ON postulaciones(instancia_id);
+CREATE INDEX idx_deudas_alumno ON deudas(alumno_id);
+CREATE INDEX idx_deudas_mes ON deudas(mes_facturacion);
+CREATE INDEX idx_pagos_alumno ON pagos(alumno_id);
+CREATE INDEX idx_pagos_fecha ON pagos(fecha_pago);

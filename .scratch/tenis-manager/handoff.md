@@ -26,7 +26,7 @@ Web app responsive (mobile-first) para una profesora de tenis que administra cla
 | Auth | JWT + bcrypt, cookie httpOnly, roles en payload | Backend |
 | Deploy Front | GitHub Actions → SSH + rsync | Automático en push a main |
 | Deploy Back | Render (conectado al repo) | Automático en push a main |
-| Nginx | `riversideclases.conf` en `/etc/nginx/conf.d/` | SSL via certbot |
+| Nginx | `riversideclases.conf` en `/etc/nginx/conf.d/` (versionado en `deploy/nginx-riversideclases.conf`) | SSL via certbot + proxy `/api/` → Render |
 
 ---
 
@@ -35,7 +35,10 @@ Web app responsive (mobile-first) para una profesora de tenis que administra cla
 ```
 GitHub (repo: Pablobun/tenis-manager)
   ├─ push a main ──► GitHub Actions → rsync frontend/out/ → droplet /var/www/tenis-manager/
+  │                                    └─ instala nginx conf + reload (proxy /api/)
   └─ push a main ──► Render → npm install + node server.js → tenis-manager.onrender.com
+                        ▲
+                        └─ nginx del droplet proxea /api/* → tenis-manager.onrender.com (mismo origen)
 ```
 
 **Mismo patrón que `torneos-jc`**: git push → deploy automático. Front en droplet, back en Render.
@@ -117,6 +120,15 @@ C:\GesttionSoftware\
 
 ## Qué se hizo en esta sesión
 
+### Fix 401 "Token no proporcionado" en producción (proxy inverso)
+- **Causa raíz**: front (`riversideclases...com.ar`) y API (`tenis-manager.onrender.com`) son dominios distintos (cross-site). Cookie `SameSite=Lax` jamás viaja en fetch cross-site → 401. No se detectó antes porque en dev local (`localhost:3000` → `localhost:10000`) es mismo sitio y `Lax` fluye.
+- **Solución (Opción B, misma arquitectura que torneos-jc)**: nginx del droplet proxea `/api/` a `tenis-manager.onrender.com` → front y API quedan mismo origen, la cookie `SameSite=Lax` httpOnly funciona sin tocar el backend.
+- Config aplicada en el servidor (verificada: `nginx -t` OK + `curl /api/health` → `{"status":"ok"}`) y **versionada** en `deploy/nginx-riversideclases.conf`.
+- Frontend: `apiUrl` ahora relativo (`process.env.NEXT_PUBLIC_API_URL || ''`) en las 8 páginas. Dev local: `frontend/.env.local` con `NEXT_PUBLIC_API_URL=http://localhost:10000` (ver `frontend/.env.local.example`).
+- Workflow `deploy-front.yml`: pasos 7-8 instalan la config nginx y recargan (`nginx -t && systemctl reload nginx`) en cada push.
+- Fix `frontend/src/app/page.tsx`: el chequeo de sesión usaba `document.cookie.includes('token=')`, que nunca ve cookies `httpOnly` → ahora usa `localStorage.getItem('user')`.
+
+
 ### Ticket 03 — Plantillas de Clases (commit `ticket3`)
 - Backend: `routes/templates.js` (CRUD + toggle `is_active` + validación de **solapamiento** entre activas del mismo día y modalidad → 409).
 - Frontend: `plantillas/page.tsx` (form con las 3 modalidades, lista con badges, Desactivar/Activar).
@@ -156,8 +168,8 @@ C:\GesttionSoftware\
 
 ## Pendiente para la próxima sesión
 
-1. **Commit + push de tickets 04 y 05** (los hace el usuario, nunca el agente). Con el push salen a producción 03-05.
-2. **Verificación contra la BD real en Render** tras el push: crear plantilla → genera instancias del mes; editar/desactivar; grilla del tablero con alumnos (aún no hay inscripciones → celdas vacías "0/cupo").
+1. **Commit + push de tickets 04, 05 y del fix de auth (proxy nginx)** (los hace el usuario, nunca el agente). Con el push salen a producción 03-05 + el fix del 401.
+2. **Verificación contra la BD real en Render** tras el push: login → cargar alumnos/plantillas sin 401; crear plantilla → genera instancias del mes; editar/desactivar; grilla del tablero con alumnos (aún no hay inscripciones → celdas vacías "0/cupo").
 3. **Ticket 06 — Reasignación de Alumnos**: conectar las acciones del bottom sheet (`Agregar`, `Mover a...`, `Borrar`). Requiere decisiones de modelo: `groups` por instancia, endpoint de inscripción/desinscripción, mover con confirmación "Queda 4/4. ¿Mover?" y optimistic update.
 
 ---
@@ -179,7 +191,7 @@ C:\GesttionSoftware\
 - **Windows**: la Execution Policy bloquea `npm.ps1` → usar `npm.cmd run build` (o `npm run build` falla). Igual con backend.
 - Backend local: para probar contra BD real hace falta `.env` con los credenciales de jockey (no están en el repo). Sin DB, las rutas con datos devuelven 500 (esperado); auth (401) y validaciones (400) se prueban con un JWT firmado localmente con el mismo secret.
 - **Verificación local sin framework de tests**: `node --check` + arranque + curl con JWT firmado (backend); `npm.cmd run build` (frontend). Convención del proyecto: verificación manual, sin framework de tests.
-- Nginx config: `root /var/www/tenis-manager;` con `try_files $uri $uri.html $uri/ /index.html;` — path `/etc/nginx/conf.d/riversideclases.conf`.
+- Nginx config: `root /var/www/tenis-manager;` con `try_files $uri $uri.html $uri/ /index.html;` + `location /api/` que proxea a `https://tenis-manager.onrender.com`. Path `/etc/nginx/conf.d/riversideclases.conf`, versionado en `deploy/nginx-riversideclases.conf`.
 - **Next.js**: `trailingSlash: true` genera carpetas (`plantillas/index.html`).
 - **Roles en BD**: `admin`, `profesor`, `alumno` (NO `professor`/`student`).
 - Frontend `node_modules` fue instalado en esta sesión (gitignored, no subir).

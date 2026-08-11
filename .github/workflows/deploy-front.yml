@@ -32,3 +32,9 @@ jobs:
 
       - name: 6. Subir archivos al servidor
         run: rsync -avz --delete frontend/out/ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/tenis-manager/
+
+      - name: 7. Instalar config nginx (proxy a la API)
+        run: scp deploy/nginx-riversideclases.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/etc/nginx/conf.d/riversideclases.conf
+
+      - name: 8. Validar y recargar nginx
+        run: ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} "nginx -t && systemctl reload nginx"

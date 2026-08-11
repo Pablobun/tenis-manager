@@ -80,7 +80,7 @@ export default function InstanciasPage() {
     setLoading(true);
     setError('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/instances?month=${targetMonth}`, {
         credentials: 'include'
       });
@@ -103,7 +103,7 @@ export default function InstanciasPage() {
     setError('');
     setInfo('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/instances/generate?month=${month}`, {
         method: 'POST',
         credentials: 'include'
@@ -124,7 +124,7 @@ export default function InstanciasPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

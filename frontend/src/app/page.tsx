@@ -7,8 +7,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = document.cookie.includes('token=');
-    if (token) {
+    if (localStorage.getItem('user')) {
       router.push('/dashboard');
     } else {
       router.push('/login');

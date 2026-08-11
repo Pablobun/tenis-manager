@@ -110,7 +110,7 @@ export default function TableroPage() {
       setLoading(true);
       setError('');
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const res = await fetch(
           mode === 'day'
             ? `${apiUrl}/api/board/day?date=${date}`
@@ -169,7 +169,7 @@ export default function TableroPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

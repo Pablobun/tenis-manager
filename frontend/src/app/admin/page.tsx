@@ -30,7 +30,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

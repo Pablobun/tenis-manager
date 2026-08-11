@@ -50,7 +50,7 @@ export default function AlumnosPage() {
 
   const fetchStudents = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/students`, {
         credentials: 'include'
       });
@@ -70,7 +70,7 @@ export default function AlumnosPage() {
     setError('');
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const url = editingStudent
         ? `${apiUrl}/api/students/${editingStudent.id}`
         : `${apiUrl}/api/students`;
@@ -117,7 +117,7 @@ export default function AlumnosPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

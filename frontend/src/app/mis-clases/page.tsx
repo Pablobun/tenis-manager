@@ -43,7 +43,7 @@ export default function MisClasesPage() {
 
   const fetchProfile = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/auth/me`, {
         credentials: 'include'
       });
@@ -65,7 +65,7 @@ export default function MisClasesPage() {
     setMessage('');
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/students/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -90,7 +90,7 @@ export default function MisClasesPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

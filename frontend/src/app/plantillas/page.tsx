@@ -89,7 +89,7 @@ export default function PlantillasPage() {
 
   const fetchTemplates = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/templates`, {
         credentials: 'include'
       });
@@ -120,7 +120,7 @@ export default function PlantillasPage() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const url = editingTemplate
         ? `${apiUrl}/api/templates/${editingTemplate.id}`
         : `${apiUrl}/api/templates`;
@@ -167,7 +167,7 @@ export default function PlantillasPage() {
   const handleToggleActive = async (template: Template) => {
     setError('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/templates/${template.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -188,7 +188,7 @@ export default function PlantillasPage() {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://tenis-manager.onrender.com';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'

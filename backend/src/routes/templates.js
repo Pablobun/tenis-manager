@@ -26,6 +26,19 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
   }
 
+  const MODALITIES = ['fija', 'extra', 'abierta'];
+  if (!MODALITIES.includes(modality)) {
+    return res.status(400).json({ error: `Modalidad inválida. Valores válidos: ${MODALITIES.join(', ')}` });
+  }
+
+  if (day_of_week < 0 || day_of_week > 6) {
+    return res.status(400).json({ error: 'day_of_week debe estar entre 0 y 6' });
+  }
+
+  if (start_hour >= end_hour) {
+    return res.status(400).json({ error: 'hora_inicio debe ser anterior a hora_fin' });
+  }
+
   try {
     // Validar solapamiento de horarios el mismo día para plantillas activas
     const [existing] = await db.query(

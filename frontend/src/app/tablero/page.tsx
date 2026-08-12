@@ -34,8 +34,8 @@ interface Instance {
 const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const MODALITIES: Record<string, string> = {
-  fixed: 'Fija',
-  open: 'Abierta',
+  fija: 'Fija',
+  abierta: 'Abierta',
   extra: 'Extra'
 };
 

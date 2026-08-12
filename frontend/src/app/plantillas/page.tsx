@@ -36,9 +36,9 @@ const DAYS: { value: number; label: string }[] = [
 ];
 
 const MODALITIES = [
-  { value: 'fixed', label: 'Fija' },
+  { value: 'fija', label: 'Fija' },
   { value: 'extra', label: 'Extra' },
-  { value: 'open', label: 'Abierta' }
+  { value: 'abierta', label: 'Abierta' }
 ];
 
 const LEVELS = [
@@ -53,7 +53,7 @@ const EMPTY_FORM = {
   start_hour: '',
   end_hour: '',
   level: '',
-  modality: 'fixed',
+  modality: 'fija',
   max_students: '4',
   price_per_class: '',
   frequency: '1'

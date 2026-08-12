@@ -102,6 +102,22 @@ export default function AdminPage() {
             <h3 className="font-bold text-lg mb-1">Alumnos</h3>
             <p className="text-sm text-gray-500">Gestión de alumnos y perfiles</p>
           </a>
+
+          <a
+            href="/facturacion"
+            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-emerald-500"
+          >
+            <h3 className="font-bold text-lg mb-1">Facturación</h3>
+            <p className="text-sm text-gray-500">Deuda mensual de clases fijas</p>
+          </a>
+
+          <a
+            href="/pagos"
+            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-amber-500"
+          >
+            <h3 className="font-bold text-lg mb-1">Pagos</h3>
+            <p className="text-sm text-gray-500">Registro individual y por lote</p>
+          </a>
         </div>
       </div>
     </main>

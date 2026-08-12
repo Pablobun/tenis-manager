@@ -8,6 +8,9 @@ const studentRoutes = require('./src/routes/students');
 const templateRoutes = require('./src/routes/templates');
 const instanceRoutes = require('./src/routes/instances');
 const boardRoutes = require('./src/routes/board');
+const attendanceRoutes = require('./src/routes/asistencias');
+const billingRoutes = require('./src/routes/billing');
+const paymentRoutes = require('./src/routes/pagos');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -32,6 +35,9 @@ app.use('/api/students', studentRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/instances', instanceRoutes);
 app.use('/api/board', boardRoutes);
+app.use('/api/asistencias', attendanceRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/pagos', paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

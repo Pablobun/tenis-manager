@@ -18,6 +18,8 @@ Create a new file under `.scratch/<feature-slug>/` (creating the directory if ne
 
 Read the file at the referenced path. The user will normally pass the path or the issue number directly.
 
-## Migración futura a GitHub
+## El repo está en GitHub, pero el tracker es local
 
-Este repo está en tracker local-markdown, pero se subirá a GitHub en algún momento. Cuando eso ocurra, correr de nuevo `/setup-matt-pocock-skills` y regenerar este archivo desde el seed `issue-tracker-github.md` (los issues vivirán entonces en GitHub Issues vía `gh` CLI). Los issues existentes en `.scratch/` se pueden migrar o dejar como registro histórico; la decisión se toma en el momento de la migración.
+El código vive en GitHub (`https://github.com/Pablobun/tenis-manager`) con deploy automático (GitHub Actions → Droplet, Render). Sin embargo, los **issues/tickets del proyecto se siguen trackeando en markdown local** (`.scratch/tenis-manager/issues/`). No usar GitHub Issues hasta que se decida migrar.
+
+Para migrar a GitHub Issues hará falta: correr `/setup-matt-pocock-skills`, regenerar este archivo desde el seed `issue-tracker-github.md` de la carpeta del skill, e instalar la CLI `gh` (hoy no está instalada en la máquina). Los issues existentes en `.scratch/` se pueden migrar o dejar como registro histórico; la decisión se toma en el momento de la migración.

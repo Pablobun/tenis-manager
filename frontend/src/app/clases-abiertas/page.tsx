@@ -26,6 +26,24 @@ interface OpenClass {
   enrolled_count: number;
 }
 
+interface Candidate {
+  postulation_id: number;
+  status: string;
+  posted_at: string;
+  student_id: number;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  level: string | null;
+  balance: number;
+}
+
+interface AttendanceItem {
+  student_id: number;
+  full_name: string;
+  asistio: number;
+}
+
 const LEVELS = [
   { value: 'principiante', label: 'Principiante' },
   { value: 'intermedio', label: 'Intermedio' },
@@ -38,8 +56,14 @@ const EMPTY_FORM = {
   hora_fin: '',
   nivel: 'intermedio',
   cupo_maximo: '4',
-  price: ''
+  price: '',
+  modalidad: 'abierta'
 };
+
+const MODALITIES = [
+  { value: 'abierta', label: 'Abierta / Rotativa' },
+  { value: 'extra', label: 'Extra' }
+];
 
 export default function ClasesAbiertasPage() {
   const router = useRouter();
@@ -51,6 +75,12 @@ export default function ClasesAbiertasPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [candidates, setCandidates] = useState<Record<number, Candidate[]>>({});
+  const [loadingCandidates, setLoadingCandidates] = useState<Record<number, boolean>>({});
+  const [expandedCandidates, setExpandedCandidates] = useState<Record<number, boolean>>({});
+  const [attendance, setAttendance] = useState<Record<number, AttendanceItem[]>>({});
+  const [loadingAttendance, setLoadingAttendance] = useState<Record<number, boolean>>({});
+  const [expandedAttendance, setExpandedAttendance] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -108,7 +138,8 @@ export default function ClasesAbiertasPage() {
       hora_fin: form.hora_fin,
       nivel: form.nivel,
       cupo_maximo: Number(form.cupo_maximo),
-      precio: Number(form.price)
+      precio: Number(form.price),
+      modalidad: form.modalidad
     };
 
     try {
@@ -152,7 +183,8 @@ export default function ClasesAbiertasPage() {
       hora_fin: c.end_hour.slice(0, 5),
       nivel: c.level,
       cupo_maximo: String(c.max_students),
-      price: c.price
+      price: c.price,
+      modalidad: c.modality || 'abierta'
     });
     setShowForm(true);
   };
@@ -191,6 +223,116 @@ export default function ClasesAbiertasPage() {
     router.push('/login');
   };
 
+  const toggleCandidates = useCallback(
+    async (classId: number) => {
+      const next = { ...expandedCandidates, [classId]: !expandedCandidates[classId] };
+      setExpandedCandidates(next);
+      if (!expandedCandidates[classId] && candidates[classId] === undefined) {
+        setLoadingCandidates((prev) => ({ ...prev, [classId]: true }));
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          const res = await fetch(`${apiUrl}/api/instances/open/${classId}/candidates`, {
+            credentials: 'include'
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setCandidates((prev) => ({ ...prev, [classId]: data.candidates || [] }));
+          }
+        } catch (err) {
+          console.error('Error fetching candidates:', err);
+        } finally {
+          setLoadingCandidates((prev) => ({ ...prev, [classId]: false }));
+        }
+      }
+    },
+    [candidates, expandedCandidates]
+  );
+
+  const handleCandidateAction = async (classId: number, postulationId: number, action: 'accept' | 'reject' | 'override') => {
+    setError('');
+    setInfo('');
+    if ((action === 'accept' || action === 'override') && !confirm('¿Confirmar la decisión sobre este candidato?')) return;
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/instances/open/${classId}/candidates/${postulationId}/${action}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Error al procesar el candidato');
+        return;
+      }
+      setInfo(data.message || 'Candidato procesado');
+      // Refrescar candidatos y clases (el cupo pudo cambiar)
+      toggleCandidates(classId);
+      fetchClasses();
+    } catch (err) {
+      setError('Error de conexión');
+    }
+  };
+
+  const toggleAttendance = useCallback(
+    async (classId: number) => {
+      const next = { ...expandedAttendance, [classId]: !expandedAttendance[classId] };
+      setExpandedAttendance(next);
+      if (!expandedAttendance[classId] && attendance[classId] === undefined) {
+        setLoadingAttendance((prev) => ({ ...prev, [classId]: true }));
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          const res = await fetch(`${apiUrl}/api/asistencias/${classId}`, {
+            credentials: 'include'
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setAttendance((prev) => ({ ...prev, [classId]: data.attendance || [] }));
+          }
+        } catch (err) {
+          console.error('Error fetching attendance:', err);
+        } finally {
+          setLoadingAttendance((prev) => ({ ...prev, [classId]: false }));
+        }
+      }
+    },
+    [attendance, expandedAttendance]
+  );
+
+  const toggleAsistio = (classId: number, studentId: number) => {
+    setAttendance((prev) => {
+      const list = prev[classId] || [];
+      return {
+        ...prev,
+        [classId]: list.map((a) =>
+          a.student_id === studentId ? { ...a, asistio: a.asistio ? 0 : 1 } : a
+        )
+      };
+    });
+  };
+
+  const saveAttendance = async (classId: number) => {
+    setError('');
+    setInfo('');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/asistencias/${classId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          attendance: (attendance[classId] || []).map((a) => ({ student_id: a.student_id, asistio: !!a.asistio }))
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Error al guardar asistencia');
+        return;
+      }
+      setInfo(data.message || 'Asistencia guardada correctamente');
+    } catch (err) {
+      setError('Error de conexión');
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -210,7 +352,7 @@ export default function ClasesAbiertasPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-lg font-semibold">Clases Abiertas / Rotativas</h2>
+            <h2 className="text-lg font-semibold">Clases Abiertas / Rotativas y Extras</h2>
             <p className="text-sm text-gray-500">Clases de una sola fecha donde los alumnos se postulan libremente</p>
           </div>
           <button
@@ -221,7 +363,7 @@ export default function ClasesAbiertasPage() {
             }}
             className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm"
           >
-            + Nueva Clase Abierta
+            + Nueva Clase
           </button>
         </div>
 
@@ -235,10 +377,25 @@ export default function ClasesAbiertasPage() {
         {showForm && (
           <div className="bg-white shadow-md rounded-lg p-6 mb-6">
             <h3 className="font-semibold mb-4">
-              {editingClass ? 'Editar Clase Abierta' : 'Nueva Clase Abierta'}
+              {editingClass ? 'Editar Clase' : 'Nueva Clase'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Modalidad</label>
+                  <select
+                    value={form.modalidad}
+                    onChange={(e) => setForm({ ...form, modalidad: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  >
+                    {MODALITIES.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
                   <input
@@ -307,6 +464,9 @@ export default function ClasesAbiertasPage() {
                     placeholder="0.00"
                     required
                   />
+                  {form.modalidad === 'extra' && (
+                    <p className="text-xs text-gray-500 mt-1">Sugerido: 50% de la clase habitual.</p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -314,7 +474,7 @@ export default function ClasesAbiertasPage() {
                   type="submit"
                   className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
                 >
-                  {editingClass ? 'Guardar Cambios' : 'Crear Clase Abierta'}
+                  {editingClass ? 'Guardar Cambios' : 'Crear Clase'}
                 </button>
                 <button
                   type="button"
@@ -359,12 +519,25 @@ export default function ClasesAbiertasPage() {
                       Horario: {c.start_hour.slice(0, 5)} - {c.end_hour.slice(0, 5)}
                     </p>
                     <p className="text-sm text-gray-600 capitalize">Nivel: {c.level}</p>
+                    <p className="text-sm text-gray-600 capitalize">Modalidad: {c.modality === 'extra' ? 'Extra' : 'Abierta'}</p>
                     <p className="text-sm text-gray-600">Precio: ${c.price}</p>
                     <p className="text-sm font-semibold text-gray-700 mt-2">
                       Cupo: {c.enrolled_count}/{c.max_students} alumnos inscriptos
                     </p>
                   </div>
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 justify-end">
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 justify-end">
+                    <button
+                      onClick={() => toggleCandidates(c.id)}
+                      className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
+                    >
+                      {expandedCandidates[c.id] ? 'Ocultar candidatos' : 'Candidatos'}
+                    </button>
+                    <button
+                      onClick={() => toggleAttendance(c.id)}
+                      className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
+                    >
+                      {expandedAttendance[c.id] ? 'Ocultar asistencia' : 'Asistencia'}
+                    </button>
                     <button
                       onClick={() => handleEdit(c)}
                       className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
@@ -378,6 +551,106 @@ export default function ClasesAbiertasPage() {
                       Eliminar
                     </button>
                   </div>
+
+                  {expandedCandidates[c.id] && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Postulaciones recibidas</h5>
+                      {loadingCandidates[c.id] ? (
+                        <p className="text-sm text-gray-500">Cargando candidatos...</p>
+                      ) : (candidates[c.id] || []).length === 0 ? (
+                        <p className="text-sm text-gray-500">No hay postulaciones para esta clase.</p>
+                      ) : (
+                        <ul className="space-y-3">
+                          {(candidates[c.id] || []).map((cd) => (
+                            <li key={cd.postulation_id} className="bg-gray-50 rounded-lg p-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="text-sm font-semibold">{cd.full_name}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {cd.level ? `Nivel: ${cd.level} · ` : ''}Deuda: ${Number(cd.balance).toLocaleString('es-AR')}
+                                  </p>
+                                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                    cd.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {cd.status === 'pendiente' ? 'Pendiente' : cd.status === 'lista_espera' ? 'Lista de espera' : cd.status}
+                                  </span>
+                                </div>
+                                <div className="flex gap-1">
+                                  {cd.status === 'pendiente' && (
+                                    <>
+                                      <button
+                                        onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'accept')}
+                                        className="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-green-700"
+                                      >
+                                        Aceptar
+                                      </button>
+                                      <button
+                                        onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'reject')}
+                                        className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-red-600"
+                                      >
+                                        Rechazar
+                                      </button>
+                                      <button
+                                        onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'override')}
+                                        title="Forzar aceptación a pesar de deuda o cupo"
+                                        className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-purple-700"
+                                      >
+                                        Forzar
+                                      </button>
+                                    </>
+                                  )}
+                                  {cd.status === 'lista_espera' && (
+                                    <button
+                                      onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'override')}
+                                      className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-purple-700"
+                                    >
+                                      Forzar ingreso
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  {expandedAttendance[c.id] && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Asistencia</h5>
+                      {loadingAttendance[c.id] ? (
+                        <p className="text-sm text-gray-500">Cargando asistencia...</p>
+                      ) : (attendance[c.id] || []).length === 0 ? (
+                        <p className="text-sm text-gray-500">Aún no hay alumnos inscriptos.</p>
+                      ) : (
+                        <>
+                          <ul className="space-y-2">
+                            {(attendance[c.id] || []).map((a) => (
+                              <li key={a.student_id} className="flex items-center justify-between">
+                                <span className="text-sm">{a.full_name}</span>
+                                <label className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!a.asistio}
+                                    onChange={() => toggleAsistio(c.id, a.student_id)}
+                                    className="w-4 h-4 text-primary-600"
+                                  />
+                                  <span className="text-sm text-gray-600">{a.asistio ? 'Asistió' : 'No asistió'}</span>
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                          <button
+                            onClick={() => saveAttendance(c.id)}
+                            className="mt-4 bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary-700"
+                          >
+                            Guardar asistencia
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

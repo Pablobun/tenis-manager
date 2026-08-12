@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { ensureDebtForEnrollment } = require('../services/billing');
 
 const router = express.Router();
 
@@ -133,6 +134,37 @@ router.get('/week', authenticateToken, authorizeRoles('admin', 'profesor'), asyn
   }
 });
 
+// GET /board/mine — mis clases del alumno (fijas + abiertas asignadas) + saldo de deuda
+router.get('/mine', authenticateToken, authorizeRoles('alumno'), async (req, res) => {
+  try {
+    const [classes] = await db.query(
+      `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date,
+             i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level,
+             i.modalidad as modality, i.cupo_maximo as max_students, i.precio as price,
+             i.estado as status, p.nombre_completo as professor_name
+      FROM grupo_alumnos ga
+      JOIN grupos g ON ga.grupo_id = g.id
+      JOIN instancias_clases i ON g.instancia_id = i.id
+      JOIN perfiles p ON i.profesor_id = p.id
+      WHERE ga.alumno_id = ?
+      ORDER BY i.fecha, i.hora_inicio`,
+      [req.user.id]
+    );
+
+    const [debtRows] = await db.query(
+      `SELECT COALESCE(SUM(monto - monto_pagado), 0) as balance
+       FROM deudas
+       WHERE alumno_id = ? AND estado IN ('pendiente', 'parcial')`,
+      [req.user.id]
+    );
+
+    res.json({ classes, balance: Number(debtRows[0].balance) });
+  } catch (err) {
+    console.error('Error obteniendo clases del alumno:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Endpoint para inscripción / reasignación (Ticket 06 foundation)
 router.post('/enroll', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   const { instance_id, student_id } = req.body;
@@ -166,6 +198,10 @@ router.post('/enroll', authenticateToken, authorizeRoles('admin', 'profesor'), a
     }
 
     await connection.query('INSERT IGNORE INTO grupo_alumnos (grupo_id, alumno_id) VALUES (?, ?)', [groupId, student_id]);
+
+    // Si es una clase fija, generar deuda de mensualidad al momento de la inscripción
+    await ensureDebtForEnrollment(connection, student_id, instance_id);
+
     await connection.commit();
 
     res.json({ message: 'Alumno inscripto exitosamente' });

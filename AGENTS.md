@@ -6,7 +6,7 @@ Nunca hacer commit ni push sin que el usuario lo pida explícitamente. Solo guar
 
 ### Issue tracker.
 
-Local markdown, migrando a GitHub. Issues viven en `.scratch/<feature>/`. Ver `docs/agents/issue-tracker.md`.
+Local markdown. El repo está en GitHub pero los issues viven en `.scratch/<feature>/`. Ver `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

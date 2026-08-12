@@ -14,7 +14,15 @@ Los 5 roles canónicos con strings por defecto. Ver `docs/agents/triage-labels.m
 
 ### Domain docs.
 
-Single-context (raíz). `CONTEXT.md` + `docs/adr/` aún no existen; se crean lazy con `/grill-with-docs`. Ver `docs/agents/domain.md`.
+Single-context (raíz). `CONTEXT.md` existe en la raíz y es la fuente del glosario/decisiones. `docs/adr/` aún no existe; se crea lazy con `/grill-with-docs`. Ver `docs/agents/domain.md`.
+
+### Esquema de BD en español (crítico).
+
+Todas las tablas, columnas y valores ENUM están en **castellano** (`perfiles`, `plantillas_clases`, `instancias_clases`, `grupos`, `grupo_alumnos`, `postulaciones`, `asistencias`, `deudas`, `pagos`). Valores ENUM: `fija`/`extra`/`abierta`, `programada`/`completada`/`cancelada`, `pendiente`/`aceptada`/`rechazada`/`lista_espera`, `admin`/`profesor`/`alumno`. El backend mapea columnas en español a claves JSON en inglés (`fecha as instance_date`, `estado as status`, `nombre_completo as full_name`, `modalidad as modality`). **Nunca mandar valores ENUM en inglés** (`fixed`/`open`): MySQL los rechaza con error `1265` / `WARN_DATA_TRUNCATED`. `instancias_clases.plantilla_id` es `NOT NULL`: las clases abiertas ad-hoc se respaldan con una plantilla inactiva.
+
+### Caché del navegador tras deploy.
+
+Next.js estático genera bundles con hash, pero el HTML puede quedar cacheado (navegador/nginx). Tras un push, verificar siempre con hard refresh (Ctrl+F5) o ventana de incógnito; un bundle viejo cacheado sigue mandando valores/endpoints viejos y confunde el diagnóstico.
 
 ### Verificación local (no hay framework de tests).
 

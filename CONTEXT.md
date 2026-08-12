@@ -52,9 +52,12 @@ Sistema para una profesora de tenis que administra clases, inscripciones y deuda
 - **Histórico de pagos**: en el perfil del alumno → pestaña "Deuda" con desglose por mes. Además, un **resumen global por fecha** (todos los alumnos, por día de pago).
 - **Excepciones de deuda/pago**: la profe tiene control total — puede mantener alumno con deuda, liberar cupo, o ajustar montos.
 - **Apertura de mes**: el sistema avisa "hay alumnos sin pago", la profe decide si libera o mantiene cupos.
-- **Generación de instancias**: cada plantilla fija genera **una instancia por cada aparición de su día de la semana en el mes** (ej. Lunes → 4-5 instancias). El campo `frequency` es metadata; para más clases por semana se crean más plantillas. Se genera solo para plantillas `fixed` activas.
+- **Generación de instancias**: cada plantilla fija genera **una instancia por cada aparición de su día de la semana en el mes** (ej. Lunes → 4-5 instancias). El campo `frequency` es metadata; para más clases por semana se crean más plantillas. Se genera solo para plantillas `fija` activas.
 - **Edición de plantilla**: si cambia el día de la semana se borran las instancias futuras y se regenera el mes; si solo cambian hora/precio/cupo/nivel se **actualizan in-place** las instancias futuras sin tocar fechas.
-- **Desactivar plantilla**: las instancias futuras pasan a `status = cancelled` (quedan como historial) y deja de generar nuevas.
+- **Desactivar plantilla**: las instancias futuras pasan a `estado = cancelada` (quedan como historial) y deja de generar nuevas.
+- **Clase abierta/rotativa (ticket 07)**: la profe crea la instancia **ad-hoc** (fecha, franja, nivel, cupo, precio) sin plantilla recurrente. Como `instancias_clases.plantilla_id` es `NOT NULL`, la instancia se respalda con una **plantilla inactiva** (nunca genera instancias recurrentes). La clase aparece en el tablero de la profe y en **"Clases disponibles"** del alumno.
+- **Postulación a clase abierta (tickets 07/09)**: el alumno se postula desde "Clases disponibles" → fila en `postulaciones` con estado `pendiente`; la profe acepta/rechaza (desarrollado en el ticket 09). El estado de la postulación se muestra al alumno en la tarjeta de la clase (Pendiente / Inscripto / Lleno).
+- **Valores ENUM en BD**: las modalidades se almacenan como `fija` / `extra` / `abierta` y los estados como `programada` / `completada` / `cancelada` / `pendiente` / `aceptada` / `rechazada` / `lista_espera` (castellano, nunca `fixed` / `open`). El backend mapea columnas españolas a claves JSON en inglés (`fecha as instance_date`, `estado as status`, `nombre_completo as full_name`).
 
 ## Términos en disputa
 

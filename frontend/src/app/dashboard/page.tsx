@@ -57,7 +57,7 @@ export default function DashboardPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h2 className="text-xl font-semibold mb-6">Panel de Control</h2>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <a
             href="/tablero"
             className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
@@ -80,6 +80,14 @@ export default function DashboardPage() {
           >
             <h3 className="font-bold text-lg mb-1">Instancias</h3>
             <p className="text-sm text-gray-500">Generación y control mensual</p>
+          </a>
+
+          <a
+            href="/clases-abiertas"
+            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+          >
+            <h3 className="font-bold text-lg mb-1">Clases Abiertas</h3>
+            <p className="text-sm text-gray-500">Creación y control de clases rotativas</p>
           </a>
 
           <a

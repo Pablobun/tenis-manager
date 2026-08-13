@@ -1,6 +1,6 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
-**Fecha**: 2026-08-12
+**Fecha**: 2026-08-13
 **Estado**: Tickets 01-12 IMPLEMENTADOS (08-12 en esta sesión) y PUSHEADOS hasta `b086981` (ticket 07). El diff 08-12 **no está pusheado aún** — verificar en Render tras el push del usuario. Verificado localmente: `node --check` backend OK (13 archivos), `npm.cmd run build` frontend OK (15 páginas).
 **Próxima acción**: Verificación del diff 08-12 en Render (BD real) + ajustes. Sin tickets pendientes conocidos.
 
@@ -52,7 +52,7 @@ C:\GesttionSoftware\
 ├── .github/workflows/deploy-front.yml
 ├── .gitignore                 ← cubre node_modules/, .next/, out/, .env
 ├── AGENTS.md                  ← incluye convención de esquema en español + caché del navegador
-├── CONTEXT.md                 ← glosario + decisiones (incluye ticket 07: clases abiertas, postulaciones)
+├── CONTEXT.md                 ← glosario + decisiones (incluye tickets 07-12: clases abiertas, postulaciones, extras, facturación, pagos)
 ├── .opencode/
 ├── .scratch/tenis-manager/     ← docs, issues, spec, PRD, handoff
 ├── docs/
@@ -178,6 +178,9 @@ C:\GesttionSoftware\
 - Backend: `routes/pagos.js` — `POST /` individual (aplica a deuda pendiente más antigua o `deuda_id`), `POST /batch` (lote), `GET /student/:id` (desglose por mes + historial; accesible por el propio alumno), `GET /summary` (por fecha). Pago suma `monto_pagado` y recalcula estado pendiente/parcial/pagada.
 - Frontend: `/pagos` (pago individual + lote con checkboxes + resumen global por fecha). `/mis-clases`: desglose de deuda expandible por mes + historial de pagos.
 
+### Docs de agentes (esta sesión)
+- `AGENTS.md:9` y `docs/agents/issue-tracker.md` actualizados: el repo está en GitHub (`Pablobun/tenis-manager`) pero los issues/tickets **siguen en markdown local** (`.scratch/tenis-manager/issues/`). No usar GitHub Issues hasta decisión explícita; para migrar hará falta `gh` CLI (hoy no instalada).
+
 ---
 
 ## Estado de los tickets
@@ -208,7 +211,7 @@ C:\GesttionSoftware\
    - Ticket 11: `/facturacion` → preview del mes, generar deudas, abrir mes, liberar cupos de un deudor.
    - Ticket 12: `/pagos` → pago individual, pago por lote, desglose y resumen por fecha.
    - Si algo falla, chequear caché del navegador (hard refresh) antes de diagnosticar.
-2. **Decisiones con el cliente pendientes (bahía en CONTEXT.md)**:
+2. **Decisiones con el cliente pendientes (marcadas en CONTEXT.md)**:
    - Confirmar que la deuda siga bloqueando la postulación (override es la excepción).
    - Definir el precio de la clase extra (50% sugerido) cuando haya clases fijas reales creadas.
    - Confirmar que liberar cupos borra al deudor de las instancias fijas del mes (comportamiento actual).

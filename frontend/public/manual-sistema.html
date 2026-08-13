@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual del Sistema · Riverside Tenis</title>
+<style>
+  :root {
+    --primary: #166534;
+    --primary-dark: #14532d;
+    --primary-light: #d1fae5;
+    --primary-50: #f0fdf4;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--gray-900);
+    background: var(--gray-50);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 260px; flex-shrink: 0;
+    background: var(--primary-dark);
+    color: #fff;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 20px 0;
+  }
+  .sidebar h2 { font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid rgba(255,255,255,.15); }
+  .sidebar nav a {
+    display: block; color: #d1fae5; padding: 8px 18px; font-size: 13.5px;
+    border-left: 3px solid transparent;
+  }
+  .sidebar nav a:hover { background: rgba(255,255,255,.08); color:#fff; text-decoration: none; border-left-color: #fff; }
+  .sidebar nav a.sub { padding-left: 32px; font-size: 12.5px; color:#a7f3d0; }
+  .sidebar .logo { padding: 0 18px 12px; font-size: 13px; color:#86efac; }
+
+  /* Main */
+  .main { flex: 1; max-width: 1000px; margin: 0 auto; padding: 32px 28px 80px; min-width: 0; }
+
+  h1 { font-size: 26px; color: var(--primary-dark); margin-bottom: 4px; }
+  .lead { color: var(--gray-500); font-size: 15px; margin-bottom: 28px; }
+  h2.section {
+    font-size: 22px; color: var(--primary-dark);
+    margin: 44px 0 6px; padding-top: 8px;
+    border-top: 3px solid var(--primary);
+    scroll-margin-top: 20px;
+  }
+  h3 { font-size: 17px; color: var(--primary-dark); margin: 26px 0 8px; }
+  h4 { font-size: 15px; margin: 18px 0 6px; color: var(--gray-700); }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 22px; }
+  li { margin: 4px 0; }
+  code {
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    padding: 1px 6px; border-radius: 6px; font-size: 13px;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  }
+
+  /* Components */
+  .card {
+    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px 18px; margin: 14px 0;
+  }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge.green { background: var(--primary-light); color: var(--primary-dark); }
+  .badge.red { background: var(--red-light); color: var(--red); }
+  .badge.amber { background: var(--amber-light); color: var(--amber); }
+  .badge.gray { background: var(--gray-200); color: var(--gray-700); }
+
+  .callout {
+    border-radius: var(--radius); padding: 12px 16px; margin: 14px 0; font-size: 14px;
+    border-left: 4px solid;
+  }
+  .callout.warn { background: var(--amber-light); border-color: var(--amber); }
+  .callout.danger { background: var(--red-light); border-color: var(--red); }
+  .callout.info { background: var(--primary-50); border-color: var(--primary); }
+  .callout b:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; background:#fff; }
+  th, td { border: 1px solid var(--gray-200); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--gray-100); font-weight: 600; }
+  tr:nth-child(even) td { background: var(--gray-50); }
+
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .kv { font-size: 13.5px; }
+  .kv b { color: var(--gray-700); }
+  .toc { columns: 2; column-gap: 28px; }
+  .toc a { display: block; padding: 3px 0; font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; padding: 14px 0 6px; }
+    .sidebar h2 { padding: 0 16px 10px; }
+    .sidebar nav a { display: inline-block; padding: 6px 12px; font-size: 13px; border-left: none; border-bottom: 2px solid transparent; }
+    .sidebar nav a.sub { padding-left: 12px; }
+    .sidebar .logo { padding: 0 16px 8px; }
+    .main { padding: 22px 16px 60px; }
+    .toc { columns: 1; }
+    h1 { font-size: 22px; }
+  }
+  @media print {
+    .sidebar { display: none; }
+    .layout { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="logo">Sistema de Gestión de Clases de Tenis</div>
+    <h2>Manual del sistema</h2>
+    <nav>
+      <a href="#introduccion">1. Introducción</a>
+      <a href="#roles">Roles y accesos</a>
+      <a href="#uso-profesor">2. Manual · Profesora / Admin</a>
+      <a href="#login-hub" class="sub">Login y panel</a>
+      <a href="#tablero" class="sub">Tablero</a>
+      <a href="#plantillas" class="sub">Plantillas</a>
+      <a href="#instancias" class="sub">Instancias</a>
+      <a href="#clases-abiertas" class="sub">Clases abiertas / extras</a>
+      <a href="#alumnos" class="sub">Alumnos</a>
+      <a href="#facturacion" class="sub">Facturación</a>
+      <a href="#pagos" class="sub">Pagos</a>
+      <a href="#uso-alumno">3. Manual · Alumno</a>
+      <a href="#arquitectura">4. Arquitectura</a>
+      <a href="#stack" class="sub">Stack y deploy</a>
+      <a href="#esquema-bd" class="sub">Esquema de BD</a>
+      <a href="#endpoints" class="sub">Endpoints</a>
+      <a href="#enums" class="sub">Valores ENUM</a>
+      <a href="#reglas">5. Reglas y restricciones</a>
+      <a href="#reglas-negocio" class="sub">De negocio</a>
+      <a href="#reglas-tecnicas" class="sub">Técnicas</a>
+      <a href="#operacion" class="sub">Operación y verificación</a>
+    </nav>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+
+    <h1>Manual del sistema · Riverside Tenis</h1>
+    <p class="lead">Guía de uso, arquitectura y reglas del sistema de gestión de clases de tenis. Pensada para la profesora y administradora del sistema.</p>
+
+    <!-- ============ 1. INTRODUCCION ============ -->
+    <h2 class="section" id="introduccion">1. Introducción</h2>
+    <p>El sistema administra <b>clases de tenis, inscripciones de alumnos y deudas</b>. Es una aplicación <b>web responsive</b> (diseñada primero para celular) accesible desde el navegador del teléfono, la tablet o la computadora.</p>
+    <div class="grid2">
+      <div class="card">
+        <h4>¿Qué se puede hacer?</h4>
+        <ul>
+          <li>Administrar la agenda de clases (día y semana).</li>
+          <li>Crear plantillas de clases recurrentes y generar los meses automáticamente.</li>
+          <li>Crear clases abiertas/rotativas y clases extras con postulación de alumnos.</li>
+          <li>Inscribir, mover y quitar alumnos de las clases.</li>
+          <li>Controlar deudas por alumno y registrar pagos (individual o por lote).</li>
+          <li>Dar a cada alumno su propio acceso para ver sus clases y su saldo.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Los 3 tipos de usuario</h4>
+        <p><span class="badge red">Admin</span> — acceso total, todos los módulos. Al entrar va a su panel.</p>
+        <p><span class="badge green">Profesora</span> — mismo alcance que admin en todos los módulos (tablero, alumnos, plantillas, facturación, pagos…). Es el rol de uso diario.</p>
+        <p><span class="badge amber">Alumno</span> — solo su vista personal: sus clases, su saldo, su perfil y postularse a clases disponibles.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>Acceso al sistema</h4>
+      <p>Para entrar, cada persona usa su <b>email y contraseña</b> en la pantalla de ingreso. Las cuentas las crea la profesora desde <b>Alumnos</b> (o el admin).</p>
+      <p class="kv"><b>Nota:</b> las contraseñas son personales de cada usuario y no se publican en este manual. La profesora define las contraseñas al crear cada cuenta.</p>
+    </div>
+
+    <!-- ============ ROLES ============ -->
+    <h3 id="roles">Dónde va cada rol al ingresar</h3>
+    <table>
+      <tr><th>Rol</th><th>Página al ingresar</th><th>Lo que puede hacer</th><th>Lo que NO ve</th></tr>
+      <tr>
+        <td><span class="badge red">Admin</span></td>
+        <td>Panel de Administración (<code>/admin</code>)</td>
+        <td>Todo: tablero, plantillas, instancias, clases abiertas, alumnos, facturación, pagos.</td>
+        <td>— (acceso total)</td>
+      </tr>
+      <tr>
+        <td><span class="badge green">Profesora</span></td>
+        <td>Tablero (<code>/tablero</code>)</td>
+        <td>Igual que admin en todos los módulos de trabajo diario.</td>
+        <td>El panel <code>/admin</code> (queda reservado al admin).</td>
+      </tr>
+      <tr>
+        <td><span class="badge amber">Alumno</span></td>
+        <td>Mis clases (<code>/mis-clases</code>)</td>
+        <td>Ver sus clases y su saldo, editar nombre/teléfono, postularse o cancelar postulación a clases disponibles.</td>
+        <td>Los módulos internos (tablero, alumnos, plantillas, facturación, pagos). Si los intenta abrir, el sistema lo devuelve a su vista.</td>
+      </tr>
+    </table>
+
+    <div class="callout info"><b>Salir del sistema</b>Hay un botón rojo <b>Salir</b> arriba a la derecha en todas las páginas. Cierra tu sesión de forma segura.</div>
+
+    <!-- ============ 2. USO PROFESORA ============ -->
+    <h2 class="section" id="uso-profesor">2. Manual de uso · Profesora / Admin</h2>
+
+    <h3 id="login-hub">Login y panel central</h3>
+    <p>Ingresás con tu email y contraseña. Si sos <b>profesora</b> caés directo al <b>Tablero</b>; si sos <b>admin</b>, a tu Panel. Desde el panel hay tarjetas de acceso a cada módulo:</p>
+    <div class="pill-row">
+      <span class="badge green">Tablero</span>
+      <span class="badge green">Plantillas</span>
+      <span class="badge green">Instancias</span>
+      <span class="badge green">Clases Abiertas</span>
+      <span class="badge green">Alumnos</span>
+      <span class="badge amber">Facturación</span>
+      <span class="badge gray">Pagos</span>
+    </div>
+    <p>Si en algún momento vas a una página sin permiso, el sistema te redirige automáticamente a la vista correcta.</p>
+
+    <h3 id="tablero">Tablero (vista diaria y semanal)</h3>
+    <p>Es la pantalla principal de trabajo. Muestra las clases del día con la hora, el nivel, la modalidad y el <b>cupo ocupado</b> (ej: <code>2/4</code>).</p>
+    <ul>
+      <li><b>Día / Semana:</b> botón para alternar entre las dos vistas. En el celular podés pasar de día deslizando el dedo (swipe).</li>
+      <li><b>Navegar fechas:</b> flechas ◀ ▶, botón <b>Hoy</b> y <b>Volver a hoy</b>.</li>
+      <li><b>Abrir una clase:</b> tocá la clase → se abre un panel inferior con opciones:
+        <ul>
+          <li><b>Ver alumnos (n/m):</b> lista con el nivel de cada uno. Junto a cada alumno, botón <b>Quitar</b> (te pide confirmación).</li>
+          <li><b>+ Agregar alumno:</b> elegís un alumno de la lista y tocás <b>Inscribir Alumno</b>.</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="callout warn"><b>Restricción</b>No se puede inscribir a una clase que ya tiene el <b>cupo lleno</b> desde el tablero: el sistema avisa "Cupo máximo alcanzado". Las clases <b>canceladas</b> se ven grises y desvanecidas.</div>
+
+    <h3 id="plantillas">Plantillas (clases recurrentes)</h3>
+    <p>Una plantilla define una clase que se repite todas las semanas (día, horario, nivel, modalidad, cupo y precio). Con las plantillas el sistema <b>genera solo las instancias del mes</b>.</p>
+    <ul>
+      <li><b>+ Nueva Plantilla:</b> elegís día de la semana, modalidad (<b>Fija / Extra / Abierta</b>), hora inicio/fin, nivel, cupo máximo, precio por clase y frecuencia. Al crearla, el sistema <b>genera las instancias del mes actual automáticamente</b>.</li>
+      <li><b>Editar:</b> cambiás los datos de la plantilla y el sistema actualiza o regenera las instancias futuras.</li>
+      <li><b>Desactivar:</b> la plantilla deja de generar clases nuevas y las <b>instancias futuras quedan canceladas</b> (como historial, no se borran).</li>
+      <li><b>Activar:</b> vuelve a generar las instancias del mes.</li>
+    </ul>
+    <div class="callout warn"><b>Reglas</b><ul>
+      <li>No se pueden crear dos plantillas activas el mismo día en horarios que se superpongan: el sistema lo rechaza con "Conflicto de horario".</li>
+      <li>La hora de inicio debe ser anterior a la hora de fin.</li>
+      <li>Los niveles: Principiante, Intermedio, Avanzado.</li>
+    </ul></div>
+
+    <h3 id="instancias">Instancias (las clases concretas de cada mes)</h3>
+    <p>Las instancias son cada clase real (una fecha concreta). Se generan en lote desde las plantillas activas.</p>
+    <ul>
+      <li><b>⚙ Generar Mes:</b> crea todas las instancias del mes mostrado para las plantillas fijas activas. Es seguro repetirlo: no duplica clases.</li>
+      <li><b>Navegación de mes:</b> flechas ◀ ▶ y el mes en pantalla.</li>
+      <li>Cada clase muestra horario, modalidad, nivel, cupo, precio y estado (<b>Programada</b> o <b>Cancelada</b>).</li>
+    </ul>
+
+    <h3 id="clases-abiertas">Clases abiertas / rotativas y clases extras</h3>
+    <p>Son clases <b>puntuales</b> (una fecha) a las que los alumnos se <b>postulan</b> y la profesora acepta o rechaza.</p>
+    <ul>
+      <li><b>+ Nueva Clase:</b> elegís modalidad (<b>Abierta/Rotativa</b> o <b>Extra</b>), fecha, nivel, horario, cupo y precio. Si elegís <b>Extra</b>, el sistema sugiere un precio del 50% de la clase habitual.</li>
+      <li><b>Candidatos:</b> cada clase muestra las postulaciones recibidas con el alumno, su nivel y su <b>deuda actual</b>. Para cada postulación pendiente tenés tres acciones:
+        <ul>
+          <li><b>Aceptar</b> — el alumno ocupa un cupo de la clase.</li>
+          <li><b>Rechazar</b> — pasa a la lista de espera.</li>
+          <li><b>Forzar</b> — aceptación por excepción aunque haya deuda o cupo lleno (permite superar el cupo).</li>
+        </ul>
+      </li>
+      <li><b>Asistencia:</b> por clase, marcás quién <b>asistió</b> y quién no, y guardás. En clases abiertas/extras, <b>marcar que asistió genera la deuda</b> de esa clase.</li>
+      <li><b>Editar / Eliminar:</b> modificar datos o borrar la clase (pide confirmación).</li>
+    </ul>
+    <div class="callout info"><b>¿Cuándo cobra un alumno de clase abierta/extra?</b>Por <b>asistencia</b>: solo se le genera la deuda si vino. Si se anota pero no asiste, no debe nada por esa clase.</div>
+
+    <h3 id="alumnos">Alumnos</h3>
+    <ul>
+      <li><b>+ Nuevo Alumno:</b> email, contraseña (se la pasás al alumno para que entre), nombre, teléfono y nivel.</li>
+      <li><b>Editar:</b> cambiar nombre, teléfono o nivel de un alumno.</li>
+      <li><b>Desactivar / Activar:</b> un alumno desactivado no puede ingresar al sistema (su estado se ve en rojo/verde).</li>
+    </ul>
+
+    <h3 id="facturacion">Facturación (deuda mensual de clases fijas)</h3>
+    <p>Las clases <b>fijas</b> se cobran por <b>mensualidad</b>: el alumno debe el mes completo asista o no (ocupó cupo). El sistema calcula la deuda de forma <b>semi-automática</b>.</p>
+    <ol>
+      <li><b>Elegí el mes</b> con el selector de mes.</li>
+      <li>Revisá la tabla <b>"Deuda propuesta (revisá antes de generar)"</b>: alumno, cantidad de clases y monto del mes. Las que ya se generaron figuran como <b>Generada</b>.</li>
+      <li><b>Generar deudas:</b> crea la deuda de mensualidad de ese mes para todos los alumnos de clases fijas. No duplica: si un alumno ya tiene deuda de ese mes, la saltea.</li>
+      <li><b>Abrir mes:</b> cierra los meses anteriores y abre el mes nuevo. Al abrirlo se listan los <b>alumnos con deuda sin pagar</b>.</li>
+      <li><b>Liberar cupos:</b> para un alumno deudor, lo saca de todas las clases fijas del mes. <b>Sus deudas del mes quedan pendientes</b>: revisalas y ajustá/cobrá aparte.</li>
+    </ol>
+    <div class="callout warn"><b>Importante</b>Si inscribís a un alumno en una clase fija <b>a mitad de mes</b>, el sistema le genera la deuda de mensualidad <b>en ese momento</b> (no hace falta esperar a "Generar deudas").</div>
+
+    <h3 id="pagos">Pagos</h3>
+    <ul>
+      <li><b>Pago individual:</b> alumno, monto (mayor a 0), fecha y nota opcional. El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno.</li>
+      <li><b>Pago por lote:</b> marcás varios alumnos y ponés un monto por alumno (el mismo para todos), fecha y nota. Registra todos juntos.</li>
+      <li><b>Resumen global por fecha:</b> todos los pagos agrupados por día, con el total de cada día y los montos por alumno.</li>
+    </ul>
+    <div class="callout info"><b>Pago parcial</b>Si el monto es menor a la deuda, la deuda queda <b>parcial</b> y sigue pendiente lo que falta. Si pagás de más, el excedente queda como pago registrado (sin deuda asignada).</div>
+
+    <!-- ============ 3. USO ALUMNO ============ -->
+    <h2 class="section" id="uso-alumno">3. Manual de uso · Alumno</h2>
+    <p>El alumno entra con su email y contraseña y cae directo a <b>Mis clases</b>, donde ve todo su mundo en una sola página:</p>
+    <ul>
+      <li><b>Mi Deuda:</b> el <b>saldo pendiente</b> arriba (rojo si debés, verde si estás al día). Al tocarlo se abre el detalle:
+        <ul>
+          <li><b>Desglose por mes:</b> cada deuda con su tipo (Mensualidad / Clase extra / Clase abierta), el monto, lo pagado y el saldo.</li>
+          <li><b>Historial de pagos:</b> fecha, monto y nota de cada pago registrado.</li>
+        </ul>
+      </li>
+      <li><b>Mis Clases:</b> tus clases (fijas, abiertas aceptadas y extras) con día, horario, nivel, modalidad y profesora.</li>
+      <li><b>Mi Perfil:</b> tus datos. Podés <b>editar nombre y teléfono</b> (el email y el nivel no se modifican desde acá).</li>
+      <li><b>Clases Disponibles:</b> las clases abiertas/rotativas y extras a las que te podés anotar. Cada tarjeta muestra fecha, horario, nivel, profesora, precio y cupo (<code>X/Y</code>).
+        <ul>
+          <li><b>Postularme:</b> envía tu solicitud a la profesora.</li>
+          <li>Estado de tu postulación: <span class="badge amber">Postulado (Pendiente)</span> · <span class="badge green">Inscripto</span> · <span class="badge gray">Lista de espera</span> · <span class="badge gray">Lleno</span>.</li>
+          <li><b>Cancelar:</b> podés cancelar tu postulación mientras esté pendiente.</li>
+        </ul>
+      </li>
+    </ul>
+    <div class="callout danger"><b>Regla: deuda pendiente</b>Si tenés deuda pendiente, <b>no podés postularte</b> a clases disponibles. Consultá a la profesora para regularizar el pago (o para que autorice la excepción).</div>
+
+    <!-- ============ 4. ARQUITECTURA ============ -->
+    <h2 class="section" id="arquitectura">4. Arquitectura del sistema</h2>
+
+    <h3 id="stack">Stack y despliegue</h3>
+    <table>
+      <tr><th>Capa</th><th>Tecnología</th><th>Dónde corre</th></tr>
+      <tr><td>Frontend</td><td>Next.js (React) + Tailwind, estático (<code>output: export</code>)</td><td>Servidor DigitalOcean (<code>/var/www/tenis-manager/</code>)</td></tr>
+      <tr><td>Backend</td><td>Node.js + Express + mysql2 + JWT</td><td>Render (<code>tenis-manager.onrender.com</code>)</td></tr>
+      <tr><td>Base de datos</td><td>MySQL (<code>tenisriverside</code>) — tablas y valores en español</td><td>Servidor DigitalOcean</td></tr>
+      <tr><td>Autenticación</td><td>JWT + bcrypt, cookie httpOnly, roles en el token</td><td>Backend</td></tr>
+      <tr><td>Despliegue front</td><td>GitHub Actions → SSH + rsync</td><td>Automático al subir a <code>main</code></td></tr>
+      <tr><td>Despliegue back</td><td>Render conectado al repositorio</td><td>Automático al subir a <code>main</code></td></tr>
+      <tr><td>Proxy</td><td>Nginx (config en <code>deploy/nginx-riversideclases.conf</code>)</td><td>SSL + proxy de <code>/api/</code> hacia Render</td></tr>
+    </table>
+    <div class="card">
+      <h4>Flujo de despliegue</h4>
+      <pre style="background:var(--gray-100);border:1px solid var(--gray-200);border-radius:8px;padding:12px;overflow-x:auto;font-size:12.5px;">GitHub (Pablobun/tenis-manager)
+  ├─ push a main ──► GitHub Actions → rsync frontend/out/ → Droplet /var/www/tenis-manager/
+  │                                   └─ instala conf de nginx + reload (proxy /api/)
+  └─ push a main ──► Render → npm install + node server.js → tenis-manager.onrender.com
+                        ▲
+                        └─ nginx del Droplet proxea /api/* → Render (mismo origen)</pre>
+      <p class="kv" style="margin-top:8px">El navegador habla siempre con el mismo dominio; las rutas <code>/api/…</code> se reenvían al backend en Render.</p>
+    </div>
+
+    <h3 id="esquema-bd">Esquema de base de datos</h3>
+    <p>Diez tablas en <b>castellano</b>. Claves (FK) en cascada salvo donde se indica.</p>
+    <table>
+      <tr><th>Tabla</th><th>Qué guarda</th><th>Claves / reglas</th></tr>
+      <tr><td><code>perfiles</code></td><td>Usuarios (admin, profesor, alumno)</td><td>email único · rol ENUM(admin, profesor, alumno) · nivel ENUM · activo</td></tr>
+      <tr><td><code>plantillas_clases</code></td><td>Clases recurrentes (día, horario, modalidad, cupo, precio)</td><td>día 0-6 · modalidad ENUM(fija, extra, abierta) · FK profesor</td></tr>
+      <tr><td><code>instancias_clases</code></td><td>Cada clase concreta (fecha)</td><td><b>plantilla_id NOT NULL</b> · único (plantilla, fecha) · estado ENUM(programada, completada, cancelada)</td></tr>
+      <tr><td><code>grupos</code></td><td>Grupo de alumnos de una instancia</td><td>FK instancia</td></tr>
+      <tr><td><code>grupo_alumnos</code></td><td>Alumno ↔ grupo</td><td>único (grupo, alumno)</td></tr>
+      <tr><td><code>postulaciones</code></td><td>Postulación a clase abierta/extra</td><td>estado ENUM(pendiente, aceptada, rechazada, lista_espera, cancelada) · único (alumno, instancia)</td></tr>
+      <tr><td><code>asistencias</code></td><td>Asistencia por alumno e instancia</td><td>único (alumno, instancia)</td></tr>
+      <tr><td><code>deudas</code></td><td>Deuda del alumno</td><td>tipo ENUM(mensualidad, clase_extra, clase_abierta) · estado ENUM(pendiente, parcial, pagada, anulada) · instancia opcional (SET NULL)</td></tr>
+      <tr><td><code>pagos</code></td><td>Pago registrado</td><td>deuda opcional (SET NULL) · monto · fecha</td></tr>
+      <tr><td><code>ciclos_facturacion</code></td><td>Ciclo mensual de facturación</td><td>mes único · estado ENUM(abierto, cerrado)</td></tr>
+    </table>
+
+    <h3 id="endpoints">Endpoints (API)</h3>
+    <p>Todos bajo <code>/api</code>, autenticados con cookie o token JWT. Los alumnos solo usan los marcados como "alumno".</p>
+    <table>
+      <tr><th>Método</th><th>Ruta</th><th>Rol</th><th>Qué hace</th></tr>
+      <tr><td>POST</td><td>/auth/login · logout · register</td><td>público</td><td>Ingresar, salir, registrarse (los accesos internos los crea la profe)</td></tr>
+      <tr><td>GET</td><td>/auth/me</td><td>cualquiera</td><td>Perfil propio</td></tr>
+      <tr><td>CRUD</td><td>/students</td><td>admin / profesor</td><td>Alumnos (solo rol alumno)</td></tr>
+      <tr><td>CRUD</td><td>/templates</td><td>admin / profesor</td><td>Plantillas (+ genera/cancela instancias)</td></tr>
+      <tr><td>GET/POST</td><td>/instances?month= / /instances/generate</td><td>admin / profesor</td><td>Ver y generar instancias del mes</td></tr>
+      <tr><td>GET/POST/PUT/DELETE</td><td>/instances/open</td><td>admin / profesor</td><td>Clases abiertas y extras (CRUD)</td></tr>
+      <tr><td>GET</td><td>/instances/open</td><td>alumno</td><td>Clases disponibles (solo programadas futuras)</td></tr>
+      <tr><td>POST/DELETE</td><td>/instances/open/:id/postulate</td><td>alumno</td><td>Postularse / cancelar postulación</td></tr>
+      <tr><td>GET</td><td>/instances/open/:id/candidates</td><td>admin / profesor</td><td>Candidatos + deuda de cada uno</td></tr>
+      <tr><td>POST</td><td>/instances/open/:id/candidates/:pid/accept · reject · override</td><td>admin / profesor</td><td>Aceptar, rechazar (→ lista de espera), forzar</td></tr>
+      <tr><td>GET</td><td>/board/day?date= / /board/week?date=</td><td>admin / profesor</td><td>Tablero del día / de la semana</td></tr>
+      <tr><td>GET</td><td>/board/mine</td><td>alumno</td><td>Mis clases + saldo</td></tr>
+      <tr><td>POST/DELETE</td><td>/board/enroll</td><td>admin / profesor</td><td>Inscribir / quitar alumno</td></tr>
+      <tr><td>GET/POST</td><td>/asistencias/:instanceId</td><td>admin / profesor</td><td>Ver / registrar asistencia</td></tr>
+      <tr><td>GET/POST</td><td>/billing/preview · /generate · /open · /release-slots</td><td>admin / profesor</td><td>Facturación mensual</td></tr>
+      <tr><td>GET</td><td>/billing/debtors?month=</td><td>admin / profesor</td><td>Deudores del mes</td></tr>
+      <tr><td>PUT</td><td>/billing/adjust/:deudaId</td><td>admin / profesor</td><td>Ajustar monto de una deuda</td></tr>
+      <tr><td>POST</td><td>/pagos · /pagos/batch</td><td>admin / profesor</td><td>Pago individual / por lote</td></tr>
+      <tr><td>GET</td><td>/pagos/student/:id</td><td>profesor / alumno propio</td><td>Desglose de deuda + historial</td></tr>
+      <tr><td>GET</td><td>/pagos/summary?date=</td><td>admin / profesor</td><td>Resumen global de pagos por fecha</td></tr>
+      <tr><td>GET</td><td>/health</td><td>público</td><td>Estado del servidor</td></tr>
+    </table>
+
+    <h3 id="enums">Valores ENUM en español ↔ claves de la API</h3>
+    <table>
+      <tr><th>Campo de BD</th><th>Valores en español</th><th>Clave en la API</th></tr>
+      <tr><td>rol</td><td>admin · profesor · alumno</td><td>role</td></tr>
+      <tr><td>nivel</td><td>principiante · intermedio · avanzado</td><td>level</td></tr>
+      <tr><td>modalidad</td><td>fija · extra · abierta</td><td>modality</td></tr>
+      <tr><td>estado (instancia)</td><td>programada · completada · cancelada</td><td>status</td></tr>
+      <tr><td>estado (postulación)</td><td>pendiente · aceptada · rechazada · lista_espera · cancelada</td><td>status</td></tr>
+      <tr><td>tipo de deuda</td><td>mensualidad · clase_extra · clase_abierta</td><td>tipo</td></tr>
+      <tr><td>estado (deuda)</td><td>pendiente · parcial · pagada · anulada</td><td>status</td></tr>
+      <tr><td>ciclo</td><td>abierto · cerrado</td><td>—</td></tr>
+    </table>
+    <div class="callout danger"><b>Crítico para desarrolladores</b>La base de datos usa valores en <b>castellano</b>. NUNCA se deben enviar valores en inglés (<code>fixed</code>, <code>open</code>): MySQL los rechaza con error 1265 y rompe la operación. En la API, los nombres de campo sí van en inglés (mapping), pero los <b>valores</b> siempre en español.</div>
+
+    <!-- ============ 5. REGLAS ============ -->
+    <h2 class="section" id="reglas">5. Reglas y restricciones de las acciones</h2>
+
+    <h3 id="reglas-negocio">Reglas de negocio</h3>
+    <div class="card"><h4>Deuda como condición de ingreso</h4>
+      <ul>
+        <li>Un alumno con <b>deuda pendiente o parcial</b> <b>no puede postularse</b> a clases disponibles.</li>
+        <li>La profesora tiene dos excepciones: <b>Forzar</b> en la postulación (acepta aunque haya deuda o cupo lleno) y aceptar con <b>override</b> desde candidatos.</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Cupos y lista de espera</h4>
+      <ul>
+        <li>Clase <b>llena</b> al momento de postularse → el alumno queda <b>directo en lista de espera</b>.</li>
+        <li>Al <b>aceptar</b>, se vuelve a verificar el cupo: si se llenó, pasa a lista de espera automáticamente.</li>
+        <li><b>Forzar / override</b> puede superar el cupo máximo.</li>
+        <li>Inscripción directa desde el tablero con cupo lleno → rechazada ("Cupo máximo alcanzado").</li>
+        <li>No se permiten inscriptos duplicados en la misma clase (un mismo alumno no aparece dos veces).</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Cómo se genera la deuda</h4>
+      <ul>
+        <li><b>Clase fija</b> (mensualidad): al <b>inscribir</b> a un alumno se le genera la deuda de ese mes de inmediato; y la profe puede generarla en lote desde Facturación. Se debe el mes completo, asista o no.</li>
+        <li><b>Clase abierta / extra</b>: al <b>marcar asistencia "asistió"</b> se le genera la deuda de esa clase (tipo <code>clase_abierta</code> / <code>clase_extra</code>). Se cobra por asistencia.</li>
+        <li>Volver a marcar asistencia <b>no duplica</b> la deuda. Pero <b>desmarcar la asistencia no borra</b> una deuda ya generada.</li>
+        <li>Las deudas pueden <b>ajustarse</b> (cambiar el monto, incluso a 0) desde facturación. Montos negativos no están permitidos.</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Cómo se aplican los pagos</h4>
+      <ul>
+        <li>El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno (o a una deuda puntual si se elige).</li>
+        <li>Si el monto cubre la deuda → queda <b>pagada</b>; si cubre parte → queda <b>parcial</b>.</li>
+        <li>Se puede <b>pagar de más</b> (el pago se registra igual; el excedente queda sin deuda asignada).</li>
+        <li>Si el alumno <b>no tiene deuda</b>, el pago igual se registra (queda como pago sin deuda asociada).</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Postulaciones</h4>
+      <ul>
+        <li>El alumno <b>solo puede cancelar</b> su postulación si está <b>pendiente</b>. Una vez respondida (aceptada/lista de espera), no.</li>
+        <li>Tras cancelar o ser rechazado, puede <b>volver a postularse</b> a la misma clase.</li>
+        <li>"Rechazar" a un candidato lo manda a <b>lista de espera</b> (no se borra: puede entrar si se libera un cupo y la profe lo acepta).</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Alumnos</h4>
+      <ul>
+        <li>Un alumno <b>desactivado</b> no puede ingresar al sistema.</li>
+        <li>Desde su cuenta, el alumno solo edita <b>nombre y teléfono</b> (email y nivel los maneja la profe).</li>
+        <li>El alumno <b>no puede ver</b> las deudas/pagos de otros alumnos.</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Apertura de mes y liberación de cupos</h4>
+      <ul>
+        <li><b>Abrir mes</b> cierra los meses anteriores y abre el nuevo; lista a los alumnos que no pagaron.</li>
+        <li><b>Liberar cupos</b> saca al alumno deudor de todas las clases fijas del mes, pero <b>no anula sus deudas</b>: quedan pendientes para revisar/cobrar manualmente.</li>
+      </ul>
+    </div>
+
+    <h3 id="reglas-tecnicas">Reglas técnicas</h3>
+    <ul>
+      <li><b>Esquema en español:</b> todas las tablas, columnas y valores ENUM en castellano. El backend traduce a claves JSON en inglés solo en las respuestas.</li>
+      <li><b>Plantilla de respaldo:</b> las clases abiertas/extras se guardan con una <b>plantilla inactiva</b> de respaldo (la columna <code>plantilla_id</code> es obligatoria). Esa plantilla no genera clases recurrentes.</li>
+      <li><b>Borrar una clase</b> elimina su plantilla de respaldo y, en cascada, sus grupos, inscripciones, asistencias y postulaciones. Las <b>deudas NO se borran</b> (pierden la referencia a la clase pero siguen existiendo).</li>
+      <li><b>Desactivar plantilla</b> cancela las instancias futuras (quedan como historial, no se eliminan).</li>
+      <li><b>Generar mes</b> es seguro de repetir (idempotente): no crea instancias duplicadas.</li>
+      <li><b>Horarios:</b> el día de la semana se maneja como 0=Lunes … 6=Domingo internamente.</li>
+      <li><b>Autenticación:</b> sesión de 7 días mediante cookie segura; roles verificados en el backend por cada ruta.</li>
+    </ul>
+
+    <h3 id="operacion">Operación y verificación (notas técnicas para la profesora/desarrollador)</h3>
+    <div class="card">
+      <h4>Después de una actualización</h4>
+      <ul>
+        <li>El sitio se actualiza solo al subir cambios a <code>main</code> (frontend por GitHub Actions, backend por Render).</li>
+        <li>Si algo "se ve viejo" tras una actualización, hacer <b>recarga forzada</b> (Ctrl+F5 en la computadora) o abrir en una ventana de incógnito: el navegador puede estar usando una versión cacheada.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Verificación sin pruebas automáticas</h4>
+      <ul>
+        <li>Backend: <code>node --check</code> por archivo y arrancar <code>node server.js</code>.</li>
+        <li>Frontend: <code>npm.cmd run build</code> (en Windows, <code>npm.ps1</code> está bloqueado por la política de ejecución → usar <code>npm.cmd</code>).</li>
+        <li>Los flujos contra la base de datos real se prueban en el sitio publicado.</li>
+      </ul>
+    </div>
+    <div class="callout info"><b>Reglas del proyecto para agentes / desarrolladores</b>No hacer commit ni push sin pedido explícito del dueño. Los issues viven en <code>.scratch/tenis-manager/issues/</code>. El estado vivo del proyecto está en <code>.scratch/tenis-manager/handoff.md</code>.</div>
+
+  </main>
+</div>
+</body>
+</html>

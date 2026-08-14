@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS perfiles (
   password_hash VARCHAR(255) NOT NULL,
   nombre_completo VARCHAR(255) NOT NULL,
   telefono VARCHAR(20),
+  saldo_a_favor DECIMAL(10,2) NOT NULL DEFAULT 0,
   rol ENUM('admin', 'profesor', 'alumno') NOT NULL DEFAULT 'alumno',
   nivel ENUM('principiante', 'intermedio', 'avanzado'),
   activo TINYINT(1) DEFAULT 1,

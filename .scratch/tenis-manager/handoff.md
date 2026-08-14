@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
 **Fecha**: 2026-08-14
-**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)** + **manuales actualizados (`manual-sistema.html` y nuevo `manual-usuario.html`)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
-**Próxima acción**: push del usuario → verificar en Render los flujos de BD (postulación con balance neto, saldo a favor, preview de facturación, generate con include_past) con hard refresh.
+**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)** + **manuales actualizados (`manual-sistema.html`, nuevo `manual-usuario.html` y nuevo `manual-profesor.html`)** + **acceso al manual desde el sistema (enlace "Manual" por rol en la nav, abre en pestaña nueva)** + **skill `doesntbreak` vendida en `.opencode/skills/`**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
+**Próxima acción**: push del usuario → verificar en Render los flujos de BD (postulación con balance neto, saldo a favor, preview de facturación, generate con include_past) y en el droplet los 3 manuales + el enlace "Manual" por rol, con hard refresh.
 
 ---
 
@@ -52,6 +52,7 @@ C:\GesttionSoftware\
 ├── AGENTS.md                  ← convención de esquema en español + caché del navegador + reglas de commit/push
 ├── CONTEXT.md                 ← glosario + decisiones (incluye tickets 07-12 y criterios nuevos del grilling)
 ├── .opencode/
+│   └── skills/doesntbreak/    ← ★ NUEVO: skill responsive mobile-first vendida (SKILL.md + references/patterns.md + README MIT)
 ├── .scratch/tenis-manager/
 │   ├── handoff.md             ← este archivo
 │   ├── modificaciones.md      ← ★ 15 observaciones + TODAS las decisiones resueltas (la fuente de la próxima sesión)
@@ -73,7 +74,7 @@ C:\GesttionSoftware\
 └── frontend/
     ├── package.json / next.config.js (output: 'export' + trailingSlash)
     ├── tailwind.config.js     ← OK: paleta A (canvas #F2F7F2)
-    ├── src/components/Navigation.tsx · LevelChip.tsx   ← NUEVOS (nav persistente + chip de nivel)
+    ├── src/components/Navigation.tsx · LevelChip.tsx   ← OK (nav persistente + chip de nivel) + ★ enlace "Manual" por rol (abre pestaña nueva)
     └── src/app/
         ├── page.tsx / layout.tsx / globals.css / login/page.tsx  ← OK (globals con .card/.btn/.input/.label/.chip/.table-head)
         ├── dashboard/page.tsx · admin/page.tsx   ← OK (rewrite con Navigation + .card)
@@ -83,7 +84,8 @@ C:\GesttionSoftware\
         ├── perfil/page.tsx   ← NUEVO (item 11: nombre/tel + change-password)
         └── public/
             ├── manual-sistema.html   ← manual del sistema (profe/admin + alumno + arquitectura + reglas) — actualizado con items 1-15
-            └── manual-usuario.html   ← ★ NUEVO: manual para el usuario final (alumno), sin Arquitectura ni secciones internas
+            ├── manual-profesor.html  ← ★ NUEVO: manual-sistema SIN la sección de Arquitectura (renumerada 5→4)
+            └── manual-usuario.html   ← manual para el usuario final (alumno), sin Arquitectura ni secciones internas
 ```
 
 ---
@@ -186,6 +188,14 @@ C:\GesttionSoftware\
 - **`frontend/public/manual-usuario.html`** (nuevo): manual para el usuario final (alumno), mismo estilo/CSS pero SIN la sección de Arquitectura ni el manual interno de profe/admin. Interpretación: "idéntico pero para usuario" = manual de alumno; si se quería copia literal solo sin la sección 4, ajustar.
 - `npm.cmd run build` OK tras los cambios (16 rutas).
 
+### 7. Manual de la profesora + acceso al manual desde el sistema + skill responsive — esta sesión
+- **`frontend/public/manual-profesor.html`** (nuevo): **todo** el contenido de `manual-sistema.html` **sin el item de Arquitectura** (stack/deploy, esquema BD, endpoints, ENUMs). Incluye Introducción, Roles, Manual Profesora/Admin, Manual Alumno y Reglas y restricciones (renumerada de 5 → 4). Mismo CSS/estilo.
+- **Acceso al manual desde el sistema** (`Navigation.tsx`): enlace **"Manual"** en la barra persistente, con destino **según rol**:
+  - **admin** → `/manual-sistema.html` · **profesor** → `/manual-profesor.html` · **alumno** → `/manual-usuario.html`
+  - Dónde aparece: PC → final de la barra superior; celular admin/profe → dentro del panel "Menú"; celular alumno → ítem directo en la barra inferior (no tienen botón Menú).
+  - Abre en **pestaña nueva** (`target="_blank" rel="noopener noreferrer"`).
+- **Skill `doesntbreak` vendida** en `.opencode/skills/doesntbreak/` (SKILL.md + `references/patterns.md` + README MIT). Diseño responsive mobile-first (320px+), tailwind-aware, con modo review. Origen: `https://github.com/Kyaa-A/doesntbreak` (MIT © 2026 Asnari). **Auditada y segura** (solo markdown; se dejaron fuera a propósito los hooks/scripts/update-check del repo). Adaptación local: sección 13 de `patterns.md` con tokens/patrones de Riverside. Se activa sola al tocar layout web; disponible recién en la **próxima sesión** (las skills se cargan al inicio).
+
 ---
 
 ## Sesión siguiente (prioridad)
@@ -211,7 +221,7 @@ C:\GesttionSoftware\
    - Preview de facturación con detalle/totales y generate con auto-saldo.
    - `POST /auth/change-password` y reset desde `/alumnos`.
    - Regenerar mes con `include_past: false` (solo fechas futuras).
-3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos). Además: `manual-sistema.html` y `manual-usuario.html` servidos en `/manual-sistema.html` y `/manual-usuario.html`.
+3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos). Además: `manual-sistema.html`, `manual-profesor.html` y `manual-usuario.html` servidos en sus URLs, y el enlace **"Manual"** en la nav apuntando al manual correcto por rol (admin/profesor/alumno) y abriendo en pestaña nueva.
 4. Si todo OK, considerar limpiar estado muerto en `mis-clases/page.tsx` (estado `profile/editing/form/saving/message/loading` + `fetchProfile`/`handleSubmit` quedaron sin uso tras quitar "Mi Perfil") — inofensivo, no bloquea build.
 
 ---
@@ -240,6 +250,7 @@ C:\GesttionSoftware\
 - **code-review** — revisar el diff de implementación antes del push del usuario.
 - **grill-with-docs** — si surge una decisión nueva de dominio (ej. arreglar el riesgo de `/auth/register`, o definir qué pasa con las clases canceladas en facturación).
 - **prototype** (rama UI) — opcional, si el pulido estético quiere explorarse con variantes antes de decidir (ya se decidió Paleta A, así que probablemente no haga falta).
+- **doesntbreak** — skill responsive mobile-first vendida esta sesión; aplicarla/revisarla al tocar cualquier layout del frontend (se carga en la próxima sesión).
 
 ---
 

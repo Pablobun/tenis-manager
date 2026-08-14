@@ -184,7 +184,7 @@ export default function AlumnosPage() {
       <Navigation title="Alumnos" />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div>
             <h2 className="text-lg font-semibold">Gestión de Alumnos</h2>
             <p className="text-sm text-gray-500">Listado y administración de alumnos</p>
@@ -329,7 +329,7 @@ export default function AlumnosPage() {
         ) : students.length === 0 ? (
           <p className="text-gray-500">No hay alumnos registrados.</p>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>

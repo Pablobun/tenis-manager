@@ -202,7 +202,7 @@ export default function FacturacionPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input
               type="month"
               value={month}
@@ -234,7 +234,7 @@ export default function FacturacionPage() {
         {loading ? (
           <p className="text-gray-500">Calculando deuda del mes...</p>
         ) : (
-          <div className="card overflow-hidden mb-8">
+          <div className="card mb-8">
             {items.length === 0 ? (
               <p className="p-6 text-gray-500 text-center">No hay alumnos inscriptos en clases fijas para este mes.</p>
             ) : (
@@ -255,65 +255,67 @@ export default function FacturacionPage() {
                     </div>
                   </div>
                 )}
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="table-head">Alumno</th>
-                      <th className="table-head">Clases × Precio</th>
-                      <th className="table-head">Total</th>
-                      <th className="table-head">Detalle</th>
-                      <th className="table-head">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {items.map((it) => (
-                      <>
-                        <tr key={it.alumno_id}>
-                          <td className="px-4 py-3 text-sm font-medium">
-                            {it.full_name}
-                            {it.inscripcion_fecha && (
-                              <p className="text-xs text-gray-400">
-                                Inscripción: {it.inscripcion_fecha.slice(0, 10)}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {it.clases} × ${Number(it.precio_por_clase).toLocaleString('es-AR', { maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="px-4 py-3 text-sm font-semibold">${Number(it.monto).toLocaleString('es-AR')}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <button
-                              onClick={() => setExpanded((prev) => ({ ...prev, [it.alumno_id]: !prev[it.alumno_id] }))}
-                              className="text-primary-600 hover:text-primary-800 text-sm font-semibold"
-                            >
-                              {expanded[it.alumno_id] ? 'Ocultar' : 'Ver clases'}
-                            </button>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {it.generated ? (
-                              <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Generada</span>
-                            ) : (
-                              <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">Pendiente</span>
-                            )}
-                          </td>
-                        </tr>
-                        {expanded[it.alumno_id] && (
-                          <tr key={`${it.alumno_id}-detalle`}>
-                            <td colSpan={5} className="px-4 py-2 bg-gray-50">
-                              <ul className="text-xs text-gray-600 space-y-1">
-                                {it.detalle.map((dd) => (
-                                  <li key={dd.instancia_id}>
-                                    {dd.instance_date.slice(0, 10)} · {dd.start_hour.slice(0, 5)} — ${Number(dd.price).toLocaleString('es-AR')}
-                                  </li>
-                                ))}
-                              </ul>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="table-head">Alumno</th>
+                        <th className="table-head">Clases × Precio</th>
+                        <th className="table-head">Total</th>
+                        <th className="table-head">Detalle</th>
+                        <th className="table-head">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {items.map((it) => (
+                        <>
+                          <tr key={it.alumno_id}>
+                            <td className="px-4 py-3 text-sm font-medium">
+                              {it.full_name}
+                              {it.inscripcion_fecha && (
+                                <p className="text-xs text-gray-400">
+                                  Inscripción: {it.inscripcion_fecha.slice(0, 10)}
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {it.clases} × ${Number(it.precio_por_clase).toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-3 text-sm font-semibold">${Number(it.monto).toLocaleString('es-AR')}</td>
+                            <td className="px-4 py-3 text-sm">
+                              <button
+                                onClick={() => setExpanded((prev) => ({ ...prev, [it.alumno_id]: !prev[it.alumno_id] }))}
+                                className="text-primary-600 hover:text-primary-800 text-sm font-semibold"
+                              >
+                                {expanded[it.alumno_id] ? 'Ocultar' : 'Ver clases'}
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {it.generated ? (
+                                <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Generada</span>
+                              ) : (
+                                <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">Pendiente</span>
+                              )}
                             </td>
                           </tr>
-                        )}
-                      </>
-                    ))}
-                  </tbody>
-                </table>
+                          {expanded[it.alumno_id] && (
+                            <tr key={`${it.alumno_id}-detalle`}>
+                              <td colSpan={5} className="px-4 py-2 bg-gray-50">
+                                <ul className="text-xs text-gray-600 space-y-1">
+                                  {it.detalle.map((dd) => (
+                                    <li key={dd.instancia_id}>
+                                      {dd.instance_date.slice(0, 10)} · {dd.start_hour.slice(0, 5)} — ${Number(dd.price).toLocaleString('es-AR')}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </>
             )}
           </div>
@@ -323,7 +325,7 @@ export default function FacturacionPage() {
         {debtors.length === 0 ? (
           <p className="text-gray-500">No hay alumnos con deuda pendiente para este mes.</p>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>

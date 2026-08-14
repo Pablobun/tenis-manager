@@ -238,7 +238,7 @@ export default function PlantillasPage() {
       <Navigation title="Plantillas" />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div>
             <h2 className="text-lg font-semibold">Plantillas de Clases</h2>
             <p className="text-sm text-gray-500">Clases recurrentes que generan instancias del mes</p>
@@ -397,7 +397,7 @@ export default function PlantillasPage() {
         ) : templates.length === 0 ? (
           <p className="text-gray-500">No hay plantillas registradas.</p>
         ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>

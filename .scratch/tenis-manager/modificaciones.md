@@ -87,6 +87,29 @@ En `/facturacion` se agrega/mejora:
 - El saldo a favor **se aplica automáticamente** a la próxima deuda del alumno; además la profe puede usarlo como pago manual desde `/pagos`.
 - **BD ya aplicada en producción.** Script de referencia idempotente en `backend/sql/migrations/001_saldo_a_favor.sql` (agrega columna + inicializa con pagos huérfanos existentes). `schema.sql` ya actualizado con la columna.
 
+### 16 · Menú móvil unificado (una sola zona)
+- El bottom nav del celular mostraba los módulos principales abajo y, al tocar **Menú**, los adicionales aparecían en un **panel aparte arriba** del contenido → el usuario percibía la navegación partida en dos zonas.
+- **Fix**: se elimina el panel desplegable superior y el botón **Menú expande el propio bottom nav** en una segunda fila con los módulos restantes + Manual (todo en la misma zona, abajo).
+  ```
+  Cerrado:  [Tablero][Clases A.][Facturación][Pagos][Menú ▾]
+  Abierto:  [Tablero][Clases A.][Facturación][Pagos][Menú ▴]
+            [Plantillas][Instancias][Alumnos][Mi Perfil][Manual]
+  ```
+- Segunda fila `grid grid-cols-5` con `text-[11px]` y `truncate` (entra en 320px).
+- El botón Menú alterna con indicador ▴/▾. Alumno sin cambios (sus 3 ítems ya van directos en la barra inferior). PC sin cambios.
+- Archivo: `frontend/src/components/Navigation.tsx`.
+
+### 17 · Scroll horizontal contenido en tablas (regla doesntbreak 9)
+- Las tablas de **facturación (2)**, **plantillas (1)** y **alumnos (1)** excedían el ancho del celular y quedaban **recortadas** por el `card overflow-hidden` (columnas cortadas: "Mod…", totales, acciones) sin posibilidad de scroll.
+- **Fix**: cada `<table>` se envuelve en `<div className="overflow-x-auto">` (el scroll queda **dentro** del contenedor, nunca en la página) y se quita el `overflow-hidden` de la tarjeta.
+- Regla aplicada: "contain the scroll" — un scroll horizontal en la tabla es correcto; un scroll horizontal de página es un bug.
+- Archivos: `facturacion/page.tsx`, `plantillas/page.tsx`, `alumnos/page.tsx`.
+
+### 18 · Botones y headers con wrap (celular)
+- Headers `flex justify-between` sin `flex-wrap` apretaban título + botón "+ Nueva…" en pantallas chicas; en facturación el selector de mes + "Generar deudas" + "Abrir mes" se cortaban.
+- **Fix**: se agrega `flex-wrap gap-3` (o `gap-2`) a los headers/acciones de facturación, plantillas, alumnos, instancias y clases-abiertas.
+- Archivos: `facturacion/page.tsx`, `plantillas/page.tsx`, `alumnos/page.tsx`, `instancias/page.tsx`, `clases-abiertas/page.tsx`.
+
 ## Lista de observaciones (pendientes y resueltas)
 
 Estado: ✅ resuelto · ⬜ pendiente
@@ -129,3 +152,9 @@ Estado: ✅ resuelto · ⬜ pendiente
 ## Pagos
 
 15. **Monto a favor del alumno**: en pagos, si se carga un valor superior a la deuda debe quedar como monto a favor del alumno. ✅ (columna `saldo_a_favor` — ver 15)
+
+## Responsive / visual (celular)
+
+16. **Menú partido en dos zonas**: al tocar "Menú", una parte de la navegación quedaba arriba y la otra abajo; se pide todo en la misma zona. ✅ (bottom nav expandible en una sola zona — ver 16)
+17. **Tablas sin scroll en celular**: facturación, plantillas y alumnos mostraban las columnas cortadas y sin poder desplazarse. ✅ (scroll horizontal contenido por tabla — ver 17)
+18. **Botones/headers apretados en celular**: título + botón "+ Nueva…" y las acciones de facturación se cortaban en pantallas chicas. ✅ (flex-wrap en headers — ver 18)

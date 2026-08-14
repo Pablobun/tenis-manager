@@ -240,6 +240,8 @@ C:\GesttionSoftware\
 - **Next.js**: `trailingSlash: true` genera carpetas (`clases-abiertas/index.html`).
 - Roles en BD: `admin`, `profesor`, `alumno`.
 - **Registro público** (`POST /auth/register`) acepta `role` del body sin restricción — posible escalada de privilegios a documentar/revisar (decisión pendiente, no se grilló).
+- **Manuales** (en `frontend/public/`, servidos como estáticos): `manual-sistema.html` (todo, con Arquitectura), `manual-profesor.html` (sin Arquitectura), `manual-usuario.html` (alumno, sin Arquitectura ni manual interno). Acceso desde la nav con el enlace **"Manual"** que redirige por rol. Recordar: los cambios a `frontend/public/` salen en el build de Next (output: export los copia a `out/`).
+- **Skill `doesntbreak`**: `.opencode/skills/doesntbreak/` — se descubre automáticamente en la próxima sesión; solo markdown (sin scripts/red).
 
 ---
 

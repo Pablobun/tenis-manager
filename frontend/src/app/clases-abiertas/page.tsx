@@ -361,7 +361,7 @@ export default function ClasesAbiertasPage() {
       <Navigation title="Clases Abiertas" />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div>
             <h2 className="text-lg font-semibold">Clases Abiertas / Rotativas y Extras</h2>
             <p className="text-sm text-gray-500">Clases de una sola fecha donde los alumnos se postulan libremente</p>

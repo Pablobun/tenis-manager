@@ -118,37 +118,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
         </div>
       </header>
 
-      {/* Panel desplegable "Menú" (mobile) */}
-      {menuOpen && (
-        <div className="md:hidden bg-primary-900 text-white shadow-lg z-30 border-t border-primary-700">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2">
-            {menuLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setMenuOpen(false)}
-                className={`py-2 px-2 rounded-lg text-sm ${isActive(l.href) ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
-              >
-                {l.label}
-              </Link>
-            ))}
-            <a
-              href={manualHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
-              className="py-2 px-2 rounded-lg text-sm hover:bg-primary-800"
-            >
-              Manual
-            </a>
-            {menuLinks.length === 0 && (
-              <span className="py-2 px-2 text-sm text-primary-200">Sin módulos adicionales</span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Barra inferior fija (mobile) */}
+      {/* Barra inferior fija (mobile) — todo en una sola zona */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-primary-900 text-white border-t border-primary-700">
         <div className="flex items-stretch">
           {mainLinks.slice(0, 4).map((l) => (
@@ -168,12 +138,38 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
           {menuLinks.length > 0 && (
             <button
               onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
               className={`flex-1 py-3 text-xs text-center transition ${menuOpen ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
             >
-              Menú
+              Menú {menuOpen ? '▴' : '▾'}
             </button>
           )}
         </div>
+
+        {/* Segunda fila expandible del bottom nav (módulos adicionales + Manual) */}
+        {menuOpen && menuLinks.length > 0 && (
+          <div className="grid grid-cols-5 border-t border-primary-700">
+            {menuLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className={`py-3 px-1 text-[11px] text-center truncate transition ${isActive(l.href) ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
+              >
+                {l.label}
+              </Link>
+            ))}
+            <a
+              href={manualHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 px-1 text-[11px] text-center truncate transition hover:bg-primary-800"
+            >
+              Manual
+            </a>
+          </div>
+        )}
       </nav>
     </>
   );

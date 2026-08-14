@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { applySaldoToDebt } = require('../services/billing');
 
 const router = express.Router();
 
@@ -34,6 +35,34 @@ async function computeMonthlyBilling(yearMonth) {
   return rows;
 }
 
+// Detalle por clase del mes (para la claridad de facturación — item 13)
+async function computeMonthlyDetail(yearMonth) {
+  const { start, end } = monthRange(yearMonth);
+  const [rows] = await db.query(
+    `SELECT ga.alumno_id, i.id as instancia_id, i.fecha as instance_date,
+            i.hora_inicio as start_hour, i.precio as price
+     FROM grupo_alumnos ga
+     JOIN grupos g ON ga.grupo_id = g.id
+     JOIN instancias_clases i ON g.instancia_id = i.id
+     WHERE i.modalidad = 'fija'
+       AND i.fecha BETWEEN ? AND ?
+       AND i.estado <> 'cancelada'
+     ORDER BY ga.alumno_id, i.fecha, i.hora_inicio`,
+    [start, end]
+  );
+  const byStudent = {};
+  for (const r of rows) {
+    if (!byStudent[r.alumno_id]) byStudent[r.alumno_id] = [];
+    byStudent[r.alumno_id].push({
+      instancia_id: r.instancia_id,
+      instance_date: r.instance_date,
+      start_hour: r.start_hour,
+      price: Number(r.price)
+    });
+  }
+  return byStudent;
+}
+
 // GET /billing/preview?month=YYYY-MM — deuda propuesta del mes (semi-automática, profe aprueba/ajusta)
 router.get('/preview', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   const { month } = req.query;
@@ -42,6 +71,7 @@ router.get('/preview', authenticateToken, authorizeRoles('admin', 'profesor'), a
   }
   try {
     const items = await computeMonthlyBilling(month);
+    const detail = await computeMonthlyDetail(month);
 
     // Marcar cuáles alumnos ya tienen deuda generada para el mes (para no duplicar)
     const [existing] = await db.query(
@@ -50,15 +80,54 @@ router.get('/preview', authenticateToken, authorizeRoles('admin', 'profesor'), a
     );
     const existingSet = new Set(existing.map((r) => String(r.alumno_id)));
 
-    const preview = items.map((it) => ({
-      alumno_id: it.alumno_id,
-      full_name: it.full_name,
-      clases: it.clases,
-      monto: Number(it.monto),
-      generated: existingSet.has(String(it.alumno_id))
-    }));
+    // Deudas por inscripción a mitad de mes (deuda inmediata con instancia_id) — item 13 #7
+    const [inscripciones] = await db.query(
+      `SELECT d.alumno_id, MAX(i.fecha) as fecha
+       FROM deudas d
+       JOIN instancias_clases i ON d.instancia_id = i.id
+       WHERE d.mes_facturacion = ? AND d.instancia_id IS NOT NULL
+       GROUP BY d.alumno_id`,
+      [month]
+    );
+    const inscripcionByStudent = {};
+    for (const ins of inscripciones) {
+      inscripcionByStudent[String(ins.alumno_id)] = ins.fecha;
+    }
 
-    res.json({ month, items: preview });
+    const preview = items.map((it) => {
+      const detalle = detail[it.alumno_id] || [];
+      return {
+        alumno_id: it.alumno_id,
+        full_name: it.full_name,
+        clases: it.clases,
+        monto: Number(it.monto),
+        precio_por_clase: it.clases > 0 ? Number(it.monto) / it.clases : 0,
+        detalle,
+        inscripcion_fecha: inscripcionByStudent[String(it.alumno_id)] || null,
+        generated: existingSet.has(String(it.alumno_id))
+      };
+    });
+
+    // Totales globales del mes — item 13 #5
+    const totalACobrar = preview.reduce((acc, p) => acc + p.monto, 0);
+    const [pagosMes] = await db.query(
+      'SELECT COALESCE(SUM(monto_pagado), 0) as pagado FROM deudas WHERE mes_facturacion = ?',
+      [month]
+    );
+    // Estado del ciclo — item 13 #3
+    const [cicloRows] = await db.query('SELECT estado FROM ciclos_facturacion WHERE mes_anio = ?', [month]);
+    const ciclo = cicloRows.length > 0 ? cicloRows[0].estado : 'no_abierto';
+
+    res.json({
+      month,
+      items: preview,
+      totales: {
+        total_a_cobrar: totalACobrar,
+        alumnos_con_deuda: preview.length,
+        total_pagado: Number(pagosMes[0].pagado)
+      },
+      ciclo
+    });
   } catch (err) {
     console.error('Error calculando preview de facturación:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -74,11 +143,14 @@ router.get('/debtors', authenticateToken, authorizeRoles('admin', 'profesor'), a
   try {
     const [rows] = await db.query(
       `SELECT a.id as alumno_id, a.nombre_completo as full_name,
-              COALESCE(SUM(d.monto - d.monto_pagado), 0) as balance
+              COALESCE(SUM(d.monto), 0) as monto_total,
+              COALESCE(SUM(d.monto_pagado), 0) as pagado,
+              COALESCE(SUM(d.monto - d.monto_pagado), 0) as balance,
+              a.saldo_a_favor as balance_favor
        FROM deudas d
        JOIN perfiles a ON d.alumno_id = a.id
        WHERE d.mes_facturacion = ? AND d.estado IN ('pendiente', 'parcial') AND d.estado <> 'anulada'
-       GROUP BY a.id, a.nombre_completo
+       GROUP BY a.id, a.nombre_completo, a.saldo_a_favor
        HAVING balance > 0
        ORDER BY a.nombre_completo`,
       [month]
@@ -119,11 +191,13 @@ router.post('/generate', authenticateToken, authorizeRoles('admin', 'profesor'),
     for (const item of items) {
       if (existingSet.has(String(item.alumno_id))) continue;
       // Deuda por mes (mensualidad). Se vincula al ciclo y grupo; sin instancia única (mes completo).
-      await db.query(
+      const [dRes] = await db.query(
         `INSERT INTO deudas (alumno_id, tipo_deuda, mes_facturacion, monto, monto_pagado, estado)
          VALUES (?, 'mensualidad', ?, ?, 0, 'pendiente')`,
         [item.alumno_id, month, item.monto]
       );
+      // item 15: aplicar saldo a favor automáticamente a la deuda recién creada
+      await applySaldoToDebt(db, item.alumno_id, dRes.insertId);
       created++;
     }
 

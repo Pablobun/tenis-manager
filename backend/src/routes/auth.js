@@ -70,7 +70,7 @@ router.post('/logout', (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, email, nombre_completo, telefono, rol, nivel FROM perfiles WHERE id = ?',
+      'SELECT id, email, nombre_completo, telefono, rol, nivel, saldo_a_favor FROM perfiles WHERE id = ?',
       [req.user.id]
     );
     if (rows.length === 0) {
@@ -83,10 +83,45 @@ router.get('/me', authenticateToken, async (req, res) => {
       full_name: user.nombre_completo,
       phone: user.telefono,
       role: user.rol,
-      level: user.nivel
+      level: user.nivel,
+      saldo_a_favor: Number(user.saldo_a_favor)
     });
   } catch (err) {
     console.error('Error en /me:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Cambiar contraseña propia (item 11): requiere la actual, verifica y hashea la nueva.
+router.post('/change-password', authenticateToken, async (req, res) => {
+  const { current_password, new_password, confirm_password } = req.body;
+  if (!current_password || !new_password || !confirm_password) {
+    return res.status(400).json({ error: 'Contraseña actual, nueva y confirmación requeridas' });
+  }
+  if (new_password !== confirm_password) {
+    return res.status(400).json({ error: 'La nueva contraseña y su confirmación no coinciden' });
+  }
+  if (new_password.length < 4) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 4 caracteres' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT password_hash FROM perfiles WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const match = await bcrypt.compare(current_password, rows[0].password_hash);
+    if (!match) {
+      return res.status(400).json({ error: 'La contraseña actual es incorrecta' });
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await db.query('UPDATE perfiles SET password_hash = ? WHERE id = ?', [hashed, req.user.id]);
+
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+  } catch (err) {
+    console.error('Error en change-password:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
+import LevelChip from '@/components/LevelChip';
 
 interface User {
   id: number;
@@ -10,9 +12,17 @@ interface User {
   role: string;
 }
 
+interface StudentRef {
+  id: number;
+  full_name: string;
+  level: string | null;
+}
+
 interface Instance {
   id: number;
   template_id: number;
+  profesor_id?: number;
+  professor_name?: string;
   instance_date: string;
   start_hour: string;
   end_hour: string;
@@ -21,6 +31,7 @@ interface Instance {
   max_students: number;
   price: string;
   status: string;
+  students?: StudentRef[];
 }
 
 const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -105,10 +116,19 @@ export default function InstanciasPage() {
     setError('');
     setInfo('');
     try {
+      // item 14: al regenerar el mes en curso, preguntar si incluir fechas pasadas
+      let includePast = true;
+      if (month === currentMonthISO()) {
+        includePast = window.confirm(
+          '¿Generar también las fechas ya pasadas de este mes?\n\nAceptar = generar TODO el mes\nCancelar = solo fechas futuras'
+        );
+      }
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/instances/generate?month=${month}`, {
         method: 'POST',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ include_past: includePast })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -124,18 +144,6 @@ export default function InstanciasPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch {}
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
-
   if (!user) return null;
 
   const grouped: Record<string, Instance[]> = {};
@@ -146,20 +154,10 @@ export default function InstanciasPage() {
   const dates = Object.keys(grouped).sort();
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800">
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Instancias" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-lg font-semibold">Instancias de Clases</h2>
@@ -221,40 +219,60 @@ export default function InstanciasPage() {
                     {weekday} {d.getDate()}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {grouped[date].map((instance) => (
-                      <div
-                        key={instance.id}
-                        className={`bg-white shadow-md rounded-lg p-4 border-l-4 ${
-                          instance.status === 'cancelada'
-                            ? 'border-gray-300 opacity-60'
-                            : 'border-primary-500'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold">
-                              {instance.start_hour} - {instance.end_hour}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-1 capitalize">
-                              {MODALITIES[instance.modality] || instance.modality}
-                              {instance.level ? ` · ${instance.level}` : ''}
-                            </p>
+                    {grouped[date].map((instance) => {
+                      const students = instance.students || [];
+                      return (
+                        <div
+                          key={instance.id}
+                          className={`card ${
+                            instance.status === 'cancelada'
+                              ? 'border-gray-300 opacity-60'
+                              : 'card-accent border-l-primary-500'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold">
+                                {instance.start_hour} - {instance.end_hour}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-sm text-gray-600 capitalize">
+                                  {MODALITIES[instance.modality] || instance.modality}
+                                </span>
+                                <LevelChip level={instance.level} />
+                                {instance.professor_name && (
+                                  <span className="text-xs text-gray-500">· {instance.professor_name}</span>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                instance.status === 'cancelada'
+                                  ? 'bg-gray-100 text-gray-600'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {instance.status === 'cancelada' ? 'Cancelada' : 'Programada'}
+                            </span>
                           </div>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              instance.status === 'cancelada'
-                                ? 'bg-gray-100 text-gray-600'
-                                : 'bg-green-100 text-green-800'
-                            }`}
-                          >
-                            {instance.status === 'cancelada' ? 'Cancelada' : 'Programada'}
-                          </span>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Cupo: {instance.max_students} · Precio: ${instance.price}
+                          </p>
+                          <p className="text-sm mt-2">
+                            <span className="font-semibold text-gray-700">
+                              Alumnos: {students.length}/{instance.max_students}
+                            </span>
+                          </p>
+                          {students.length === 0 ? (
+                            <p className="text-xs text-gray-400 mt-1">Sin alumnos</p>
+                          ) : (
+                            <p className="text-xs text-gray-600 mt-1">
+                              {students.map((s) => s.full_name).join(' · ')}
+                            </p>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Cupo: {instance.max_students} · Precio: ${instance.price}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );

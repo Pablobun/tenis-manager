@@ -1,11 +1,11 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const { generateInstancesForMonth } = require('../services/instances');
+const { generateInstancesForMonth, enrichInstancesWithStudents } = require('../services/instances');
 
 const router = express.Router();
 
-// Listar instancias por mes (?month=YYYY-MM)
+// Listar instancias por mes (?month=YYYY-MM) — enriquecidas con alumnos y profesor
 router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   const { month } = req.query; // YYYY-MM
   if (!month) {
@@ -14,30 +14,35 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
 
   try {
     const [rows] = await db.query(
-      `SELECT id, plantilla_id as template_id, profesor_id, fecha as instance_date, 
-      hora_inicio as start_hour, hora_fin as end_hour, nivel, modalidad, 
-      cupo_maximo as max_students, precio as price, estado as status 
-      FROM instancias_clases 
-      WHERE DATE_FORMAT(fecha, '%Y-%m') = ? 
-      ORDER BY fecha, hora_inicio`,
+      `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level, i.modalidad, 
+      i.cupo_maximo as max_students, i.precio as price, i.estado as status,
+      p.nombre_completo as professor_name
+      FROM instancias_clases i
+      JOIN perfiles p ON i.profesor_id = p.id
+      WHERE DATE_FORMAT(i.fecha, '%Y-%m') = ? 
+      ORDER BY i.fecha, i.hora_inicio`,
       [month]
     );
-    res.json(rows);
+    const enriched = await enrichInstancesWithStudents(rows);
+    res.json(enriched);
   } catch (err) {
     console.error('Error listando instancias:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-// Generar o regenerar instancias para un mes (?month=YYYY-MM)
+// Generar o regenerar instancias para un mes (?month=YYYY-MM) — item 14: include_past opcional
 router.post('/generate', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   const { month } = req.query; // YYYY-MM
+  const { include_past } = req.body; // false = solo fechas futuras del mes
   if (!month) {
     return res.status(400).json({ error: 'Parámetro month requerido (YYYY-MM)' });
   }
 
   try {
-    const count = await generateInstancesForMonth(month);
+    const includePast = include_past !== false;
+    const count = await generateInstancesForMonth(month, { includePast });
     res.json({ message: `Generación completada. Se generaron ${count} nuevas instancias.`, count });
   } catch (err) {
     console.error('Error generando instancias:', err);
@@ -54,6 +59,7 @@ router.get('/open', authenticateToken, async (req, res) => {
              i.cupo_maximo as max_students, i.precio as price, i.estado as status,
              p.nombre_completo as professor_name,
              (SELECT COUNT(*) FROM grupo_alumnos ga JOIN grupos g ON ga.grupo_id = g.id WHERE g.instancia_id = i.id) as enrolled_count,
+             (SELECT COUNT(*) FROM postulaciones po WHERE po.instancia_id = i.id AND po.estado = 'pendiente') as pending_candidates,
              (SELECT estado FROM postulaciones WHERE alumno_id = ? AND instancia_id = i.id) as postulation_status
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
@@ -107,7 +113,8 @@ router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), 
       }
     }
 
-    // Regla de deuda (CONTEXT): deuda pendiente bloquea la postulación; se puede forzar por override
+    // Regla de deuda (CONTEXT): deuda pendiente bloquea la postulación; se puede forzar por override.
+    // item 15: el bloqueo usa el balance neto (deuda − saldo a favor).
     if (!force) {
       const [debtRows] = await db.query(
         `SELECT COALESCE(SUM(monto - monto_pagado), 0) as balance
@@ -115,7 +122,12 @@ router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), 
          WHERE alumno_id = ? AND estado IN ('pendiente', 'parcial')`,
         [req.user.id]
       );
-      if (Number(debtRows[0].balance) > 0) {
+      const [saldoRows] = await db.query(
+        'SELECT COALESCE(saldo_a_favor, 0) as saldo FROM perfiles WHERE id = ?',
+        [req.user.id]
+      );
+      const balanceNeto = Number(debtRows[0].balance) - Number(saldoRows[0].saldo);
+      if (balanceNeto > 0) {
         return res.status(400).json({ error: 'Tenés una deuda pendiente. Consultá a la profesora para postularte.' });
       }
     }
@@ -172,7 +184,8 @@ router.get('/open/:id/candidates', authenticateToken, authorizeRoles('admin', 'p
               a.id as student_id, a.nombre_completo as full_name, a.email, a.telefono as phone,
               a.nivel as level,
               (SELECT COALESCE(SUM(d.monto - d.monto_pagado), 0) FROM deudas d
-               WHERE d.alumno_id = a.id AND d.estado IN ('pendiente', 'parcial')) as balance
+               WHERE d.alumno_id = a.id AND d.estado IN ('pendiente', 'parcial')) as balance,
+              a.saldo_a_favor as balance_favor
        FROM postulaciones p
        JOIN perfiles a ON p.alumno_id = a.id
        WHERE p.instancia_id = ?
@@ -343,8 +356,9 @@ router.delete('/open/:id/postulate', authenticateToken, authorizeRoles('alumno')
 
 // Crear una clase abierta (ad-hoc) o extra (modalidad)
 router.post('/open', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
-  const { fecha, hora_inicio, hora_fin, nivel, cupo_maximo, precio } = req.body;
+  const { fecha, hora_inicio, hora_fin, nivel, cupo_maximo, precio, profesor_id } = req.body;
   const modalidad = req.body.modalidad || 'abierta';
+  const profesorElegido = profesor_id || req.user.id;
 
   if (!fecha || !hora_inicio || !hora_fin || !nivel || !cupo_maximo || !precio) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -366,7 +380,7 @@ router.post('/open', authenticateToken, authorizeRoles('admin', 'profesor'), asy
     const [tRes] = await connection.query(
       `INSERT INTO plantillas_clases (profesor_id, dia_semana, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio_por_clase, activa)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)`,
-      [req.user.id, dayOfWeek, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio]
+      [profesorElegido, dayOfWeek, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio]
     );
 
     const templateId = tRes.insertId;
@@ -375,7 +389,7 @@ router.post('/open', authenticateToken, authorizeRoles('admin', 'profesor'), asy
     const [iRes] = await connection.query(
       `INSERT INTO instancias_clases (plantilla_id, profesor_id, fecha, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio, estado)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'programada')`,
-      [templateId, req.user.id, fecha, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio]
+      [templateId, profesorElegido, fecha, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio]
     );
 
     const instanceId = iRes.insertId;

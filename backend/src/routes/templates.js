@@ -9,7 +9,13 @@ const router = express.Router();
 router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, profesor_id, dia_semana as day_of_week, hora_inicio as start_hour, hora_fin as end_hour, nivel as level, modalidad as modality, cupo_maximo as max_students, precio_por_clase as price_per_class, frecuencia as frequency, activa as is_active, creado_en as created_at FROM plantillas_clases ORDER BY dia_semana, hora_inicio'
+      `SELECT t.id, t.profesor_id, p.nombre_completo as professor_name, t.dia_semana as day_of_week,
+              t.hora_inicio as start_hour, t.hora_fin as end_hour, t.nivel as level, t.modalidad as modality,
+              t.cupo_maximo as max_students, t.precio_por_clase as price_per_class, t.frecuencia as frequency,
+              t.activa as is_active, t.creado_en as created_at
+       FROM plantillas_clases t
+       JOIN perfiles p ON t.profesor_id = p.id
+       ORDER BY t.dia_semana, t.hora_inicio`
     );
     res.json(rows);
   } catch (err) {
@@ -18,9 +24,9 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
   }
 });
 
-// Crear plantilla
+// Crear plantilla — item 6: profesor_id del body (default quien crea). item 14: include_past.
 router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
-  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency } = req.body;
+  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, profesor_id, include_past } = req.body;
 
   if (day_of_week === undefined || !start_hour || !end_hour || !modality || !price_per_class) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -52,11 +58,13 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
       }
     }
 
+    const profesorElegido = profesor_id || req.user.id;
+
     const [result] = await db.query(
       `INSERT INTO plantillas_clases (profesor_id, dia_semana, hora_inicio, hora_fin, nivel, modalidad, cupo_maximo, precio_por_clase, frecuencia, activa) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
       [
-        req.user.id,
+        profesorElegido,
         day_of_week,
         start_hour,
         end_hour,
@@ -70,9 +78,9 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
 
     const templateId = result.insertId;
 
-    // Generar instancias para el mes actual
+    // Generar instancias para el mes actual (item 14: puede excluir fechas pasadas)
     const currentMonth = new Date().toISOString().slice(0, 7);
-    await generateInstancesForMonth(currentMonth);
+    await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });
 
     res.status(201).json({ message: 'Plantilla creada exitosamente', id: templateId });
   } catch (err) {
@@ -83,7 +91,7 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
 
 // Actualizar plantilla o activar/desactivar
 router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
-  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, is_active } = req.body;
+  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, is_active, profesor_id, include_past } = req.body;
 
   try {
     const [rows] = await db.query('SELECT * FROM plantillas_clases WHERE id = ?', [req.params.id]);
@@ -104,7 +112,7 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async
     if (is_active !== undefined && is_active === 1 && current.activa === 0) {
       await db.query('UPDATE plantillas_clases SET activa = 1 WHERE id = ?', [req.params.id]);
       const currentMonth = new Date().toISOString().slice(0, 7);
-      await generateInstancesForMonth(currentMonth);
+      await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });
       return res.json({ message: 'Plantilla activada e instancias regeneradas' });
     }
 
@@ -112,18 +120,19 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async
     const newDay = day_of_week !== undefined ? day_of_week : current.dia_semana;
     const newStart = start_hour || current.hora_inicio;
     const newEnd = end_hour || current.hora_fin;
+    const newProfesor = profesor_id || current.profesor_id;
 
     await db.query(
       `UPDATE plantillas_clases SET 
-      dia_semana = ?, hora_inicio = ?, hora_fin = ?, nivel = COALESCE(?, nivel), 
+      profesor_id = ?, dia_semana = ?, hora_inicio = ?, hora_fin = ?, nivel = COALESCE(?, nivel), 
       modalidad = COALESCE(?, modalidad), cupo_maximo = COALESCE(?, cupo_maximo), 
       precio_por_clase = COALESCE(?, precio_por_clase), frecuencia = COALESCE(?, frecuencia) 
       WHERE id = ?`,
-      [newDay, newStart, newEnd, level, modality, max_students, price_per_class, frequency, req.params.id]
+      [newProfesor, newDay, newStart, newEnd, level, modality, max_students, price_per_class, frequency, req.params.id]
     );
 
     const currentMonth = new Date().toISOString().slice(0, 7);
-    await generateInstancesForMonth(currentMonth);
+    await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });
 
     res.json({ message: 'Plantilla actualizada exitosamente' });
   } catch (err) {

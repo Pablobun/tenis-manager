@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
-**Fecha**: 2026-08-13
-**Estado**: Tickets 01-12 IMPLEMENTADOS (08-12 en esta sesión) y PUSHEADOS hasta `b086981` (ticket 07). El diff 08-12 **no está pusheado aún** — verificar en Render tras el push del usuario. Verificado localmente: `node --check` backend OK (13 archivos), `npm.cmd run build` frontend OK (15 páginas).
-**Próxima acción**: Verificación del diff 08-12 en Render (BD real) + ajustes. Sin tickets pendientes conocidos.
+**Fecha**: 2026-08-14
+**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
+**Próxima acción**: push del usuario → verificar en Render los flujos de BD (postulación con balance neto, saldo a favor, preview de facturación, generate con include_past) con hard refresh.
 
 ---
 
@@ -41,8 +41,6 @@ GitHub (repo: Pablobun/tenis-manager)
                         └─ nginx del droplet proxea /api/* → tenis-manager.onrender.com (mismo origen)
 ```
 
-**Mismo patrón que `torneos-jc`**: git push → deploy automático. Front en droplet, back en Render.
-
 ---
 
 ## Estructura del monorepo (al día)
@@ -51,41 +49,39 @@ GitHub (repo: Pablobun/tenis-manager)
 C:\GesttionSoftware\
 ├── .github/workflows/deploy-front.yml
 ├── .gitignore                 ← cubre node_modules/, .next/, out/, .env
-├── AGENTS.md                  ← incluye convención de esquema en español + caché del navegador
-├── CONTEXT.md                 ← glosario + decisiones (incluye tickets 07-12: clases abiertas, postulaciones, extras, facturación, pagos)
+├── AGENTS.md                  ← convención de esquema en español + caché del navegador + reglas de commit/push
+├── CONTEXT.md                 ← glosario + decisiones (incluye tickets 07-12 y criterios nuevos del grilling)
 ├── .opencode/
-├── .scratch/tenis-manager/     ← docs, issues, spec, PRD, handoff
+├── .scratch/tenis-manager/
+│   ├── handoff.md             ← este archivo
+│   ├── modificaciones.md      ← ★ 15 observaciones + TODAS las decisiones resueltas (la fuente de la próxima sesión)
+│   ├── issues/, tickets/, spec.md, PRD.md, map.md, research/
 ├── docs/
 ├── deploy/nginx-riversideclases.conf
 ├── backend/
-│   ├── server.js              ← Express API (raíz para Render)
+│   ├── server.js
 │   ├── package.json, .env.example
-│   ├── sql/schema.sql         ← 10 tablas en castellano (perfiles, plantillas_clases, instancias_clases, grupos, grupo_alumnos, postulaciones, asistencias, deudas, pagos, ciclos_facturacion)
-│   ├── sql/seed-admin.js      ← seed admin@tenismanager.com / admin123
+│   ├── sql/
+│   │   ├── schema.sql         ← 10 tablas + columna saldo_a_favor (item 15) YA actualizada
+│   │   ├── migrations/001_saldo_a_favor.sql  ← ★ NUEVO (migración de referencia, idempotente)
+│   │   ├── seed-admin.js / seed-admin.sql
 │   └── src/
-│       ├── db.js
+│       ├── db.js              ← OK: dateStrings: true (fix item 3/7)
 │       ├── middleware/auth.js
-│       ├── services/instances.js      ← generación mensual desde plantillas fija activas
-│       ├── services/billing.js        ← deuda inmediata al inscribir (ticket 11)
-│       └── routes/
-│           ├── auth.js
-│           ├── students.js
-│           ├── templates.js           ← CRUD + validación + disparadores
-│           ├── instances.js           ← ?month, /generate, CRUD abiertas/extra (/open) + postulate + candidatos + decide + cancel
-│           ├── board.js               ← /day, /week, /mine (clases del alumno), enroll (POST/DELETE)
-│           ├── asistencias.js         ← GET/POST asistencia por instancia + genera deuda abierta/extra (ticket 10)
-│           ├── billing.js             ← /preview, /generate, /debtors, /open, /release-slots, /adjust (ticket 11)
-│           └── pagos.js               ← individual, /batch, /student/:id (desglose), /summary (ticket 12)
+│       ├── services/instances.js, services/billing.js   ← OK: enrich + saldo + includePast
+│       └── routes/ (auth, students, templates, instances, board, asistencias, billing, pagos)  ← OK
 └── frontend/
-    ├── package.json / next.config.js  (output: 'export' + trailingSlash)
+    ├── package.json / next.config.js (output: 'export' + trailingSlash)
+    ├── tailwind.config.js     ← OK: paleta A (canvas #F2F7F2)
+    ├── src/components/Navigation.tsx · LevelChip.tsx   ← NUEVOS (nav persistente + chip de nivel)
     └── src/app/
-        ├── page.tsx / layout.tsx / globals.css / login/page.tsx
-        ├── dashboard/page.tsx · admin/page.tsx  ← cards: Tablero, Plantillas, Instancias, Clases Abiertas, Alumnos, Facturación, Pagos
-        ├── alumnos/page.tsx · mis-clases/page.tsx  ← mis-clases: saldo + desglose deuda + "Mis clases" + "Clases Disponibles" con Postularme/Cancelar
-        ├── plantillas/page.tsx · instancias/page.tsx · tablero/page.tsx
-        ├── clases-abiertas/page.tsx   ← CRUD abiertas/extra + candidatos (aceptar/rechazar/forzar) + asistencia
-        ├── facturacion/page.tsx       ← NUEVO (ticket 11): preview, generar deudas, apertura de mes, liberar cupos
-        └── pagos/page.tsx             ← NUEVO (ticket 12): pago individual y por lote, resumen global
+        ├── page.tsx / layout.tsx / globals.css / login/page.tsx  ← OK (globals con .card/.btn/.input/.label/.chip/.table-head)
+        ├── dashboard/page.tsx · admin/page.tsx   ← OK (rewrite con Navigation + .card)
+        ├── alumnos/page.tsx · mis-clases/page.tsx   ← OK
+        ├── plantillas/page.tsx · instancias/page.tsx · tablero/page.tsx   ← OK
+        ├── clases-abiertas/page.tsx · facturacion/page.tsx · pagos/page.tsx   ← OK
+        ├── perfil/page.tsx   ← NUEVO (item 11: nombre/tel + change-password)
+        └── public/manual-sistema.html  ← ★ NUEVO: manual del sistema (se sirve en /manual-sistema.html)
 ```
 
 ---
@@ -94,24 +90,25 @@ C:\GesttionSoftware\
 
 | Método | Ruta | Rol | Descripción |
 |---|---|---|---|
-| POST | /auth/login, logout, password | varios | Auth |
+| POST | /auth/login, logout | varios | Auth |
 | GET | /auth/me | cualquiera | Perfil propio |
-| CRUD | /students | admin/profesor | Alumnos |
+| POST | /auth/register | público | Registro (⚠ riesgo: acepta role del body) |
+| CRUD | /students | admin/profesor | Alumnos (+ PUT /students/profile = propio) |
 | CRUD | /templates | admin/profesor | Plantillas (+ genera/cancela instancias) |
 | GET | /instances?month=YYYY-MM | admin/profesor | Instancias del mes |
 | POST | /instances/generate?month=YYYY-MM | admin/profesor | Regenera un mes desde plantillas activas |
-| GET | /instances/open | admin/profesor/alumno | Clases abiertas+extras (alumno: solo programadas futuras + su postulation_status) |
-| POST | /instances/open | admin/profesor | Crea clase abierta/extra ad-hoc (modalidad en body) |
+| GET | /instances/open | admin/profesor/alumno | Clases abiertas+extras (alumno: solo programadas futuras) |
+| POST | /instances/open | admin/profesor | Crea clase abierta/extra ad-hoc |
 | PUT/DELETE | /instances/open/:id | admin/profesor | Edita / elimina (cascada por plantilla) |
-| POST | /instances/open/:id/postulate | alumno | Postula (chequea deuda; si lleno → lista_espera; `force` para override) |
+| POST | /instances/open/:id/postulate | alumno | Postula (chequea deuda; lleno → lista_espera; force) |
 | DELETE | /instances/open/:id/postulate | alumno | Cancela postulación pendiente |
 | GET | /instances/open/:id/candidates | admin/profesor | Candidatos + balance deuda |
-| POST | /instances/open/:id/candidates/:pid/accept | admin/profesor | Acepta → ocupa cupo en grupo (si lleno → waitlist) |
+| POST | /instances/open/:id/candidates/:pid/accept | admin/profesor | Acepta → ocupa cupo (lleno → waitlist) |
 | POST | /instances/open/:id/candidates/:pid/reject | admin/profesor | Rechaza → lista_espera |
 | POST | /instances/open/:id/candidates/:pid/override | admin/profesor | Fuerza aceptación (deuda/cupo) |
 | GET | /board/day?date= / /board/week?date= | admin/profesor | Instancias del día/semana + alumnos |
-| GET | /board/mine | alumno | Mis clases (fijas+abiertas) + saldo de deuda (ticket 08) |
-| POST/DELETE | /board/enroll | admin/profesor | Inscribir / desinscribir (fija genera deuda de mensualidad) |
+| GET | /board/mine | alumno | Mis clases + saldo de deuda |
+| POST/DELETE | /board/enroll | admin/profesor | Inscribir / desinscribir (fija genera mensualidad) |
 | GET/POST | /asistencias/:instanceId | admin/profesor | Ver / registrar asistencia (+ deuda abierta/extra si asistió) |
 | GET | /billing/preview?month= / /debtors?month= | admin/profesor | Deuda propuesta / deudores del mes |
 | POST | /billing/generate?month= / /open / /release-slots | admin/profesor | Generar deudas, apertura de mes, liberar cupos |
@@ -128,9 +125,9 @@ C:\GesttionSoftware\
 | Credencial | Valor |
 |-----------|-------|
 | Admin seed | `admin@tenismanager.com` / `admin123` |
-| Superusuario Pablo | `pablo@tenismanager.com` / `1414` (insertado manual vía SQL con hash bcrypt) |
+| Superusuario Pablo | `pablo@tenismanager.com` / `1414` (insertado manual vía SQL) |
 | DB host | `137.184.178.21` (mismo que jockey) |
-| DB user/password | (mismos que jockey — NO están en el repo; pedirlos al user para probar contra BD local) |
+| DB user/password | (mismos que jockey — NO están en el repo) |
 | DB name | `tenisriverside` |
 | Render URL | `https://tenis-manager.onrender.com` |
 | JWT_SECRET | `ts_riverside_2026_secret` (env var de Render) |
@@ -138,83 +135,77 @@ C:\GesttionSoftware\
 
 ---
 
-## Qué se hizo en esta sesión
+## Lo que se hizo en ESTA sesión
 
-### Re-implementación de Tickets 01-06 (tras borrado del repo)
-- **01 Auth + scaffolding**: Express + JWT cookie httpOnly, roles `admin`/`profesor`/`alumno`, login/logout/me/register.
-- **02 Gestión de alumnos**: CRUD `/students` + perfil editable en `/mis-clases`.
-- **03 Plantillas**: CRUD `/templates` + validación de solapamiento (409) + triggers de generación.
-- **04 Instancias**: `services/instances.js` (1 instancia por aparición del día, `INSERT IGNORE` + UNIQUE `uk_plantilla_fecha`), `/instances` con calendario mensual + "Generar mes".
-- **05 Tablero**: `/board/dia` y `/semana` enriqueciendo con alumnos; `tablero/page.tsx` con swipe, toggle día/semana, bottom sheet, indicador de cupo por color.
-- **06 Reasignación**: enroll/remove (`POST/DELETE /board/enroll`), "Agregar alumno"/"Quitar" funcionales en el sheet.
+### 1. Artefacto HTML del manual del sistema
+- **`frontend/public/manual-sistema.html`** (nuevo, autocontenido, en español). Se sirve en `https://riversideclases.portaltorneos-riocuarto.com.ar/manual-sistema.html` tras el próximo build/push. Contiene: introducción + roles, manual de uso por rol (profesora/admin y alumno), arquitectura (stack, deploy, esquema BD, endpoints, ENUMs) y reglas/restricciones de las acciones. Credenciales como placeholder (sin contraseñas reales).
 
-### Fix "Data truncated for column 'modalidad'"
-- **Causa**: el frontend mandaba `fixed`/`open` (inglés) pero la BD usa ENUM en español (`fija`/`extra`/`abierta`). MySQL rechaaza valores inválidos.
-- **Fix**: valores del form y mapas de display a `fija`/`abierta`/`extra` en `plantillas`, `tablero`, `instancias`; validación backend en `templates.js` (400 claro si modalidad/día/horas inválidos).
-- **Lección**: el bundle viejo cacheado en el navegador confundió el diagnóstico; tras deploy usar hard refresh. Ver AGENTS.md.
+### 2. Grilling completo de observaciones (skill grill-with-docs)
+- Se listaron **15 observaciones** en `.scratch/tenis-manager/modificaciones.md` (usuario recorrió el sistema).
+- Se grillaron **todas** y quedaron resueltas con decisiones concretas. **Detalle completo en `modificaciones.md`** — es la fuente principal de la próxima sesión. Resumen:
 
-### Ticket 07 — Clases Abiertas/Rotativas (commit `b086981 ticket7`)
-- Backend en `routes/instances.js`: `GET/POST/PUT/DELETE /open` + `POST /open/:id/postulate`. Clase abierta = instancia ad-hoc con plantilla **inactiva** de respaldo (por `plantilla_id NOT NULL`) + grupo "Grupo Abierto", en transacción.
-- Frontend: `/clases-abiertas` (CRUD profe, contador `enrolled_count`) + sección "Clases Disponibles" en `/mis-clases` (botón Postularme + badges Pendiente/Inscripto/Lleno).
-- Cards en `dashboard` y `admin`.
+| # | Observación | Decisión |
+|---|---|---|
+| 1/2 | Nav sin salida al panel / botón volver | **Barra de navegación persistente** adaptativa: bottom nav mobile / top bar PC + botón "Menú" con el resto de módulos (componente compartido) |
+| 3 | Vista semanal vacía (bug) | `dateStrings: true` en `db.js` + `inst.fecha.slice(0,7)` en `services/billing.js:13` |
+| 4/9 | Candidatos poco visibles | Campo `pending_candidates` en `GET /instances/open`; badge ámbar "N candidatos" (cupo libre) / gris "N en lista de espera" (llena) en `/clases-abiertas` |
+| 5 | Color por nivel | Chip de nivel: principiante red / intermedio green / avanzado amber; borde de tarjeta intacto (cupo) |
+| 6 | Profesor por clase | Selector "Profesor/a" (solo rol `profesor`) en plantillas y abiertas; mostrar nombre en tablero/instancias/abiertas. Sin cambios de BD |
+| 7 | Fecha NaN en instancias | Cubierto por fix del item 3 |
+| 8 | Alumnos en instancias | `enrichInstancesWithStudents` en `GET /instances` + "Alumnos: N/M" con nombres |
+| 10 | Campo "frecuencia" confuso | **Se elimina** del form y listado de plantillas |
+| 11 | Perfil / contraseña | Página `/perfil` para todos (nombre+teléfono editables; email/nivel solo lectura); `POST /auth/change-password` (actual+nueva+confirmar); reset de contraseña desde `/alumnos` (profe/admin) |
+| 12 | Alerta al cambiar nivel | Al guardar en `/alumnos`, listar clases discrepantes con `fecha >= hoy` (solo informa) |
+| 13 | Facturación poco clara | 8 mejoras: detalle por clase, cuenta "N clases × $", estado mes/ciclo, saldo vs pagado, totales globales, columna Pagado, aviso inscripción a mitad de mes, fondo generadas/pendientes |
+| 14 | Deuda mensual ambigua | Aclarar "precio por clase × N clases del mes" en form y facturación; **preguntar a la profe** al crear plantilla si genera fechas pasadas del mes en curso. Asistencia en fija NO afecta deuda |
+| 15 | Monto a favor | Columna `saldo_a_favor` en `perfiles` (**único cambio de BD**); excedente de pago → saldo a favor; se aplica automático a próxima deuda; verde "a favor". **BD YA aplicada en producción** |
 
-### Ticket 08 — Dashboard del Alumno (NO PUSHEADO aún)
-- Backend: `GET /board/mine` (rol alumno) — clases vía `grupo_alumnos → grupos → instancias_clases` + saldo `SUM(monto - monto_pagado)` deudas pendiente/parcial.
-- Frontend `/mis-clases`: saldo de deuda arriba (rojo/verde) + sección "Mis clases" (día, hora, nivel, modalidad, profesor).
+### 3. Cambios de BD (item 15) — ya aplicados en producción
+- `backend/sql/schema.sql` — agregada `saldo_a_favor DECIMAL(10,2) NOT NULL DEFAULT 0` en `perfiles`.
+- `backend/sql/migrations/001_saldo_a_favor.sql` — **nuevo**: script de referencia idempotente para SQLYog (agrega columna si no existe + inicializa con pagos huérfanos `deuda_id NULL`).
+- **Nota**: la columna ya existe en la BD real; el script es solo referencia/replicación.
 
-### Ticket 09 — Flujo de Postulaciones (NO PUSHEADO aún)
-- Backend en `routes/instances.js`: `GET /open/:id/candidates` (incluye balance deuda), `POST .../accept` (inscribe al grupo, transaction), `.../reject` (→ lista_espera), `.../override` (fuerza), `DELETE /open/:id/postulate` (alumno cancela). Postular ahora chequea **deuda** (bloquea si no hay `force`) y cupo lleno → `lista_espera` directo. Re-postulación tras cancelada/rechazada re-activa la misma fila.
-- Frontend `/clases-abiertas`: botón "Candidatos" por clase → listado con badges de estado, botones Aceptar/Rechazar/Forzar y el balance de deuda del postulante. `/mis-clases`: badge "Postulado (Pendiente)" con botón **Cancelar**; badge diferenciado "Lista de espera".
+### 4. Pulido estético del frontend — PLAN APROBADO
+- **Paleta A "Verde cancha / aire"** (elegida): fondo verde tenue cálido (`#F2F7F2` aprox.) en lugar de `gray-50` frío; tarjetas `rounded-xl/2xl` con borde sutil + borde de acento izquierdo + sombra difusa.
+- **Header oscuro** (verde profundo `primary-800/900`, texto blanco) en todas las pantallas.
+- Aplicar a **TODO el frontend** (login, dashboard/admin, tablero, plantillas, instancias, alumnos, clases-abiertas, facturación, pagos, mis-clases).
+- Conservar chips de nivel (item 5) y badges de candidatos (item 4/9).
+- Archivos clave: `tailwind.config.js` (paleta), `globals.css` (fondo body), headers y cards de cada `page.tsx`.
+- Sin cambios de lógica.
 
-### Ticket 10 — Clases Extras (NO PUSHEADO aún)
-- Backend: `POST /open` acepta `modalidad: 'abierta'|'extra'` (plantilla inactiva + grupo "Grupo Extra"). `GET /open` incluye `extra`. Nuevo `routes/asistencias.js`: `GET/POST /asistencias/:instanceId`; al marcar "asistió" en abierta/extra crea deuda `clase_abierta`/`clase_extra` pendiente.
-- Frontend `/clases-abiertas`: select de modalidad (sugerencia precio 50% en extra), botón "Asistencia" por clase con checkboxes asistió/no y guardado.
-
-### Ticket 11 — Facturación Mensual (NO PUSHEADO aún)
-- Backend: `services/billing.js` (`ensureDebtForEnrollment` — al inscribir a fija genera deuda de mensualidad inmediata, conectado en `/board/enroll`); `routes/billing.js`: `GET /preview` (no escribe), `POST /generate` (crea deudas por alumno/mes + `ciclos_facturacion`), `GET /debtors`, `POST /open` (cierra ciclos anteriores), `POST /release-slots`, `PUT /adjust/:id`.
-- Frontend: `/facturacion` — picker de mes, preview de deuda propuesta (estado Generada/Pendiente), botones "Generar deudas" y "Abrir mes", tabla de deudores con "Liberar cupos".
-
-### Ticket 12 — Pagos (NO PUSHEADO aún)
-- Backend: `routes/pagos.js` — `POST /` individual (aplica a deuda pendiente más antigua o `deuda_id`), `POST /batch` (lote), `GET /student/:id` (desglose por mes + historial; accesible por el propio alumno), `GET /summary` (por fecha). Pago suma `monto_pagado` y recalcula estado pendiente/parcial/pagada.
-- Frontend: `/pagos` (pago individual + lote con checkboxes + resumen global por fecha). `/mis-clases`: desglose de deuda expandible por mes + historial de pagos.
-
-### Docs de agentes (esta sesión)
-- `AGENTS.md:9` y `docs/agents/issue-tracker.md` actualizados: el repo está en GitHub (`Pablobun/tenis-manager`) pero los issues/tickets **siguen en markdown local** (`.scratch/tenis-manager/issues/`). No usar GitHub Issues hasta decisión explícita; para migrar hará falta `gh` CLI (hoy no instalada).
-
----
-
-## Estado de los tickets
-
-| # | Ticket | Estado | Notas |
-|---|--------|--------|-------|
-| 01 | Auth + scaffolding | **COMPLETADO** | |
-| 02 | Gestión de alumnos | **COMPLETADO** | |
-| 03 | Plantillas de clases | **COMPLETADO** | |
-| 04 | Generación de instancias | **COMPLETADO** | |
-| 05 | Vista diaria del tablero | **COMPLETADO** | |
-| 06 | Reasignación de alumnos | **COMPLETADO** | |
-| 07 | Clases abiertas/rotativas | **COMPLETADO** | commit `b086981` |
-| 08 | Dashboard del alumno | **COMPLETADO** | diff 08-12 sin pushear |
-| 09 | Flujo de postulaciones | **COMPLETADO** | diff 08-12 sin pushear |
-| 10 | Clases extras | **COMPLETADO** | diff 08-12 sin pushear |
-| 11 | Facturación mensual | **COMPLETADO** | diff 08-12 sin pushear |
-| 12 | Pagos | **COMPLETADO** | diff 08-12 sin pushear |
+### 5. Implementación funcional (items 1-15 + pulido) — esta sesión
+- **Backend** (`node --check` OK): `db.js` (dateStrings), `services/billing.js` (`applySaldoToDebt`, applySaldo en ensureDebt/generate), `services/instances.js` (`enrichInstancesWithStudents`, `generateInstancesForMonth` con `includePast`), rutas `board/instances/templates/students/auth/pagos/billing/asistencias`.
+- **Componentes nuevos**: `frontend/src/components/Navigation.tsx` y `LevelChip.tsx`.
+- **Frontend** (`npm run build` OK, 16 rutas): login, dashboard, admin, tablero, mis-clases, plantillas, instancias, alumnos, clases-abiertas, facturación, pagos → reescritos con Navigation + `.card`/`.btn-*`/`.input`/`.chip`; **`/perfil` nuevo**.
+- Detalle de cada item en las secciones de la sesión siguiente.
 
 ---
 
-## Pendiente para la próxima sesión
+## Sesión siguiente (prioridad)
 
-1. **Verificar el diff 08-12 contra la BD real en Render** (tras el push del usuario):
-   - Ticket 08: alumno entra a `/mis-clases` → ve saldo + "Mis clases" (fijas asignadas y abiertas aceptadas).
-   - Ticket 09: alumno se postula a abierta → profe ve el candidato en "Candidatos" de `/clases-abiertas`, la acepta → aparece en "Mis clases" del alumno. Probar reject (waitlist), override, cancelar postulación, y postular con deuda (debe bloquear).
-   - Ticket 10: crear clase extra (50%), alumno se postula, profe marca asistencia → se genera deuda `clase_extra`.
-   - Ticket 11: `/facturacion` → preview del mes, generar deudas, abrir mes, liberar cupos de un deudor.
-   - Ticket 12: `/pagos` → pago individual, pago por lote, desglose y resumen por fecha.
-   - Si algo falla, chequear caché del navegador (hard refresh) antes de diagnosticar.
-2. **Decisiones con el cliente pendientes (marcadas en CONTEXT.md)**:
-   - Confirmar que la deuda siga bloqueando la postulación (override es la excepción).
-   - Definir el precio de la clase extra (50% sugerido) cuando haya clases fijas reales creadas.
-   - Confirmar que liberar cupos borra al deudor de las instancias fijas del mes (comportamiento actual).
+**Ya implementado (todo listo para push del usuario):**
+
+- **Item 3/7 (bug semana)**: `dateStrings: true` en `db.js` + `inst.fecha.slice(0,7)` en `services/billing.js:13`. ✔
+- **Item 1/2 (nav)**: componente `Navigation.tsx` (bottom nav mobile / top bar PC oscura + "Menú") en TODAS las páginas. ✔
+- **Item 10**: campo `frecuencia` eliminado de form/listado de plantillas. ✔
+- **Item 15 (saldo a favor)**: excedente de pago → `saldo_a_favor` en `pagos.js`; se aplica automático en `billing.js` (ensureDebt/generate), `asistencias.js`; balance neto en `/board/mine`, `/pagos/student/:id`, candidatos de abiertas, preview/debtors de facturación. ✔
+- **Items 4/9, 5, 6, 8**: `pending_candidates` (badge ámbar), `LevelChip`, `profesor_id`+`professor_name` (plantillas, abiertas, tablero, instancias), `enrichInstancesWithStudents` ("Alumnos N/M" + nombres). ✔
+- **Item 11**: `/perfil` (nombre/tel + change-password) + `POST /auth/change-password` + reset de contraseña desde `/alumnos`. ✔
+- **Item 12**: `PUT /students/:id` lista clases discrepantes futuras (warning, solo informa). ✔
+- **Item 13 (facturación)**: preview con detalle por clase, "N × $", inscripción a mitad de mes, totales globales, estado mes/ciclo, columna Pagado + saldo a favor en deudores. ✔
+- **Item 14**: pregunta `include_past` al crear plantilla y al regenerar mes; hint "mensualidad = precio × clases del mes". ✔
+- **Pulido estético**: Paleta A (`#F2F7F2`), header oscuro `Navigation`, clases reutilizables en `globals.css` (`.card`, `.btn-primary`, `.input`, `.label`, `.chip`, `.table-head`). ✔
+
+**Próximo paso (después del push del usuario):**
+1. Usuario hace commit + push (git add/commit/push).
+2. Verificar en **Render** los flujos contra BD real (sin `.env` local no se pueden probar):
+   - `POST /instances/open` y `POST /templates` con `profesor_id`.
+   - Postulación con balance neto (item 15) y candidatos con `balance_favor`.
+   - Preview de facturación con detalle/totales y generate con auto-saldo.
+   - `POST /auth/change-password` y reset desde `/alumnos`.
+   - Regenerar mes con `include_past: false` (solo fechas futuras).
+3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos).
+4. Si todo OK, considerar limpiar estado muerto en `mis-clases/page.tsx` (estado `profile/editing/form/saving/message/loading` + `fetchProfile`/`handleSubmit` quedaron sin uso tras quitar "Mi Perfil") — inofensivo, no bloquea build.
 
 ---
 
@@ -224,19 +215,24 @@ C:\GesttionSoftware\
 - **Esquema en español**: tablas/columnas/ENUM en castellano (`fija`/`extra`/`abierta`, `programada`/`completada`/`cancelada`, `pendiente`/`aceptada`/`rechazada`/`lista_espera`). Nunca mandar `fixed`/`open`. El backend mapea columnas españolas → claves JSON en inglés. `instancias_clases.plantilla_id` es NOT NULL.
 - **Windows**: la Execution Policy bloquea `npm.ps1` → usar `npm.cmd run build` en frontend y `npm.cmd install` en backend.
 - **Verificación local sin tests**: `node --check` por archivo (backend) + `npm.cmd run build` (frontend). Flujos contra BD real se prueban en Render tras push.
-- Sin `.env` local no hay conexión a BD (500 esperado); auth (401) y validaciones (400) se prueban con JWT firmado localmente (`node -e "console.log(require('jsonwebtoken').sign({id:1,rol:'admin'},'ts_riverside_2026_secret'))"` en `backend/`).
-- **Caché tras deploy**: verificar con hard refresh (Ctrl+F5) o incógnito.
-- Nginx: `root /var/www/tenis-manager;` + `location /api/` → Render. Path `/etc/nginx/conf.d/riversideclases.conf`, versionado en `deploy/nginx-riversideclases.conf`.
+- **Sin `.env` local** no hay conexión a BD (500 esperado); auth (401) y validaciones (400) se prueban con JWT firmado localmente (`node -e "console.log(require('jsonwebtoken').sign({id:1,rol:'admin'},'ts_riverside_2026_secret'))"` en `backend/`).
+- **Caché tras deploy**: verificar con hard refresh (Ctrl+F5) o incógnito. Un bundle viejo cacheado manda valores/endpoints viejos y confunde el diagnóstico (lección del item 3).
+- **mysql2**: las columnas DATE vuelven como objetos `Date` salvo que se setee `dateStrings: true` — causa del bug de semana (item 3) y del NaN (item 7).
+- **Bug de zona horaria descartado** para la semana: el armado de fechas de `/board/week` da bien en UTC y Argentina; la causa real fue el tipo de dato de mysql2.
+- Nginx: `root /var/www/tenis-manager;` + `location /api/` → Render. Config versionada en `deploy/nginx-riversideclases.conf`.
 - **Next.js**: `trailingSlash: true` genera carpetas (`clases-abiertas/index.html`).
 - Roles en BD: `admin`, `profesor`, `alumno`.
+- **Registro público** (`POST /auth/register`) acepta `role` del body sin restricción — posible escalada de privilegios a documentar/revisar (decisión pendiente, no se grilló).
 
 ---
 
 ## Suggested skills
 
-- **code-review** — revisar el diff 08-12 (tickets 08-12) antes del push.
-- **grill-with-docs** — si antes de seguir hay que cerrar las decisiones pendientes de facturación/pagos (liberar cupos, precio extra, deuda bloqueante).
-- **wizard / to-questionnaire** — para confirmar las decisiones pendientes con el cliente.
+- **implement** — para ejecutar los items 1-15 y el pulido estético con los tickets/documentos ya escritos.
+- **to-tickets / to-issues** — si se quiere partir los 15 items en tickets de trabajo antes de implementar.
+- **code-review** — revisar el diff de implementación antes del push del usuario.
+- **grill-with-docs** — si surge una decisión nueva de dominio (ej. arreglar el riesgo de `/auth/register`, o definir qué pasa con las clases canceladas en facturación).
+- **prototype** (rama UI) — opcional, si el pulido estético quiere explorarse con variantes antes de decidir (ya se decidió Paleta A, así que probablemente no haga falta).
 
 ---
 
@@ -250,3 +246,5 @@ C:\GesttionSoftware\
 - Paginación avanzada
 - Exportación a PDF/Excel
 - **Visitantes** como rol propio (hoy usan cuenta `alumno`)
+- Cambiar email del usuario (requiere verificación) — queda fuera por decisión del item 11
+- Arreglar el riesgo de `/auth/register` (rol desde el body)

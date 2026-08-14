@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { applySaldoToDebt } = require('../services/billing');
 
 const router = express.Router();
 
@@ -58,11 +59,13 @@ router.post('/:instanceId', authenticateToken, authorizeRoles('admin', 'profesor
         );
         if (existingDebt.length === 0) {
           const fechaStr = new Date().toISOString().slice(0, 7);
-          await db.query(
+          const [dRes] = await db.query(
             `INSERT INTO deudas (alumno_id, instancia_id, tipo_deuda, mes_facturacion, monto, monto_pagado, estado)
              VALUES (?, ?, ?, ?, ?, 0, 'pendiente')`,
             [item.student_id, req.params.instanceId, tipo, fechaStr, precio]
           );
+          // item 15: aplicar saldo a favor automáticamente
+          await applySaldoToDebt(db, item.student_id, dRes.insertId);
         }
       }
     }

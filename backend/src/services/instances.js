@@ -1,7 +1,54 @@
 const db = require('../db');
 
-// Genera instancias para un mes dado (YYYY-MM) basándose en las plantillas activas
-async function generateInstancesForMonth(yearMonth) {
+// Enriquecer instancias con sus alumnos (y profesor). Reutilizado por tablero e instancias.
+async function enrichInstancesWithStudents(instances) {
+  if (instances.length === 0) return [];
+
+  const instanceIds = instances.map((i) => i.id);
+  const placeholders = instanceIds.map(() => '?').join(',');
+
+  // Buscar grupos y alumnos para estas instancias
+  const [links] = await db.query(
+    `SELECT g.instancia_id, p.id as student_id, p.nombre_completo as full_name, p.nivel as level 
+    FROM grupos g 
+    JOIN grupo_alumnos ga ON g.id = ga.grupo_id 
+    JOIN perfiles p ON ga.alumno_id = p.id 
+    WHERE g.instancia_id IN (${placeholders})`,
+    instanceIds
+  );
+
+  const studentsByInstance = {};
+  for (const link of links) {
+    if (!studentsByInstance[link.instancia_id]) {
+      studentsByInstance[link.instancia_id] = [];
+    }
+    studentsByInstance[link.instancia_id].push({
+      id: link.student_id,
+      full_name: link.full_name,
+      level: link.level
+    });
+  }
+
+  return instances.map((inst) => ({
+    id: inst.id,
+    template_id: inst.template_id,
+    profesor_id: inst.profesor_id,
+    professor_name: inst.professor_name,
+    instance_date: inst.instance_date,
+    start_hour: inst.start_hour,
+    end_hour: inst.end_hour,
+    level: inst.level,
+    modality: inst.modality,
+    max_students: inst.max_students,
+    price: inst.price,
+    status: inst.status,
+    students: studentsByInstance[inst.id] || []
+  }));
+}
+
+// Genera instancias para un mes dado (YYYY-MM) basándose en las plantillas activas.
+// includePast: si es false, no genera fechas anteriores a hoy (item 14).
+async function generateInstancesForMonth(yearMonth, { includePast = true } = {}) {
   const [year, month] = yearMonth.split('-').map(Number);
   if (!year || !month) throw new Error('Formato de mes inválido (YYYY-MM)');
 
@@ -14,6 +61,7 @@ async function generateInstancesForMonth(yearMonth) {
 
   // Calcular días del mes
   const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
 
   for (const t of templates) {
     // dia_semana: 0 = Lunes, ..., 6 = Domingo en nuestra convención (ver dayOfweek)
@@ -29,6 +77,9 @@ async function generateInstancesForMonth(yearMonth) {
         const mm = String(month).padStart(2, '0');
         const dd = String(day).padStart(2, '0');
         const dateStr = `${yyyy}-${mm}-${dd}`;
+
+        // item 14: omitir fechas ya pasadas del mes en curso cuando se pide solo futuras
+        if (!includePast && dateStr < today) continue;
 
         try {
           const [res] = await db.query(
@@ -71,5 +122,6 @@ async function cancelFutureInstances(templateId) {
 
 module.exports = {
   generateInstancesForMonth,
-  cancelFutureInstances
+  cancelFutureInstances,
+  enrichInstancesWithStudents
 };

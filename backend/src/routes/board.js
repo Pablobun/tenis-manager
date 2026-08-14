@@ -2,52 +2,9 @@ const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { ensureDebtForEnrollment } = require('../services/billing');
+const { enrichInstancesWithStudents } = require('../services/instances');
 
 const router = express.Router();
-
-// Helper para enriquecer instancias con sus alumnos
-async function enrichInstancesWithStudents(instances) {
-  if (instances.length === 0) return [];
-
-  const instanceIds = instances.map((i) => i.id);
-  const placeholders = instanceIds.map(() => '?').join(',');
-
-  // Buscar grupos y alumnos para estas instancias
-  const [links] = await db.query(
-    `SELECT g.instancia_id, p.id as student_id, p.nombre_completo as full_name, p.nivel as level 
-    FROM grupos g 
-    JOIN grupo_alumnos ga ON g.id = ga.grupo_id 
-    JOIN perfiles p ON ga.alumno_id = p.id 
-    WHERE g.instancia_id IN (${placeholders})`,
-    instanceIds
-  );
-
-  const studentsByInstance = {};
-  for (const link of links) {
-    if (!studentsByInstance[link.instancia_id]) {
-      studentsByInstance[link.instancia_id] = [];
-    }
-    studentsByInstance[link.instancia_id].push({
-      id: link.student_id,
-      full_name: link.full_name,
-      level: link.level
-    });
-  }
-
-  return instances.map((inst) => ({
-    id: inst.id,
-    template_id: inst.template_id,
-    instance_date: inst.instance_date,
-    start_hour: inst.start_hour,
-    end_hour: inst.end_hour,
-    level: inst.level,
-    modality: inst.modality,
-    max_students: inst.max_students,
-    price: inst.price,
-    status: inst.status,
-    students: studentsByInstance[inst.id] || []
-  }));
-}
 
 // GET /board/day?date=YYYY-MM-DD
 router.get('/day', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
@@ -58,12 +15,14 @@ router.get('/day', authenticateToken, authorizeRoles('admin', 'profesor'), async
 
   try {
     const [rows] = await db.query(
-      `SELECT id, plantilla_id as template_id, fecha as instance_date, 
-      hora_inicio as start_hour, hora_fin as end_hour, nivel, modalidad, 
-      cupo_maximo as max_students, precio, estado as status 
-      FROM instancias_clases 
-      WHERE fecha = ? 
-      ORDER BY hora_inicio`,
+      `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel, i.modalidad, 
+      i.cupo_maximo as max_students, i.precio, i.estado as status,
+      p.nombre_completo as professor_name
+      FROM instancias_clases i
+      JOIN perfiles p ON i.profesor_id = p.id
+      WHERE i.fecha = ? 
+      ORDER BY i.hora_inicio`,
       [date]
     );
 
@@ -101,12 +60,14 @@ router.get('/week', authenticateToken, authorizeRoles('admin', 'profesor'), asyn
     const endDate = weekDays[6];
 
     const [rows] = await db.query(
-      `SELECT id, plantilla_id as template_id, fecha as instance_date, 
-      hora_inicio as start_hour, hora_fin as end_hour, nivel, modalidad, 
-      cupo_maximo as max_students, precio, estado as status 
-      FROM instancias_clases 
-      WHERE fecha BETWEEN ? AND ? 
-      ORDER BY fecha, hora_inicio`,
+      `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel, i.modalidad, 
+      i.cupo_maximo as max_students, i.precio, i.estado as status,
+      p.nombre_completo as professor_name
+      FROM instancias_clases i
+      JOIN perfiles p ON i.profesor_id = p.id
+      WHERE i.fecha BETWEEN ? AND ? 
+      ORDER BY i.fecha, i.hora_inicio`,
       [startDate, endDate]
     );
 
@@ -158,7 +119,14 @@ router.get('/mine', authenticateToken, authorizeRoles('alumno'), async (req, res
       [req.user.id]
     );
 
-    res.json({ classes, balance: Number(debtRows[0].balance) });
+    const [saldoRows] = await db.query(
+      'SELECT COALESCE(saldo_a_favor, 0) as saldo FROM perfiles WHERE id = ?',
+      [req.user.id]
+    );
+    const saldoAFavor = Number(saldoRows[0].saldo);
+    const balance = Number(debtRows[0].balance) - saldoAFavor;
+
+    res.json({ classes, balance, saldo_a_favor: saldoAFavor });
   } catch (err) {
     console.error('Error obteniendo clases del alumno:', err);
     res.status(500).json({ error: 'Error interno del servidor' });

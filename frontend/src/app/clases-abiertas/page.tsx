@@ -2,12 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
+import LevelChip from '@/components/LevelChip';
 
 interface User {
   id: number;
   email: string;
   full_name: string;
   role: string;
+}
+
+interface Profesor {
+  id: number;
+  full_name: string;
 }
 
 interface OpenClass {
@@ -24,6 +31,7 @@ interface OpenClass {
   status: string;
   professor_name: string;
   enrolled_count: number;
+  pending_candidates: number;
 }
 
 interface Candidate {
@@ -36,6 +44,7 @@ interface Candidate {
   phone: string | null;
   level: string | null;
   balance: number;
+  balance_favor: number;
 }
 
 interface AttendanceItem {
@@ -57,7 +66,8 @@ const EMPTY_FORM = {
   nivel: 'intermedio',
   cupo_maximo: '4',
   price: '',
-  modalidad: 'abierta'
+  modalidad: 'abierta',
+  profesor_id: ''
 };
 
 const MODALITIES = [
@@ -69,6 +79,7 @@ export default function ClasesAbiertasPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [classes, setClasses] = useState<OpenClass[]>([]);
+  const [profesores, setProfesores] = useState<Profesor[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingClass, setEditingClass] = useState<OpenClass | null>(null);
@@ -119,8 +130,28 @@ export default function ClasesAbiertasPage() {
   }, []);
 
   useEffect(() => {
-    if (user) fetchClasses();
+    if (user) {
+      fetchClasses();
+      fetchProfesores();
+      if (user.role === 'profesor') {
+        setForm((f) => ({ ...f, profesor_id: String(user.id) }));
+      }
+    }
   }, [user, fetchClasses]);
+
+  const fetchProfesores = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/students/profesores`, {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setProfesores(await res.json());
+      }
+    } catch (err) {
+      console.error('Error fetching profesores:', err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +170,8 @@ export default function ClasesAbiertasPage() {
       nivel: form.nivel,
       cupo_maximo: Number(form.cupo_maximo),
       precio: Number(form.price),
-      modalidad: form.modalidad
+      modalidad: form.modalidad,
+      profesor_id: form.profesor_id ? Number(form.profesor_id) : undefined
     };
 
     try {
@@ -184,7 +216,8 @@ export default function ClasesAbiertasPage() {
       nivel: c.level,
       cupo_maximo: String(c.max_students),
       price: c.price,
-      modalidad: c.modality || 'abierta'
+      modalidad: c.modality || 'abierta',
+      profesor_id: c.profesor_id ? String(c.profesor_id) : ''
     });
     setShowForm(true);
   };
@@ -211,17 +244,7 @@ export default function ClasesAbiertasPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch {}
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
+if (!user) return null;
 
   const toggleCandidates = useCallback(
     async (classId: number) => {
@@ -336,20 +359,10 @@ export default function ClasesAbiertasPage() {
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800">
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Clases Abiertas" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-lg font-semibold">Clases Abiertas / Rotativas y Extras</h2>
@@ -358,10 +371,10 @@ export default function ClasesAbiertasPage() {
           <button
             onClick={() => {
               setEditingClass(null);
-              setForm(EMPTY_FORM);
+              setForm({ ...EMPTY_FORM, profesor_id: user.role === 'profesor' ? String(user.id) : '' });
               setShowForm(true);
             }}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm"
+            className="btn-primary text-sm"
           >
             + Nueva Clase
           </button>
@@ -375,18 +388,18 @@ export default function ClasesAbiertasPage() {
         )}
 
         {showForm && (
-          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <div className="card mb-6">
             <h3 className="font-semibold mb-4">
               {editingClass ? 'Editar Clase' : 'Nueva Clase'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Modalidad</label>
+                  <label className="label">Modalidad</label>
                   <select
                     value={form.modalidad}
                     onChange={(e) => setForm({ ...form, modalidad: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   >
                     {MODALITIES.map((m) => (
@@ -397,21 +410,21 @@ export default function ClasesAbiertasPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                  <label className="label">Fecha</label>
                   <input
                     type="date"
                     value={form.fecha}
                     onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nivel sugerido</label>
+                  <label className="label">Nivel sugerido</label>
                   <select
                     value={form.nivel}
                     onChange={(e) => setForm({ ...form, nivel: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   >
                     {LEVELS.map((level) => (
@@ -422,45 +435,60 @@ export default function ClasesAbiertasPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora inicio</label>
+                  <label className="label">Profesor/a</label>
+                  <select
+                    value={form.profesor_id}
+                    onChange={(e) => setForm({ ...form, profesor_id: e.target.value })}
+                    className="input"
+                  >
+                    <option value="">{user.role === 'profesor' ? 'Yo (profesor/a)' : '— Seleccionar —'}</option>
+                    {profesores.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Hora inicio</label>
                   <input
                     type="time"
                     value={form.hora_inicio}
                     onChange={(e) => setForm({ ...form, hora_inicio: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hora fin</label>
+                  <label className="label">Hora fin</label>
                   <input
                     type="time"
                     value={form.hora_fin}
                     onChange={(e) => setForm({ ...form, hora_fin: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cupo máximo de alumnos</label>
+                  <label className="label">Cupo máximo de alumnos</label>
                   <input
                     type="number"
                     min="1"
                     value={form.cupo_maximo}
                     onChange={(e) => setForm({ ...form, cupo_maximo: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                  <label className="label">Precio</label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="input"
                     placeholder="0.00"
                     required
                   />
@@ -472,7 +500,7 @@ export default function ClasesAbiertasPage() {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700"
+                  className="btn-primary"
                 >
                   {editingClass ? 'Guardar Cambios' : 'Crear Clase'}
                 </button>
@@ -482,7 +510,7 @@ export default function ClasesAbiertasPage() {
                     setShowForm(false);
                     setEditingClass(null);
                   }}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
@@ -507,7 +535,7 @@ export default function ClasesAbiertasPage() {
               const capitalizedLabel = `${label[0].toUpperCase()}${label.slice(1)}`;
 
               return (
-                <div key={c.id} className="bg-white shadow-md rounded-lg p-5 border-l-4 border-primary-500 flex flex-col justify-between">
+                <div key={c.id} className="card card-accent flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold text-gray-800 capitalize">{capitalizedLabel}</h4>
@@ -518,12 +546,26 @@ export default function ClasesAbiertasPage() {
                     <p className="text-sm text-gray-600">
                       Horario: {c.start_hour.slice(0, 5)} - {c.end_hour.slice(0, 5)}
                     </p>
-                    <p className="text-sm text-gray-600 capitalize">Nivel: {c.level}</p>
-                    <p className="text-sm text-gray-600 capitalize">Modalidad: {c.modality === 'extra' ? 'Extra' : 'Abierta'}</p>
+                    <div className="flex items-center gap-2 flex-wrap mt-1">
+                      <LevelChip level={c.level} />
+                      <span className="text-sm text-gray-600 capitalize">
+                        {c.modality === 'extra' ? 'Extra' : 'Abierta'}
+                      </span>
+                      {c.professor_name && (
+                        <span className="text-xs text-gray-500">· {c.professor_name}</span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600">Precio: ${c.price}</p>
-                    <p className="text-sm font-semibold text-gray-700 mt-2">
-                      Cupo: {c.enrolled_count}/{c.max_students} alumnos inscriptos
-                    </p>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <p className="text-sm font-semibold text-gray-700">
+                        Cupo: {c.enrolled_count}/{c.max_students} alumnos inscriptos
+                      </p>
+                      {c.pending_candidates > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                          {c.pending_candidates} postulante{c.pending_candidates > 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 justify-end">
                     <button
@@ -567,7 +609,13 @@ export default function ClasesAbiertasPage() {
                                 <div>
                                   <p className="text-sm font-semibold">{cd.full_name}</p>
                                   <p className="text-xs text-gray-500">
-                                    {cd.level ? `Nivel: ${cd.level} · ` : ''}Deuda: ${Number(cd.balance).toLocaleString('es-AR')}
+                                    {cd.level ? `Nivel: ${cd.level} · ` : ''}
+                                    {(() => {
+                                      const net = Number(cd.balance) - Number(cd.balance_favor);
+                                      if (net > 0) return `Deuda neta: $${net.toLocaleString('es-AR')}`;
+                                      if (net < 0) return `Saldo a favor: $${Math.abs(net).toLocaleString('es-AR')}`;
+                                      return 'Sin deuda';
+                                    })()}
                                   </p>
                                   <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
                                     cd.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'

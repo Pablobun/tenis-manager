@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
 
 interface User {
   id: number;
@@ -23,44 +24,19 @@ export default function DashboardPage() {
     setUser(JSON.parse(stored));
   }, [router]);
 
-  const handleLogout = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch {}
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
-
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name} ({user.role})</span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-red-600 hover:text-red-800"
-            >
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Riverside Tenis" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-xl font-semibold mb-6">Panel de Control</h2>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <a
             href="/tablero"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+            className="card card-hover card-accent border-l-primary-500"
           >
             <h3 className="font-bold text-lg mb-1">Tablero</h3>
             <p className="text-sm text-gray-500">Vista diaria y semanal de clases y alumnos</p>
@@ -68,7 +44,7 @@ export default function DashboardPage() {
 
           <a
             href="/plantillas"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+            className="card card-hover card-accent border-l-primary-500"
           >
             <h3 className="font-bold text-lg mb-1">Plantillas</h3>
             <p className="text-sm text-gray-500">Gestión de clases recurrentes</p>
@@ -76,7 +52,7 @@ export default function DashboardPage() {
 
           <a
             href="/instancias"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+            className="card card-hover card-accent border-l-primary-500"
           >
             <h3 className="font-bold text-lg mb-1">Instancias</h3>
             <p className="text-sm text-gray-500">Generación y control mensual</p>
@@ -84,7 +60,7 @@ export default function DashboardPage() {
 
           <a
             href="/clases-abiertas"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+            className="card card-hover card-accent border-l-primary-500"
           >
             <h3 className="font-bold text-lg mb-1">Clases Abiertas</h3>
             <p className="text-sm text-gray-500">Creación y control de clases rotativas</p>
@@ -92,7 +68,7 @@ export default function DashboardPage() {
 
           <a
             href="/alumnos"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-primary-500"
+            className="card card-hover card-accent border-l-primary-500"
           >
             <h3 className="font-bold text-lg mb-1">Alumnos</h3>
             <p className="text-sm text-gray-500">Gestión de alumnos y perfiles</p>
@@ -100,7 +76,7 @@ export default function DashboardPage() {
 
           <a
             href="/facturacion"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-emerald-500"
+            className="card card-hover card-accent border-l-emerald-500"
           >
             <h3 className="font-bold text-lg mb-1">Facturación</h3>
             <p className="text-sm text-gray-500">Deuda mensual de clases fijas</p>
@@ -108,7 +84,7 @@ export default function DashboardPage() {
 
           <a
             href="/pagos"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition border-l-4 border-amber-500"
+            className="card card-hover card-accent border-l-amber-500"
           >
             <h3 className="font-bold text-lg mb-1">Pagos</h3>
             <p className="text-sm text-gray-500">Registro individual y por lote</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
 
 interface User {
   id: number;
@@ -13,6 +14,11 @@ interface User {
 interface Student {
   id: number;
   full_name: string;
+}
+
+interface StudentBalance {
+  total: number;
+  saldo_a_favor: number;
 }
 
 interface PaymentSummary {
@@ -36,6 +42,7 @@ export default function PagosPage() {
   const [batch, setBatch] = useState({ monto_global: '', fecha: today, nota: '' });
   const [selectedBatch, setSelectedBatch] = useState<Record<number, boolean>>({});
   const [summary, setSummary] = useState<Record<string, PaymentSummary>>({});
+  const [selectedInfo, setSelectedInfo] = useState<StudentBalance | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -81,6 +88,23 @@ export default function PagosPage() {
   useEffect(() => {
     if (user) fetchData();
   }, [user]);
+
+  const fetchStudentInfo = async (studentId: string) => {
+    setSelectedInfo(null);
+    if (!studentId) return;
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/pagos/student/${studentId}`, {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedInfo({ total: Number(data.total), saldo_a_favor: Number(data.saldo_a_favor) });
+      }
+    } catch (err) {
+      console.error('Error fetching student info:', err);
+    }
+  };
 
   const handleIndividual = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,20 +202,10 @@ export default function PagosPage() {
   const summaryEntries = Object.keys(summary).sort().reverse();
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800">
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Pagos" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-lg font-semibold mb-6">Registro de Pagos</h2>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm mb-4">{error}</div>}
@@ -199,15 +213,19 @@ export default function PagosPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Pago individual */}
-          <div className="bg-white shadow-md rounded-lg p-6">
+          <div className="card">
             <h3 className="font-semibold mb-4">Pago individual</h3>
             <form onSubmit={handleIndividual} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Alumno</label>
+                <label className="label">Alumno</label>
                 <select
                   value={form.alumno_id}
-                  onChange={(e) => setForm({ ...form, alumno_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, alumno_id: v });
+                    fetchStudentInfo(v);
+                  }}
+                  className="input"
                   required
                 >
                   <option value="">Seleccionar alumno</option>
@@ -217,43 +235,61 @@ export default function PagosPage() {
                     </option>
                   ))}
                 </select>
+                {selectedInfo && (
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    {selectedInfo.total > 0 ? (
+                      <span className="px-2 py-1 rounded-full bg-red-100 text-red-800">
+                        Deuda neta: ${selectedInfo.total.toLocaleString('es-AR')}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">
+                        Sin deuda pendiente
+                      </span>
+                    )}
+                    {selectedInfo.saldo_a_favor > 0 && (
+                      <span className="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                        Saldo a favor: ${selectedInfo.saldo_a_favor.toLocaleString('es-AR')}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+                <label className="label">Monto</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={form.monto}
                   onChange={(e) => setForm({ ...form, monto: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                   placeholder="0.00"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                <label className="label">Fecha</label>
                 <input
                   type="date"
                   value={form.fecha}
                   onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+                <label className="label">Nota</label>
                 <input
                   type="text"
                   value={form.nota}
                   onChange={(e) => setForm({ ...form, nota: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                className="btn-primary disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Registrar pago'}
               </button>
@@ -261,7 +297,7 @@ export default function PagosPage() {
           </div>
 
           {/* Pago por lote */}
-          <div className="bg-white shadow-md rounded-lg p-6">
+          <div className="card">
             <h3 className="font-semibold mb-4">Pago por lote</h3>
             <form onSubmit={handleBatch} className="space-y-4">
               <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2">
@@ -278,41 +314,41 @@ export default function PagosPage() {
                 ))}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monto (por alumno)</label>
+                <label className="label">Monto (por alumno)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={batch.monto_global}
                   onChange={(e) => setBatch({ ...batch, monto_global: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                   placeholder="0.00"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                <label className="label">Fecha</label>
                 <input
                   type="date"
                   value={batch.fecha}
                   onChange={(e) => setBatch({ ...batch, fecha: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+                <label className="label">Nota</label>
                 <input
                   type="text"
                   value={batch.nota}
                   onChange={(e) => setBatch({ ...batch, nota: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="input"
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                className="btn-primary disabled:opacity-50"
               >
                 {saving ? 'Guardando...' : 'Registrar pagos'}
               </button>
@@ -333,7 +369,7 @@ export default function PagosPage() {
               const capitalized = `${label[0].toUpperCase()}${label.slice(1)}`;
               const entry = summary[date];
               return (
-                <div key={date} className="bg-white shadow-md rounded-lg p-5">
+                <div key={date} className="card">
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="font-semibold text-gray-800">{capitalized}</h4>
                     <span className="text-lg font-bold text-green-600">${entry.total.toLocaleString('es-AR')}</span>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
 
 interface User {
   id: number;
@@ -10,18 +11,31 @@ interface User {
   role: string;
 }
 
+interface DetailItem {
+  instancia_id: number;
+  instance_date: string;
+  start_hour: string;
+  price: number;
+}
+
 interface PreviewItem {
   alumno_id: number;
   full_name: string;
   clases: number;
   monto: number;
+  precio_por_clase: number;
+  detalle: DetailItem[];
+  inscripcion_fecha: string | null;
   generated: boolean;
 }
 
 interface Debtor {
   alumno_id: number;
   full_name: string;
+  monto_total: number;
+  pagado: number;
   balance: number;
+  balance_favor: number;
 }
 
 const currentMonth = new Date().toISOString().slice(0, 7);
@@ -32,6 +46,9 @@ export default function FacturacionPage() {
   const [month, setMonth] = useState(currentMonth);
   const [items, setItems] = useState<PreviewItem[]>([]);
   const [debtors, setDebtors] = useState<Debtor[]>([]);
+  const [totales, setTotales] = useState<{ total_a_cobrar: number; alumnos_con_deuda: number; total_pagado: number } | null>(null);
+  const [ciclo, setCiclo] = useState('');
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -63,6 +80,8 @@ export default function FacturacionPage() {
       if (previewRes.ok) {
         const previewData = await previewRes.json();
         setItems(previewData.items || []);
+        setTotales(previewData.totales || null);
+        setCiclo(previewData.ciclo || '');
       } else {
         setError('Error cargando preview de facturación');
       }
@@ -162,25 +181,26 @@ export default function FacturacionPage() {
 
   if (!user) return null;
 
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800">
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+  const cicloLabel = ciclo === 'abierto' ? 'Mes abierto' : ciclo === 'cerrado' ? 'Mes cerrado' : 'Mes no abierto';
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+  return (
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Facturación" />
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-          <div>
-            <h2 className="text-lg font-semibold">Facturación Mensual</h2>
-            <p className="text-sm text-gray-500">Generación semi-automática de deudas para clases fijas</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Facturación Mensual</h2>
+              <p className="text-sm text-gray-500">Generación semi-automática de deudas para clases fijas</p>
+            </div>
+            {ciclo && (
+              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                ciclo === 'abierto' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+              }`}>
+                {cicloLabel}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -190,17 +210,17 @@ export default function FacturacionPage() {
                 setMonth(e.target.value);
                 loadAll(e.target.value);
               }}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="input"
             />
             <button
               onClick={handleGenerate}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm"
+              className="btn-primary text-sm"
             >
               Generar deudas
             </button>
             <button
               onClick={handleOpenMonth}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm"
+              className="btn-secondary text-sm"
             >
               Abrir mes
             </button>
@@ -214,36 +234,87 @@ export default function FacturacionPage() {
         {loading ? (
           <p className="text-gray-500">Calculando deuda del mes...</p>
         ) : (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+          <div className="card overflow-hidden mb-8">
             {items.length === 0 ? (
               <p className="p-6 text-gray-500 text-center">No hay alumnos inscriptos en clases fijas para este mes.</p>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Alumno</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Clases</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Monto</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {items.map((it) => (
-                    <tr key={it.alumno_id}>
-                      <td className="px-4 py-3 text-sm font-medium">{it.full_name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{it.clases}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">${Number(it.monto).toLocaleString('es-AR')}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {it.generated ? (
-                          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Generada</span>
-                        ) : (
-                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">Pendiente</span>
-                        )}
-                      </td>
+              <>
+                {totales && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 border-b border-gray-100 bg-canvas">
+                    <div>
+                      <p className="text-xs text-gray-500">Total a cobrar</p>
+                      <p className="font-bold text-primary-700">${totales.total_a_cobrar.toLocaleString('es-AR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Ya pagado</p>
+                      <p className="font-semibold text-green-700">${totales.total_pagado.toLocaleString('es-AR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Alumnos con deuda</p>
+                      <p className="font-semibold text-gray-700">{totales.alumnos_con_deuda}</p>
+                    </div>
+                  </div>
+                )}
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="table-head">Alumno</th>
+                      <th className="table-head">Clases × Precio</th>
+                      <th className="table-head">Total</th>
+                      <th className="table-head">Detalle</th>
+                      <th className="table-head">Estado</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {items.map((it) => (
+                      <>
+                        <tr key={it.alumno_id}>
+                          <td className="px-4 py-3 text-sm font-medium">
+                            {it.full_name}
+                            {it.inscripcion_fecha && (
+                              <p className="text-xs text-gray-400">
+                                Inscripción: {it.inscripcion_fecha.slice(0, 10)}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {it.clases} × ${Number(it.precio_por_clase).toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-semibold">${Number(it.monto).toLocaleString('es-AR')}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => setExpanded((prev) => ({ ...prev, [it.alumno_id]: !prev[it.alumno_id] }))}
+                              className="text-primary-600 hover:text-primary-800 text-sm font-semibold"
+                            >
+                              {expanded[it.alumno_id] ? 'Ocultar' : 'Ver clases'}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {it.generated ? (
+                              <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Generada</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800">Pendiente</span>
+                            )}
+                          </td>
+                        </tr>
+                        {expanded[it.alumno_id] && (
+                          <tr key={`${it.alumno_id}-detalle`}>
+                            <td colSpan={5} className="px-4 py-2 bg-gray-50">
+                              <ul className="text-xs text-gray-600 space-y-1">
+                                {it.detalle.map((dd) => (
+                                  <li key={dd.instancia_id}>
+                                    {dd.instance_date.slice(0, 10)} · {dd.start_hour.slice(0, 5)} — ${Number(dd.price).toLocaleString('es-AR')}
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
           </div>
         )}
@@ -252,20 +323,28 @@ export default function FacturacionPage() {
         {debtors.length === 0 ? (
           <p className="text-gray-500">No hay alumnos con deuda pendiente para este mes.</p>
         ) : (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="card overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Alumno</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Saldo</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Acción</th>
+                  <th className="table-head">Alumno</th>
+                  <th className="table-head">Monto</th>
+                  <th className="table-head">Pagado</th>
+                  <th className="table-head">Saldo restante</th>
+                  <th className="table-head">Saldo a favor</th>
+                  <th className="table-head">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {debtors.map((d) => (
                   <tr key={d.alumno_id}>
                     <td className="px-4 py-3 text-sm font-medium">{d.full_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">${Number(d.monto_total).toLocaleString('es-AR')}</td>
+                    <td className="px-4 py-3 text-sm text-green-700">${Number(d.pagado).toLocaleString('es-AR')}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-red-600">${Number(d.balance).toLocaleString('es-AR')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {Number(d.balance_favor) > 0 ? `$${Number(d.balance_favor).toLocaleString('es-AR')}` : '—'}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       <button
                         onClick={() => handleReleaseSlots(d.alumno_id)}

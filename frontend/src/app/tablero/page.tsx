@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '@/components/Navigation';
+import LevelChip from '@/components/LevelChip';
 
 interface User {
   id: number;
@@ -20,6 +22,8 @@ interface Student {
 interface Instance {
   id: number;
   template_id: number;
+  profesor_id?: number;
+  professor_name?: string;
   instance_date: string;
   start_hour: string;
   end_hour: string;
@@ -231,18 +235,6 @@ export default function TableroPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch {}
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
-
   if (!user) return null;
 
   const isToday = selectedDate === todayISO();
@@ -281,7 +273,7 @@ export default function TableroPage() {
       <button
         key={instance.id}
         onClick={() => openSheet(instance)}
-        className={`w-full text-left bg-white shadow-md rounded-lg p-4 border-l-4 ${cupoColor(instance)} hover:shadow-lg transition`}
+        className={`w-full text-left bg-white rounded-xl border border-gray-200 shadow-sm p-4 border-l-4 ${cupoColor(instance)} hover:shadow-md transition`}
       >
         <div className="flex justify-between items-start gap-2">
           <p className="font-semibold text-sm">
@@ -291,32 +283,29 @@ export default function TableroPage() {
             {badge.text}
           </span>
         </div>
-        <p className="text-sm mt-1">
-          {names || <span className="text-gray-400">Sin alumnos</span>}
-        </p>
-        <p className="text-xs text-gray-500 mt-1 capitalize">
-          {MODALITIES[instance.modality] || instance.modality}
-          {instance.level ? ` · ${instance.level}` : ''}
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-sm">
+            {names || <span className="text-gray-400">Sin alumnos</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <span className="text-xs text-gray-500 capitalize">
+            {MODALITIES[instance.modality] || instance.modality}
+          </span>
+          <LevelChip level={instance.level} />
+          {instance.professor_name && (
+            <span className="text-xs text-gray-500">· {instance.professor_name}</span>
+          )}
+        </div>
       </button>
     );
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-primary-600">Riverside Tenis</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.full_name}</span>
-            <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800">
-              Salir
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24 md:pb-8">
+      <Navigation title="Tablero" />
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex bg-white rounded-lg shadow-sm overflow-hidden">
             <button
@@ -371,7 +360,7 @@ export default function TableroPage() {
           <p className="text-gray-500">Cargando tablero...</p>
         ) : view === 'day' ? (
           dayData.length === 0 ? (
-            <div className="bg-white shadow-md rounded-lg p-8 text-center">
+            <div className="card text-center">
               <p className="text-gray-500">No hay clases para este día.</p>
             </div>
           ) : (
@@ -386,7 +375,7 @@ export default function TableroPage() {
         ) : (
           <div className="space-y-4">
             {weekData.map((day) => (
-              <div key={day.date} className="bg-white shadow-md rounded-lg p-4">
+              <div key={day.date} className="card">
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-semibold text-sm capitalize">
                     {weekdayOf(day.date)} {Number(day.date.slice(8, 10))}
@@ -405,7 +394,7 @@ export default function TableroPage() {
                         <button
                           key={instance.id}
                           onClick={() => openSheet(instance)}
-                          className={`px-3 py-1.5 rounded-lg border-l-4 bg-gray-50 text-sm hover:shadow transition ${cupoColor(instance)}`}
+                          className={`px-3 py-1.5 rounded-lg border-l-4 bg-white border border-gray-200 text-sm hover:shadow transition ${cupoColor(instance)}`}
                         >
                           {instance.start_hour}
                           <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${badge.className}`}>
@@ -433,12 +422,17 @@ export default function TableroPage() {
                 <h3 className="font-bold">
                   {selectedInstance.start_hour} - {selectedInstance.end_hour}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1 capitalize">
-                  {weekdayOf(selectedInstance.instance_date)}{' '}
-                  {selectedInstance.instance_date.slice(8, 10)} ·{' '}
-                  {MODALITIES[selectedInstance.modality] || selectedInstance.modality}
-                  {selectedInstance.level ? ` · ${selectedInstance.level}` : ''}
-                </p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <p className="text-sm text-gray-500 capitalize">
+                    {weekdayOf(selectedInstance.instance_date)}{' '}
+                    {selectedInstance.instance_date.slice(8, 10)} ·{' '}
+                    {MODALITIES[selectedInstance.modality] || selectedInstance.modality}
+                  </p>
+                  <LevelChip level={selectedInstance.level} />
+                </div>
+                {selectedInstance.professor_name && (
+                  <p className="text-xs text-gray-500 mt-1">Profesor/a: {selectedInstance.professor_name}</p>
+                )}
               </div>
               <button onClick={closeSheet} className="text-gray-400 hover:text-gray-600 text-xl">
                 ✕

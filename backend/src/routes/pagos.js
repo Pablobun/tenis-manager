@@ -11,6 +11,7 @@ function canViewStudent(req, studentId) {
 }
 
 // Pago individual: más reciente deuda pendiente del alumno, o deuda_id explícito.
+// item 15: si el pago supera el saldo de la deuda, el excedente va a saldo_a_favor del alumno.
 async function applyPayment(alumnoId, monto, fecha, deudaId, registradoPor, nota, client = db) {
   // Determinar deuda a la que aplicar
   let targetDeudaId = deudaId || null;
@@ -23,15 +24,33 @@ async function applyPayment(alumnoId, monto, fecha, deudaId, registradoPor, nota
     if (rd.length > 0) targetDeudaId = rd[0].id;
   }
 
-  // Insertar pago
+  let aplicado = Number(monto);
+  let saldoAFavor = 0;
+
+  if (targetDeudaId) {
+    const [deudaRows] = await client.query('SELECT monto, monto_pagado FROM deudas WHERE id = ?', [targetDeudaId]);
+    if (deudaRows.length > 0) {
+      const pendiente = Number(deudaRows[0].monto) - Number(deudaRows[0].monto_pagado);
+      if (aplicado > pendiente) {
+        saldoAFavor = aplicado - pendiente;
+        aplicado = pendiente;
+      }
+    }
+  } else {
+    // Sin deuda pendiente: el pago completo es saldo a favor (no hay pago huérfano)
+    saldoAFavor = aplicado;
+    aplicado = 0;
+  }
+
+  // Insertar pago (monto total registrado; el excedente va al saldo a favor)
   const [pRes] = await client.query(
     'INSERT INTO pagos (alumno_id, deuda_id, monto, fecha_pago, nota, registrado_por) VALUES (?, ?, ?, ?, ?, ?)',
     [alumnoId, targetDeudaId, monto, fecha, nota || null, registradoPor]
   );
 
   // Actualizar monto_pagado de la deuda y su estado
-  if (targetDeudaId) {
-    await client.query('UPDATE deudas SET monto_pagado = monto_pagado + ? WHERE id = ?', [monto, targetDeudaId]);
+  if (aplicado > 0 && targetDeudaId) {
+    await client.query('UPDATE deudas SET monto_pagado = monto_pagado + ? WHERE id = ?', [aplicado, targetDeudaId]);
     await client.query(
       `UPDATE deudas SET estado = CASE
          WHEN monto_pagado >= monto THEN 'pagada'
@@ -41,7 +60,12 @@ async function applyPayment(alumnoId, monto, fecha, deudaId, registradoPor, nota
     );
   }
 
-  return { paymentId: pRes.insertId, deudaId: targetDeudaId };
+  // Sumar el excedente al saldo a favor
+  if (saldoAFavor > 0) {
+    await client.query('UPDATE perfiles SET saldo_a_favor = saldo_a_favor + ? WHERE id = ?', [saldoAFavor, alumnoId]);
+  }
+
+  return { paymentId: pRes.insertId, deudaId: targetDeudaId, saldo_a_favor: saldoAFavor };
 }
 
 // POST /pagos — pago individual { alumno_id, monto, fecha, deuda_id?, nota? }
@@ -123,9 +147,16 @@ router.get('/student/:id', authenticateToken, async (req, res) => {
       [req.params.id]
     );
 
-    const total = debts.reduce((acc, d) => acc + Number(d.saldo), 0);
+    const [perfilRows] = await db.query(
+      'SELECT COALESCE(saldo_a_favor, 0) as saldo FROM perfiles WHERE id = ?',
+      [req.params.id]
+    );
+    const saldoAFavor = Number(perfilRows[0].saldo);
 
-    res.json({ payments, debts, total });
+    const totalBruto = debts.reduce((acc, d) => acc + Number(d.saldo), 0);
+    const total = totalBruto - saldoAFavor;
+
+    res.json({ payments, debts, total, saldo_a_favor: saldoAFavor });
   } catch (err) {
     console.error('Error obteniendo pagos del alumno:', err);
     res.status(500).json({ error: 'Error interno del servidor' });

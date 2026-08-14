@@ -101,7 +101,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
                 {l.label}
               </Link>
             ))}
-            <a href={manualHref} className="text-primary-100 hover:text-white transition">
+            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="text-primary-100 hover:text-white transition">
               Manual
             </a>
           </nav>
@@ -134,6 +134,8 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
             ))}
             <a
               href={manualHref}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
               className="py-2 px-2 rounded-lg text-sm hover:bg-primary-800"
             >
@@ -159,7 +161,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
             </Link>
           ))}
           {!isAdminOrProfesor && (
-            <a href={manualHref} className="flex-1 py-3 text-xs text-center transition hover:bg-primary-800">
+            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 text-xs text-center transition hover:bg-primary-800">
               Manual
             </a>
           )}

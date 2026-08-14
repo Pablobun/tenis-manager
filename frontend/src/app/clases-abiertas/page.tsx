@@ -244,8 +244,6 @@ export default function ClasesAbiertasPage() {
     }
   };
 
-if (!user) return null;
-
   const toggleCandidates = useCallback(
     async (classId: number) => {
       const next = { ...expandedCandidates, [classId]: !expandedCandidates[classId] };

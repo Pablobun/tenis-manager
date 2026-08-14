@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
 **Fecha**: 2026-08-14
-**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)** + **manuales actualizados (`manual-sistema.html`, nuevo `manual-usuario.html` y nuevo `manual-profesor.html`)** + **acceso al manual desde el sistema (enlace "Manual" por rol en la nav, abre en pestaña nueva)** + **skill `doesntbreak` vendida en `.opencode/skills/`**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
-**Próxima acción**: push del usuario → verificar en Render los flujos de BD (postulación con balance neto, saldo a favor, preview de facturación, generate con include_past) y en el droplet los 3 manuales + el enlace "Manual" por rol, con hard refresh.
+**Estado**: Items 1-15 + pulido estético + manuales + acceso "Manual" por rol + skill `doesntbreak` + **responsive mobile (items 16-18: menú móvil unificado, tablas con scroll horizontal propio, headers con wrap)** — todo **commiteado y pusheado** (último commit `d93719b resposive`) + **`backend/sql/seed-demo.sql` creado (solo INSERT, pendiente de ejecutar por el usuario en la BD real)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente del usuario**: ejecutar `seed-demo.sql` contra la BD real, limpiar luego lo `demo.*`, y verificación final en Render/Droplet con hard refresh.
+**Próxima acción**: usuario ejecuta `backend/sql/seed-demo.sql` en la BD real (SQLYog o similar) para probar todos los escenarios con datos demo (contraseña `demo123`, emails `demo.*`); luego verificar responsive en el droplet con hard refresh (menú móvil en una sola zona, tablas de facturación/plantillas/alumnos con scroll horizontal) y flujos de BD contra los datos demo. El usuario limpia lo `demo.*` al terminar.
 
 ---
 
@@ -66,6 +66,7 @@ C:\GesttionSoftware\
 │   │   ├── schema.sql         ← 10 tablas + columna saldo_a_favor (item 15) YA actualizada
 │   │   ├── migrations/001_saldo_a_favor.sql  ← ★ NUEVO (migración de referencia, idempotente)
 │   │   ├── seed-admin.js / seed-admin.sql
+│   │   └── seed-demo.sql      ← ★ NUEVO: seed de prueba con datos varios (solo INSERT, contraseña demo123, emails demo.*)
 │   └── src/
 │       ├── db.js              ← OK: dateStrings: true (fix item 3/7)
 │       ├── middleware/auth.js
@@ -196,6 +197,17 @@ C:\GesttionSoftware\
   - Abre en **pestaña nueva** (`target="_blank" rel="noopener noreferrer"`).
 - **Skill `doesntbreak` vendida** en `.opencode/skills/doesntbreak/` (SKILL.md + `references/patterns.md` + README MIT). Diseño responsive mobile-first (320px+), tailwind-aware, con modo review. Origen: `https://github.com/Kyaa-A/doesntbreak` (MIT © 2026 Asnari). **Auditada y segura** (solo markdown; se dejaron fuera a propósito los hooks/scripts/update-check del repo). Adaptación local: sección 13 de `patterns.md` con tokens/patrones de Riverside. Se activa sola al tocar layout web; disponible recién en la **próxima sesión** (las skills se cargan al inicio).
 
+### 8. Responsive mobile (items 16-18) + seed demo — esta sesión
+- **Item 16 · Menú móvil unificado** (`Navigation.tsx`): se elimina el panel desplegable que aparecía arriba del contenido y el botón **Menú ahora expande el propio bottom nav** en una segunda fila (`grid-cols-5`, `text-[11px]`, `truncate`) con Plantillas/Instancias/Alumnos/Mi Perfil/Manual — **todo en una sola zona, abajo**. Indicador ▴/▾. Alumno sin cambios (sus 3 ítems van directos). PC sin cambios.
+- **Item 17 · Tablas con scroll horizontal propio** (regla doesntbreak 9 "contain the scroll"): cada `<table>` envuelta en `<div className="overflow-x-auto">` y se quita el `card overflow-hidden` que recortaba el contenido. Aplicado en:
+  - `facturacion/page.tsx` (2 tablas: deuda propuesta + apertura de mes).
+  - `plantillas/page.tsx` (tabla de 9 columnas — el "Mod…" truncado).
+  - `alumnos/page.tsx` (tabla de 7 columnas).
+- **Item 18 · Botones/headers con wrap**: `flex-wrap` + `gap` en los headers y acciones de `facturacion` (selector mes + Generar deudas + Abrir mes), `plantillas`, `alumnos`, `instancias` y `clases-abiertas` (título + botón "+ Nueva…").
+- **Páginas ya responsive (sin cambios)**: tablero, instancias, clases-abiertas, pagos, mis-clases, dashboard, admin, perfil, login (cards/grid, sin tablas anchas).
+- **`backend/sql/seed-demo.sql`** (nuevo): seed de prueba **solo INSERT** (MySQL puro, sin DELETE — la limpieza la hace el usuario) para ejecutar en la BD real. Contraseña común **`demo123`** (hash bcrypt embebido), emails prefijo **`demo.*`**. Datos: 2 profesores + 12 alumnos (con deuda pendiente/parcial/pagada/atrasada, sin deuda, inactivo, saldo a favor ×2), 3 plantillas fijas con instancias del mes actual (dinámicas), inscripciones en clase fija, clase abierta futura con postulaciones (pendiente/aceptada/lista_espera), clase extra pasada con asistencia (deuda clase_extra), pagos (parcial/completo/huérfanos) y ciclos (mes anterior cerrado, mes actual abierto). Montos de mensualidad calculados con `COUNT(*)` de instancias (precio × clases). **Pendiente de ejecutar por el usuario.**
+- `npm.cmd run build` OK tras el responsive (16 rutas). Commit del usuario: `d93719b resposive`.
+
 ---
 
 ## Sesión siguiente (prioridad)
@@ -212,17 +224,22 @@ C:\GesttionSoftware\
 - **Item 13 (facturación)**: preview con detalle por clase, "N × $", inscripción a mitad de mes, totales globales, estado mes/ciclo, columna Pagado + saldo a favor en deudores. ✔
 - **Item 14**: pregunta `include_past` al crear plantilla y al regenerar mes; hint "mensualidad = precio × clases del mes". ✔
 - **Pulido estético**: Paleta A (`#F2F7F2`), header oscuro `Navigation`, clases reutilizables en `globals.css` (`.card`, `.btn-primary`, `.input`, `.label`, `.chip`, `.table-head`). ✔
+- **Items 16-18 (responsive)**: menú móvil unificado en una sola zona (bottom nav expandible), tablas con `overflow-x-auto` (facturación/plantillas/alumnos), headers con `flex-wrap`. ✔
 
-**Próximo paso (después del push del usuario):**
-1. Usuario hace commit + push (git add/commit/push).
-2. Verificar en **Render** los flujos contra BD real (sin `.env` local no se pueden probar):
-   - `POST /instances/open` y `POST /templates` con `profesor_id`.
-   - Postulación con balance neto (item 15) y candidatos con `balance_favor`.
-   - Preview de facturación con detalle/totales y generate con auto-saldo.
+**Próximo paso (pendiente del usuario):**
+1. **Ejecutar `backend/sql/seed-demo.sql` en la BD real** (SQLYog o similar) para probar todos los escenarios con datos demo. Contraseña `demo123`, emails `demo.*`. Al terminar, el usuario **limpia los datos `demo.*`** (el script es solo INSERT, sin DELETE).
+2. Verificar en **Render** los flujos contra BD real usando los datos demo:
+   - Postulación con balance neto (item 15) y candidatos con `balance_favor` (Hugo/Elena pendientes, Irene lista_espera, Lucía aceptada).
+   - Preview de facturación con detalle/totales y generate con auto-saldo (Ana pendiente, Bruno parcial, Carla pagada, Gabriela atrasada).
+   - Saldo a favor (Facundo $15000, Lucía $5000) aplicándose a la próxima deuda.
    - `POST /auth/change-password` y reset desde `/alumnos`.
-   - Regenerar mes con `include_past: false` (solo fechas futuras).
-3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos). Además: `manual-sistema.html`, `manual-profesor.html` y `manual-usuario.html` servidos en sus URLs, y el enlace **"Manual"** en la nav apuntando al manual correcto por rol (admin/profesor/alumno) y abriendo en pestaña nueva.
-4. Si todo OK, considerar limpiar estado muerto en `mis-clases/page.tsx` (estado `profile/editing/form/saving/message/loading` + `fetchProfile`/`handleSubmit` quedaron sin uso tras quitar "Mi Perfil") — inofensivo, no bloquea build.
+   - Regenerar mes con `include_past: false`.
+3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito**:
+   - Menú móvil: al tocar "Menú" todo queda en la barra inferior (una sola zona), sin panel arriba.
+   - Tablas de facturación/plantillas/alumnos con scroll horizontal propio (se desliza la tabla, no la página).
+   - Headers/botones sin cortes en pantallas chicas.
+   - 3 manuales servidos + enlace "Manual" por rol.
+4. Opcional: limpiar estado muerto en `mis-clases/page.tsx` (estado `profile/editing/form/saving/message/loading` + `fetchProfile`/`handleSubmit` quedaron sin uso tras quitar "Mi Perfil") — inofensivo, no bloquea build.
 
 ---
 
@@ -241,7 +258,8 @@ C:\GesttionSoftware\
 - Roles en BD: `admin`, `profesor`, `alumno`.
 - **Registro público** (`POST /auth/register`) acepta `role` del body sin restricción — posible escalada de privilegios a documentar/revisar (decisión pendiente, no se grilló).
 - **Manuales** (en `frontend/public/`, servidos como estáticos): `manual-sistema.html` (todo, con Arquitectura), `manual-profesor.html` (sin Arquitectura), `manual-usuario.html` (alumno, sin Arquitectura ni manual interno). Acceso desde la nav con el enlace **"Manual"** que redirige por rol. Recordar: los cambios a `frontend/public/` salen en el build de Next (output: export los copia a `out/`).
-- **Skill `doesntbreak`**: `.opencode/skills/doesntbreak/` — se descubre automáticamente en la próxima sesión; solo markdown (sin scripts/red).
+- **Skill `doesntbreak`**: `.opencode/skills/doesntbreak/` — solo markdown (sin scripts/red). Ya se aplicó para los items 16-18 (regla 9 "contain the scroll": envolver tablas anchas en `overflow-x-auto`, nunca dejar scroll horizontal en la página).
+- **Seed demo** (`backend/sql/seed-demo.sql`): solo INSERT (sin DELETE), contraseña `demo123`, emails `demo.*`. Ejecutar contra la BD real para probar; el usuario limpia lo `demo.*` al terminar. Montos de mensualidad se calculan con `COUNT(*)` de instancias del mes (precio × clases), coherentes con facturación.
 
 ---
 
@@ -252,7 +270,7 @@ C:\GesttionSoftware\
 - **code-review** — revisar el diff de implementación antes del push del usuario.
 - **grill-with-docs** — si surge una decisión nueva de dominio (ej. arreglar el riesgo de `/auth/register`, o definir qué pasa con las clases canceladas en facturación).
 - **prototype** (rama UI) — opcional, si el pulido estético quiere explorarse con variantes antes de decidir (ya se decidió Paleta A, así que probablemente no haga falta).
-- **doesntbreak** — skill responsive mobile-first vendida esta sesión; aplicarla/revisarla al tocar cualquier layout del frontend (se carga en la próxima sesión).
+- **doesntbreak** — skill responsive mobile-first (ya aplicada en items 16-18); volver a usarla al tocar cualquier layout del frontend o para una revisión responsive del conjunto.
 
 ---
 

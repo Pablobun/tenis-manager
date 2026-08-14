@@ -1,7 +1,7 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
 **Fecha**: 2026-08-14
-**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
+**Estado**: Tickets 01-12 pusheados + **implementación completa de los items 1-15 de `modificaciones.md` y del pulido estético (Paleta A + header oscuro)** + **manuales actualizados (`manual-sistema.html` y nuevo `manual-usuario.html`)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente: push del usuario + verificación en Render/Droplet** (flujos contra BD real y hard refresh). Working tree con cambios sin commitear (commitea/pushea el usuario).
 **Próxima acción**: push del usuario → verificar en Render los flujos de BD (postulación con balance neto, saldo a favor, preview de facturación, generate con include_past) con hard refresh.
 
 ---
@@ -81,7 +81,9 @@ C:\GesttionSoftware\
         ├── plantillas/page.tsx · instancias/page.tsx · tablero/page.tsx   ← OK
         ├── clases-abiertas/page.tsx · facturacion/page.tsx · pagos/page.tsx   ← OK
         ├── perfil/page.tsx   ← NUEVO (item 11: nombre/tel + change-password)
-        └── public/manual-sistema.html  ← ★ NUEVO: manual del sistema (se sirve en /manual-sistema.html)
+        └── public/
+            ├── manual-sistema.html   ← manual del sistema (profe/admin + alumno + arquitectura + reglas) — actualizado con items 1-15
+            └── manual-usuario.html   ← ★ NUEVO: manual para el usuario final (alumno), sin Arquitectura ni secciones internas
 ```
 
 ---
@@ -179,6 +181,11 @@ C:\GesttionSoftware\
 - **Frontend** (`npm run build` OK, 16 rutas): login, dashboard, admin, tablero, mis-clases, plantillas, instancias, alumnos, clases-abiertas, facturación, pagos → reescritos con Navigation + `.card`/`.btn-*`/`.input`/`.chip`; **`/perfil` nuevo**.
 - Detalle de cada item en las secciones de la sesión siguiente.
 
+### 6. Manuales actualizados — esta sesión
+- **`frontend/public/manual-sistema.html`**: actualizado para reflejar los items 1-15 — Instancias (Alumnos N/M + nombres, profesor, chip nivel, `include_past`), Clases abiertas (badge de postulaciones, deuda neta en candidatos), Alumnos (reset de contraseña, alerta de nivel discrepante), Facturación (detalle expandible "N × $", totales globales, estado mes/ciclo, inscripción a mitad de mes, Pagado + saldo a favor), Pagos (saldo a favor, pago parcial/excedente), sección Alumno (perfil, change-password, bloqueo por deuda neta), reglas de negocio (deuda neta en postulación, pagos/saldo a favor, alumnos), tabla de endpoints (change-password, profesores, `/pagos/student/:id` neto, generate con `include_past`) y esquema `perfiles` (saldo_a_favor).
+- **`frontend/public/manual-usuario.html`** (nuevo): manual para el usuario final (alumno), mismo estilo/CSS pero SIN la sección de Arquitectura ni el manual interno de profe/admin. Interpretación: "idéntico pero para usuario" = manual de alumno; si se quería copia literal solo sin la sección 4, ajustar.
+- `npm.cmd run build` OK tras los cambios (16 rutas).
+
 ---
 
 ## Sesión siguiente (prioridad)
@@ -204,7 +211,7 @@ C:\GesttionSoftware\
    - Preview de facturación con detalle/totales y generate con auto-saldo.
    - `POST /auth/change-password` y reset desde `/alumnos`.
    - Regenerar mes con `include_past: false` (solo fechas futuras).
-3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos).
+3. Verificar frontend en el droplet con **hard refresh (Ctrl+F5) / incógnito** (caché puede mandar bundles viejos). Además: `manual-sistema.html` y `manual-usuario.html` servidos en `/manual-sistema.html` y `/manual-usuario.html`.
 4. Si todo OK, considerar limpiar estado muerto en `mis-clases/page.tsx` (estado `profile/editing/form/saving/message/loading` + `fetchProfile`/`handleSubmit` quedaron sin uso tras quitar "Mi Perfil") — inofensivo, no bloquea build.
 
 ---

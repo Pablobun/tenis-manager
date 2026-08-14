@@ -31,6 +31,13 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
 
   const isAdminOrProfesor = user?.role === 'admin' || user?.role === 'profesor';
 
+  const manualHref =
+    user?.role === 'admin'
+      ? '/manual-sistema.html'
+      : user?.role === 'profesor'
+        ? '/manual-profesor.html'
+        : '/manual-usuario.html';
+
   const mainLinks = isAdminOrProfesor
     ? [
         { href: '/tablero', label: 'Tablero' },
@@ -94,6 +101,9 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
                 {l.label}
               </Link>
             ))}
+            <a href={manualHref} className="text-primary-100 hover:text-white transition">
+              Manual
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -122,6 +132,13 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
                 {l.label}
               </Link>
             ))}
+            <a
+              href={manualHref}
+              onClick={() => setMenuOpen(false)}
+              className="py-2 px-2 rounded-lg text-sm hover:bg-primary-800"
+            >
+              Manual
+            </a>
             {menuLinks.length === 0 && (
               <span className="py-2 px-2 text-sm text-primary-200">Sin módulos adicionales</span>
             )}
@@ -141,6 +158,11 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
               {l.label}
             </Link>
           ))}
+          {!isAdminOrProfesor && (
+            <a href={manualHref} className="flex-1 py-3 text-xs text-center transition hover:bg-primary-800">
+              Manual
+            </a>
+          )}
           {menuLinks.length > 0 && (
             <button
               onClick={() => setMenuOpen((v) => !v)}

@@ -220,7 +220,7 @@
       </tr>
     </table>
 
-    <div class="callout info"><b>Salir del sistema</b>Hay un botón rojo <b>Salir</b> arriba a la derecha en todas las páginas. Cierra tu sesión de forma segura.</div>
+    <div class="callout info"><b>Salir del sistema</b>Hay un botón <b>Salir</b> en la barra superior (en el celular, en el encabezado). Cierra tu sesión de forma segura.</div>
 
     <!-- ============ 2. USO PROFESORA ============ -->
     <h2 class="section" id="uso-profesor">2. Manual de uso · Profesora / Admin</h2>
@@ -236,10 +236,11 @@
       <span class="badge amber">Facturación</span>
       <span class="badge gray">Pagos</span>
     </div>
+    <p><b>Barra de navegación persistente:</b> en todas las páginas hay una barra que te permite moverte sin volver al panel. En <b>celular</b> es una barra inferior fija con los módulos principales (Tablero, Clases Abiertas, Facturación, Pagos) y un botón <b>Menú</b> que despliega el resto (Plantillas, Instancias, Alumnos, Mi Perfil). En <b>computadora</b> es una barra superior con todos los enlaces, tu nombre y el botón <b>Salir</b>.</p>
     <p>Si en algún momento vas a una página sin permiso, el sistema te redirige automáticamente a la vista correcta.</p>
 
     <h3 id="tablero">Tablero (vista diaria y semanal)</h3>
-    <p>Es la pantalla principal de trabajo. Muestra las clases del día con la hora, el nivel, la modalidad y el <b>cupo ocupado</b> (ej: <code>2/4</code>).</p>
+    <p>Es la pantalla principal de trabajo. Muestra las clases del día con la hora, la modalidad, el <b>nivel</b> (con un <b>chip de color</b>: principiante rojo, intermedio verde, avanzado ámbar), el <b>profesor/a</b> y el <b>cupo ocupado</b> (ej: <code>2/4</code>).</p>
     <ul>
       <li><b>Día / Semana:</b> botón para alternar entre las dos vistas. En el celular podés pasar de día deslizando el dedo (swipe).</li>
       <li><b>Navegar fechas:</b> flechas ◀ ▶, botón <b>Hoy</b> y <b>Volver a hoy</b>.</li>
@@ -253,9 +254,11 @@
     <div class="callout warn"><b>Restricción</b>No se puede inscribir a una clase que ya tiene el <b>cupo lleno</b> desde el tablero: el sistema avisa "Cupo máximo alcanzado". Las clases <b>canceladas</b> se ven grises y desvanecidas.</div>
 
     <h3 id="plantillas">Plantillas (clases recurrentes)</h3>
-    <p>Una plantilla define una clase que se repite todas las semanas (día, horario, nivel, modalidad, cupo y precio). Con las plantillas el sistema <b>genera solo las instancias del mes</b>.</p>
+    <p>Una plantilla define una clase que se repite todas las semanas (día, horario, nivel, modalidad, profesor/a, cupo y precio por clase). Con las plantillas el sistema <b>genera las instancias del mes</b>.</p>
     <ul>
-      <li><b>+ Nueva Plantilla:</b> elegís día de la semana, modalidad (<b>Fija / Extra / Abierta</b>), hora inicio/fin, nivel, cupo máximo, precio por clase y frecuencia. Al crearla, el sistema <b>genera las instancias del mes actual automáticamente</b>.</li>
+      <li><b>+ Nueva Plantilla:</b> elegís día de la semana, modalidad (<b>Fija / Extra / Abierta</b>), hora inicio/fin, nivel, <b>profesor/a</b>, cupo máximo y <b>precio por clase</b>. Al crearla, el sistema <b>genera las instancias del mes actual automáticamente</b>.</li>
+      <li><b>La mensualidad = precio por clase × cantidad de clases del mes.</b> Ej: $10 por clase y 4 clases en el mes → $40. El formulario aclara este cálculo.</li>
+      <li><b>¿Fechas ya pasadas del mes?</b> Si creás una plantilla cuando el mes ya empezó, el sistema te <b>pregunta</b> si querés generar también las fechas pasadas de ese mes o solo las futuras.</li>
       <li><b>Editar:</b> cambiás los datos de la plantilla y el sistema actualiza o regenera las instancias futuras.</li>
       <li><b>Desactivar:</b> la plantilla deja de generar clases nuevas y las <b>instancias futuras quedan canceladas</b> (como historial, no se borran).</li>
       <li><b>Activar:</b> vuelve a generar las instancias del mes.</li>
@@ -269,16 +272,18 @@
     <h3 id="instancias">Instancias (las clases concretas de cada mes)</h3>
     <p>Las instancias son cada clase real (una fecha concreta). Se generan en lote desde las plantillas activas.</p>
     <ul>
-      <li><b>⚙ Generar Mes:</b> crea todas las instancias del mes mostrado para las plantillas fijas activas. Es seguro repetirlo: no duplica clases.</li>
+      <li><b>⚙ Generar Mes:</b> crea todas las instancias del mes mostrado para las plantillas fijas activas. Es seguro repetirlo: no duplica clases. Si regenerás el mes en curso, también pregunta si querés incluir las fechas ya pasadas.</li>
       <li><b>Navegación de mes:</b> flechas ◀ ▶ y el mes en pantalla.</li>
-      <li>Cada clase muestra horario, modalidad, nivel, cupo, precio y estado (<b>Programada</b> o <b>Cancelada</b>).</li>
+      <li>Cada clase muestra horario, modalidad, <b>nivel (chip de color)</b>, profesor/a, cupo, precio y estado (<b>Programada</b> o <b>Cancelada</b>).</li>
+      <li><b>Alumnos:</b> cada clase indica <b>"Alumnos: N/M"</b> y debajo la lista de los nombres de los alumnos inscriptos (o "Sin alumnos").</li>
     </ul>
 
     <h3 id="clases-abiertas">Clases abiertas / rotativas y clases extras</h3>
     <p>Son clases <b>puntuales</b> (una fecha) a las que los alumnos se <b>postulan</b> y la profesora acepta o rechaza.</p>
     <ul>
-      <li><b>+ Nueva Clase:</b> elegís modalidad (<b>Abierta/Rotativa</b> o <b>Extra</b>), fecha, nivel, horario, cupo y precio. Si elegís <b>Extra</b>, el sistema sugiere un precio del 50% de la clase habitual.</li>
-      <li><b>Candidatos:</b> cada clase muestra las postulaciones recibidas con el alumno, su nivel y su <b>deuda actual</b>. Para cada postulación pendiente tenés tres acciones:
+      <li><b>+ Nueva Clase:</b> elegís modalidad (<b>Abierta/Rotativa</b> o <b>Extra</b>), fecha, nivel, <b>profesor/a</b>, horario, cupo y precio. Si elegís <b>Extra</b>, el sistema sugiere un precio del 50% de la clase habitual.</li>
+      <li><b>Indicador de postulaciones:</b> cada tarjeta muestra un <b>badge ámbar "N candidatos"</b> si hay postulaciones pendientes y la clase tiene cupo libre, o un <b>badge gris "N en lista de espera"</b> si la clase está llena. Sin pendientes, no aparece ningún badge.</li>
+      <li><b>Candidatos:</b> cada clase muestra las postulaciones recibidas con el alumno, su nivel y su <b>deuda neta</b> (deuda − saldo a favor; si tiene saldo a favor se muestra en verde). Para cada postulación pendiente tenés tres acciones:
         <ul>
           <li><b>Aceptar</b> — el alumno ocupa un cupo de la clase.</li>
           <li><b>Rechazar</b> — pasa a la lista de espera.</li>
@@ -294,40 +299,51 @@
     <ul>
       <li><b>+ Nuevo Alumno:</b> email, contraseña (se la pasás al alumno para que entre), nombre, teléfono y nivel.</li>
       <li><b>Editar:</b> cambiar nombre, teléfono o nivel de un alumno.</li>
+      <li><b>Cambiar contraseña:</b> al editar podés cargar una <b>nueva contraseña</b> para el alumno (sin pedirle la actual) — útil cuando pierde el acceso. Si la dejás vacía, la contraseña no cambia.</li>
+      <li><b>Alerta al cambiar nivel:</b> si cambiás el nivel, el sistema <b>informa las clases futuras (desde hoy)</b> donde el alumno queda con nivel discrepante. Es solo un aviso: no modifica nada.</li>
       <li><b>Desactivar / Activar:</b> un alumno desactivado no puede ingresar al sistema (su estado se ve en rojo/verde).</li>
     </ul>
 
     <h3 id="facturacion">Facturación (deuda mensual de clases fijas)</h3>
     <p>Las clases <b>fijas</b> se cobran por <b>mensualidad</b>: el alumno debe el mes completo asista o no (ocupó cupo). El sistema calcula la deuda de forma <b>semi-automática</b>.</p>
     <ol>
-      <li><b>Elegí el mes</b> con el selector de mes.</li>
-      <li>Revisá la tabla <b>"Deuda propuesta (revisá antes de generar)"</b>: alumno, cantidad de clases y monto del mes. Las que ya se generaron figuran como <b>Generada</b>.</li>
+      <li><b>Elegí el mes</b> con el selector de mes. El sistema muestra el <b>estado del ciclo</b> del mes (Abierto / Cerrado / No abierto).</li>
+      <li>Revisá la tabla <b>"Deuda propuesta (revisá antes de generar)"</b>. Por alumno verás:
+        <ul>
+          <li>la cuenta <b>"N clases × $precio = total"</b> del mes,</li>
+          <li>el botón <b>"Ver clases"</b> que despliega el <b>detalle de cada clase</b> (fecha, hora, precio individual),</li>
+          <li>un aviso si el alumno <b>se inscribió a mitad de mes</b> ("Inscripción: 15/08"),</li>
+          <li>el estado <b>Generada</b> (fondo verde) o <b>Pendiente</b> (fondo ámbar).</li>
+        </ul>
+      </li>
+      <li>Arriba de la tabla están los <b>totales globales del mes</b>: total a cobrar, total ya pagado y cantidad de alumnos con deuda.</li>
       <li><b>Generar deudas:</b> crea la deuda de mensualidad de ese mes para todos los alumnos de clases fijas. No duplica: si un alumno ya tiene deuda de ese mes, la saltea.</li>
       <li><b>Abrir mes:</b> cierra los meses anteriores y abre el mes nuevo. Al abrirlo se listan los <b>alumnos con deuda sin pagar</b>.</li>
+      <li>En la tabla de deudores se ve por alumno: <b>Monto total, Pagado, Saldo restante y Saldo a favor</b>.</li>
       <li><b>Liberar cupos:</b> para un alumno deudor, lo saca de todas las clases fijas del mes. <b>Sus deudas del mes quedan pendientes</b>: revisalas y ajustá/cobrá aparte.</li>
     </ol>
     <div class="callout warn"><b>Importante</b>Si inscribís a un alumno en una clase fija <b>a mitad de mes</b>, el sistema le genera la deuda de mensualidad <b>en ese momento</b> (no hace falta esperar a "Generar deudas").</div>
 
     <h3 id="pagos">Pagos</h3>
     <ul>
-      <li><b>Pago individual:</b> alumno, monto (mayor a 0), fecha y nota opcional. El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno.</li>
+      <li><b>Pago individual:</b> alumno, monto (mayor a 0), fecha y nota opcional. Al elegir el alumno se muestra su <b>deuda neta</b> y su <b>saldo a favor</b>. El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno.</li>
       <li><b>Pago por lote:</b> marcás varios alumnos y ponés un monto por alumno (el mismo para todos), fecha y nota. Registra todos juntos.</li>
       <li><b>Resumen global por fecha:</b> todos los pagos agrupados por día, con el total de cada día y los montos por alumno.</li>
     </ul>
-    <div class="callout info"><b>Pago parcial</b>Si el monto es menor a la deuda, la deuda queda <b>parcial</b> y sigue pendiente lo que falta. Si pagás de más, el excedente queda como pago registrado (sin deuda asignada).</div>
+    <div class="callout info"><b>Pago parcial y saldo a favor</b>Si el monto es menor a la deuda, la deuda queda <b>parcial</b> y sigue pendiente lo que falta. Si pagás de más, el <b>excedente queda como saldo a favor</b> del alumno (se ve en verde) y <b>se aplica automáticamente</b> a su próxima deuda. La profe también puede usarlo como pago manual.</div>
 
     <!-- ============ 3. USO ALUMNO ============ -->
     <h2 class="section" id="uso-alumno">3. Manual de uso · Alumno</h2>
     <p>El alumno entra con su email y contraseña y cae directo a <b>Mis clases</b>, donde ve todo su mundo en una sola página:</p>
     <ul>
-      <li><b>Mi Deuda:</b> el <b>saldo pendiente</b> arriba (rojo si debés, verde si estás al día). Al tocarlo se abre el detalle:
+      <li><b>Mi Deuda:</b> el <b>saldo neto</b> arriba (deuda − saldo a favor). Si debés se muestra en <b>rojo</b>; si tenés saldo a favor, en <b>verde "a favor"</b>. Al tocarlo se abre el detalle:
         <ul>
           <li><b>Desglose por mes:</b> cada deuda con su tipo (Mensualidad / Clase extra / Clase abierta), el monto, lo pagado y el saldo.</li>
           <li><b>Historial de pagos:</b> fecha, monto y nota de cada pago registrado.</li>
         </ul>
       </li>
-      <li><b>Mis Clases:</b> tus clases (fijas, abiertas aceptadas y extras) con día, horario, nivel, modalidad y profesora.</li>
-      <li><b>Mi Perfil:</b> tus datos. Podés <b>editar nombre y teléfono</b> (el email y el nivel no se modifican desde acá).</li>
+      <li><b>Mis Clases:</b> tus clases (fijas, abiertas aceptadas y extras) con día, horario, nivel (chip de color), modalidad y profesora.</li>
+      <li><b>Mi Perfil:</b> tu página de perfil, enlazada desde la barra de navegación. Podés <b>editar nombre y teléfono</b> y <b>cambiar tu contraseña</b> (actual + nueva + confirmar). El <b>email</b> (tu login) y el <b>nivel</b> son solo lectura: los maneja la profe.</li>
       <li><b>Clases Disponibles:</b> las clases abiertas/rotativas y extras a las que te podés anotar. Cada tarjeta muestra fecha, horario, nivel, profesora, precio y cupo (<code>X/Y</code>).
         <ul>
           <li><b>Postularme:</b> envía tu solicitud a la profesora.</li>
@@ -336,7 +352,7 @@
         </ul>
       </li>
     </ul>
-    <div class="callout danger"><b>Regla: deuda pendiente</b>Si tenés deuda pendiente, <b>no podés postularte</b> a clases disponibles. Consultá a la profesora para regularizar el pago (o para que autorice la excepción).</div>
+    <div class="callout danger"><b>Regla: deuda pendiente</b>Si tu <b>deuda neta</b> (deuda − saldo a favor) es mayor a cero, <b>no podés postularte</b> a clases disponibles. Si tu saldo a favor cubre tu deuda, podés postularte con normalidad. Consultá a la profesora para regularizar el pago (o para que autorice la excepción).</div>
 
     <!-- ============ 4. ARQUITECTURA ============ -->
     <h2 class="section" id="arquitectura">4. Arquitectura del sistema</h2>
@@ -367,7 +383,7 @@
     <p>Diez tablas en <b>castellano</b>. Claves (FK) en cascada salvo donde se indica.</p>
     <table>
       <tr><th>Tabla</th><th>Qué guarda</th><th>Claves / reglas</th></tr>
-      <tr><td><code>perfiles</code></td><td>Usuarios (admin, profesor, alumno)</td><td>email único · rol ENUM(admin, profesor, alumno) · nivel ENUM · activo</td></tr>
+      <tr><td><code>perfiles</code></td><td>Usuarios (admin, profesor, alumno)</td><td>email único · rol ENUM(admin, profesor, alumno) · nivel ENUM · activo · saldo_a_favor</td></tr>
       <tr><td><code>plantillas_clases</code></td><td>Clases recurrentes (día, horario, modalidad, cupo, precio)</td><td>día 0-6 · modalidad ENUM(fija, extra, abierta) · FK profesor</td></tr>
       <tr><td><code>instancias_clases</code></td><td>Cada clase concreta (fecha)</td><td><b>plantilla_id NOT NULL</b> · único (plantilla, fecha) · estado ENUM(programada, completada, cancelada)</td></tr>
       <tr><td><code>grupos</code></td><td>Grupo de alumnos de una instancia</td><td>FK instancia</td></tr>
@@ -384,10 +400,12 @@
     <table>
       <tr><th>Método</th><th>Ruta</th><th>Rol</th><th>Qué hace</th></tr>
       <tr><td>POST</td><td>/auth/login · logout · register</td><td>público</td><td>Ingresar, salir, registrarse (los accesos internos los crea la profe)</td></tr>
-      <tr><td>GET</td><td>/auth/me</td><td>cualquiera</td><td>Perfil propio</td></tr>
-      <tr><td>CRUD</td><td>/students</td><td>admin / profesor</td><td>Alumnos (solo rol alumno)</td></tr>
+      <tr><td>GET</td><td>/auth/me</td><td>cualquiera</td><td>Perfil propio (incluye saldo a favor)</td></tr>
+      <tr><td>POST</td><td>/auth/change-password</td><td>cualquiera</td><td>Cambiar la propia contraseña (actual + nueva)</td></tr>
+      <tr><td>CRUD</td><td>/students</td><td>admin / profesor</td><td>Alumnos (solo rol alumno; PUT acepta reset de contraseña y avisa nivel discrepante)</td></tr>
+      <tr><td>GET</td><td>/students/profesores</td><td>admin / profesor</td><td>Lista de profesores para el selector "Profesor/a"</td></tr>
       <tr><td>CRUD</td><td>/templates</td><td>admin / profesor</td><td>Plantillas (+ genera/cancela instancias)</td></tr>
-      <tr><td>GET/POST</td><td>/instances?month= / /instances/generate</td><td>admin / profesor</td><td>Ver y generar instancias del mes</td></tr>
+      <tr><td>GET/POST</td><td>/instances?month= / /instances/generate</td><td>admin / profesor</td><td>Ver y generar instancias del mes (generate acepta incluir solo fechas futuras)</td></tr>
       <tr><td>GET/POST/PUT/DELETE</td><td>/instances/open</td><td>admin / profesor</td><td>Clases abiertas y extras (CRUD)</td></tr>
       <tr><td>GET</td><td>/instances/open</td><td>alumno</td><td>Clases disponibles (solo programadas futuras)</td></tr>
       <tr><td>POST/DELETE</td><td>/instances/open/:id/postulate</td><td>alumno</td><td>Postularse / cancelar postulación</td></tr>
@@ -401,7 +419,7 @@
       <tr><td>GET</td><td>/billing/debtors?month=</td><td>admin / profesor</td><td>Deudores del mes</td></tr>
       <tr><td>PUT</td><td>/billing/adjust/:deudaId</td><td>admin / profesor</td><td>Ajustar monto de una deuda</td></tr>
       <tr><td>POST</td><td>/pagos · /pagos/batch</td><td>admin / profesor</td><td>Pago individual / por lote</td></tr>
-      <tr><td>GET</td><td>/pagos/student/:id</td><td>profesor / alumno propio</td><td>Desglose de deuda + historial</td></tr>
+      <tr><td>GET</td><td>/pagos/student/:id</td><td>profesor / alumno propio</td><td>Desglose de deuda + historial + total neto (deuda − saldo a favor)</td></tr>
       <tr><td>GET</td><td>/pagos/summary?date=</td><td>admin / profesor</td><td>Resumen global de pagos por fecha</td></tr>
       <tr><td>GET</td><td>/health</td><td>público</td><td>Estado del servidor</td></tr>
     </table>
@@ -426,7 +444,8 @@
     <h3 id="reglas-negocio">Reglas de negocio</h3>
     <div class="card"><h4>Deuda como condición de ingreso</h4>
       <ul>
-        <li>Un alumno con <b>deuda pendiente o parcial</b> <b>no puede postularse</b> a clases disponibles.</li>
+        <li>Se evalúa la <b>deuda neta</b> = deuda pendiente − saldo a favor. Si es mayor a cero, el alumno <b>no puede postularse</b> a clases disponibles.</li>
+        <li>Un alumno con <b>saldo a favor</b> que cubra su deuda <b>no queda bloqueado</b> (puede postularse).</li>
         <li>La profesora tiene dos excepciones: <b>Forzar</b> en la postulación (acepta aunque haya deuda o cupo lleno) y aceptar con <b>override</b> desde candidatos.</li>
       </ul>
     </div>
@@ -447,12 +466,13 @@
         <li>Las deudas pueden <b>ajustarse</b> (cambiar el monto, incluso a 0) desde facturación. Montos negativos no están permitidos.</li>
       </ul>
     </div>
-    <div class="card"><h4>Cómo se aplican los pagos</h4>
+    <div class="card"><h4>Cómo se aplican los pagos y el saldo a favor</h4>
       <ul>
         <li>El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno (o a una deuda puntual si se elige).</li>
         <li>Si el monto cubre la deuda → queda <b>pagada</b>; si cubre parte → queda <b>parcial</b>.</li>
-        <li>Se puede <b>pagar de más</b> (el pago se registra igual; el excedente queda sin deuda asignada).</li>
-        <li>Si el alumno <b>no tiene deuda</b>, el pago igual se registra (queda como pago sin deuda asociada).</li>
+        <li>Si el pago <b>supera la deuda</b>, el <b>excedente pasa a saldo a favor</b> del alumno (campo <code>saldo_a_favor</code>).</li>
+        <li>El saldo a favor <b>se descuenta automáticamente</b> de la próxima deuda que se le genere al alumno; la profe también puede usarlo como pago manual.</li>
+        <li>El balance mostrado en todo el sistema es <b>deuda − saldo a favor</b> (si da negativo se muestra en verde "a favor").</li>
       </ul>
     </div>
     <div class="card"><h4>Postulaciones</h4>
@@ -465,7 +485,9 @@
     <div class="card"><h4>Alumnos</h4>
       <ul>
         <li>Un alumno <b>desactivado</b> no puede ingresar al sistema.</li>
-        <li>Desde su cuenta, el alumno solo edita <b>nombre y teléfono</b> (email y nivel los maneja la profe).</li>
+        <li>Desde su cuenta, el alumno solo edita <b>nombre y teléfono</b> y <b>cambia su contraseña</b> (email y nivel los maneja la profe).</li>
+        <li>La profe/admin puede <b>resetear la contraseña</b> de un alumno desde Alumnos (sin pedir la actual).</li>
+        <li>Al <b>cambiar el nivel</b> de un alumno, el sistema informa las <b>clases futuras con nivel discrepante</b> (solo aviso, no modifica).</li>
         <li>El alumno <b>no puede ver</b> las deudas/pagos de otros alumnos.</li>
       </ul>
     </div>

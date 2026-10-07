@@ -60,12 +60,12 @@ export default function LoginPage() {
       <div className="bg-polvo court-line px-4 pt-12 pb-14 text-center">
         <div className="inline-flex mb-4">
           <Image
-            src="/logo.jpeg"
+            src="/logo.png"
             alt="Riverside Tenis"
-            width={64}
+            width={90}
             height={64}
             priority
-            className="w-16 h-16 rounded-2xl object-cover"
+            className="h-16 w-auto object-contain"
           />
         </div>
         <h1 className="font-display text-white text-4xl font-bold uppercase tracking-wide">

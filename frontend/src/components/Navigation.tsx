@@ -82,11 +82,11 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Link href={isAdminOrProfesor ? '/tablero' : '/mis-clases'} className="flex items-center gap-2 min-w-0">
             <Image
-              src="/logo.jpeg"
+              src="/logo.png"
               alt=""
-              width={28}
+              width={40}
               height={28}
-              className="w-7 h-7 rounded-md object-cover shrink-0"
+              className="h-7 w-auto object-contain shrink-0"
             />
             <span className="font-display font-bold text-lg uppercase tracking-wide truncate">{title}</span>
           </Link>

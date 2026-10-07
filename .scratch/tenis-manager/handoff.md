@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
 **Fecha**: 2026-10-06
-**Estado**: Items 1-15 + responsive (16-18) + manuales — commiteados y pusheados (último commit `d93719b`). **NUEVO ESTA SESIÓN (sin commitear — el usuario hace add/commit/push)**: **lote 2 completo** (issue `13-cambios-lote2`, los 10 puntos de `cambios.txt`) + **rediseño visual total "Polvo de Ladrillo"** guiado por la skill `impeccable`, con flujo de cierre terminado: detector limpio, finish review **ship** (3 materiales corregidos: cancha de horas en el tablero, NaN en instancias, iconos SVG), **`DESIGN.md` + `.impeccable/design.json` escritos**, provenance del logo embebida (`embed-prompt --scan` limpio). Backend `node --check` OK; frontend `npm.cmd run build` OK (16 rutas).
-**Próxima acción**: usuario commitea/pushea (tras push: hard refresh o incógnito por caché de HTML). Contra la BD real sigue pendiente `backend/sql/seed-demo.sql`. Menores abiertos del finish review: (a) confirmaciones nativas `confirm()`/`alert()` en varios flujos, (b) mitad derecha del campo-cancha vacía en desktop cuando no hay2 clases en la misma hora, (c) utilidades `gray/emerald/amber` fuera de paleta en páginas no capturadas (dashboard/admin/pagos/facturación), (d) SMTP real pendiente de credenciales.
+**Estado**: **lote 2 + rediseño "Polvo de Ladrillo" commiteados y pusheados** (commit `9982d0a cambios`, `main` = `origin/main`, working tree limpio). Incluye: los 10 puntos de `cambios.txt` (issue `13-cambios-lote2` → **completed**), rediseño visual guiado por `impeccable` con cierre completo (detect `[]`, finish review **ship**, `DESIGN.md` + `.impeccable/design.json`, provenance del logo embebida), skill impeccable + `.impeccable/` + `DESIGN.md`/`PRODUCT.md`/`cambios.txt` versionados. **Tabla nueva `plantilla_alumnos` YA EJECUTADA en la BD real por el usuario** (único cambio de esquema; migración `backend/sql/migrations/002_plantilla_alumnos.sql`; ningún campo/ENUM modificado). Backend `node --check` OK; frontend `npm.cmd run build` OK (16 rutas). Items 1-15 + responsive 16-18 + manuales siguen commiteados (commit previo `d93719b`).
+**Próxima acción**: verificar el deploy — **hard refresh (Ctrl+F5) o incógnito** (caché de HTML) en el droplet y Render; probar los flujos del lote 2 contra la BD real (baja24h, extras directo, roster de plantillas). `backend/sql/seed-demo.sql` sigue pendiente de ejecutar si se quieren datos demo. SMTP opcional: sin env vars `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM` los mails son no-op. Menores abiertos del finish review: (a) confirmaciones nativas `confirm()`/`alert()`, (b) mitad derecha del campo-cancha vacía en desktop con pocas clases, (c) utilidades `gray/emerald/amber` fuera de paleta en páginas no capturadas (dashboard/admin/pagos/facturación), (d) SMTP real pendiente de credenciales.
 
 ---
 
@@ -263,7 +263,7 @@ C:\GesttionSoftware\
 
 ---
 
-## Lote 2 + rediseño "Polvo de Ladrillo" (sesión 2026-10-06, SIN COMMITEAR)
+## Lote 2 + rediseño "Polvo de Ladrillo" (sesión 2026-10-06 — commiteado y pusheado como `9982d0a cambios`)
 
 **Spec**: `.scratch/tenis-manager/issues/13-cambios-lote2.md` (decisiones grill: baja propia alumno24h antes UTC-3, baja en fija = solo esa instancia, extras inscripción directa `aceptada`/`lista_espera` sin candidatos, 50% del precio regular, replicación con roster solo en fijas, mails alumno+profe con Gmail App Password → desactivado silencioso si faltan env vars `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM`).
 
@@ -283,7 +283,7 @@ C:\GesttionSoftware\
 - Plantillas: picker de alumnos (roster), hint 50%.
 - Clases-abiertas: extras → "Lista de espera", agregar/quitar directo, border rojo.
 - Iconos: `frontend/src/components/icons.tsx` (chevrones/X SVG stroke-2 — sin glifos Unicode).
-- Logo: `frontend/public/logo.jpeg` (placa negra sin procesar, login64px + nav28px, next/image); provenance embebida.
+- Logo: `frontend/public/logo.png` (nuevo PNG procesado 800px blanco con alfa real — el original `imagens/logopng.png` traía el damero de transparencia quemado; login h16 + nav h28, next/image con `object-contain`, reemplaza al viejo `logo.jpeg` borrado); provenance embebida.
 
 **Cierre impeccable**: detect limpio (`[]`); finish review **fix → ship** (resueltos: cancha de horas, NaN fechas instancias, iconos SVG, copy "de octubre", nav activa, keylines1.5px); **`DESIGN.md` + `.impeccable/design.json` escritos en la raíz**. Brief: `.impeccable/surfaces/frontend-src-app.md`; screenshots de evidencia: `.impeccable/review/*.png` (captura con fixtures + localStorage falso — script temporal `capture.mjs` en el temp del agente, no en el repo).
 

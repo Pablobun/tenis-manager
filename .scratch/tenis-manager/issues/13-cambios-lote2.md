@@ -4,7 +4,7 @@
 
 **Blocked by:** —
 
-**Status:** ready-for-agent
+**Status:** completed
 
 ## Decisiones del grilling (confirmadas con el usuario)
 
@@ -18,14 +18,18 @@
 
 ## Criterios
 
-- [ ] P1 — Alumno se da de baja de una clase (abierta/extra/fija-instancia) con botón en su vista; bloqueado si faltan <24h (mensaje claro); la profe siempre puede quitarlo
-- [ ] P1 — Baja en fija remueve solo esa instancia, mensualidad intacta
-- [ ] P2 — Extra: inscripción directa (sin pendiente/candidatos); cupo lleno → lista de espera; se oculta UI de candidatos en extras
-- [ ] P2 — Profe: alta forzada (salta cupo/deuda) y baja directa de alumnos en extras/abiertas
-- [ ] P3 — Replicar mes: fijas con roster de plantilla, extras vacías, abiertas sin traslado
-- [ ] P3 — Form de plantilla fija: selector de alumnos precargados; roster editable en Plantillas
-- [ ] P4 — Tarjetas de clase extra con borde rojo (tablero, instancias, clases-abiertas, mis-clases)
-- [ ] P4 — Extra cobra 50% de la clase habitual por asistencia (verificar/garantizar en billing)
-- [ ] P5 — Vista profe: alta/baja de alumnos coherente en tablero/instancias/abiertas (bottom sheet + acciones)
-- [ ] P6 — Servicio de mail (SMTP env vars) + mails de subida/baja a alumno y profe; desactivado sin credenciales
-- [ ] Verificación: `node --check` backend + `npm.cmd run build` frontend
+- [x] P1 — Alumno se da de baja de una clase (abierta/extra/fija-instancia) con botón en su vista; bloqueado si faltan <24h (mensaje claro); la profe siempre puede quitarlo
+- [x] P1 — Baja en fija remueve solo esa instancia, mensualidad intacta
+- [x] P2 — Extra: inscripción directa (sin pendiente/candidatos); cupo lleno → lista de espera; se oculta UI de candidatos en extras
+- [x] P2 — Profe: alta forzada (salta cupo/deuda) y baja directa de alumnos en extras/abiertas
+- [x] P3 — Replicar mes: fijas con roster de plantilla, extras vacías, abiertas sin traslado
+- [x] P3 — Form de plantilla fija: selector de alumnos precargados; roster editable en Plantillas
+- [x] P4 — Tarjetas de clase extra con borde rojo (tablero, instancias, clases-abiertas, mis-clases)
+- [x] P4 — Extra cobra 50% de la clase habitual por asistencia (mecanismo: hint "Sugerido: 50%" en form de plantillas/abiertas + `billing` deuda el `precio` de la instancia en `asistencias.js:65`; sin cambio backend, decisión grill)
+- [x] P5 — Vista profe: alta/baja de alumnos coherente en tablero/instancias/abiertas (bottom sheet + acciones)
+- [x] P6 — Servicio de mail (SMTP env vars) + mails de subida/baja a alumno y profe; desactivado sin credenciales
+- [x] Verificación: `node --check` backend + `npm.cmd run build` frontend
+
+## Comments
+
+- **Cerrado** en commit `9982d0a cambios` (pusheado). Único cambio de esquema: tabla nueva `plantilla_alumnos` (migración `backend/sql/migrations/002_plantilla_alumnos.sql`), **ya ejecutada en la BD real por el usuario**. Ningún campo/ENUM modificado. Mails: no-op silencioso hasta que existan las env vars `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM`. Cierre impeccable: detect limpio, finish review `ship`, `DESIGN.md` + `.impeccable/design.json` escritos.

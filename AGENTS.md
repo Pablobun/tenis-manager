@@ -28,6 +28,10 @@ Next.js estático genera bundles con hash, pero el HTML puede quedar cacheado (n
 
 Convención del proyecto: verificación **manual** + build. Backend: `node --check` por archivo, arrancar `node server.js` y probar auth/validaciones con un JWT firmado localmente (`node -e "console.log(require('jsonwebtoken').sign({id:1,role:'admin'},'test'))"` en `backend/`). Frontend: `npm run build`. En Windows la Execution Policy bloquea `npm.ps1` → usar `npm.cmd run build`.
 
+### Skill impeccable (cambios visuales).
+
+Al terminar cambios de UI: detect debe quedar limpio — `.opencode\skills\impeccable\scripts\impeccable.cmd detect --json frontend/src` → `[]` (sin `border-l-4` coloreados >1px = "side-tab", sin emoji como iconos) — y pasar la finish review de la skill (veredicto ship) antes de dar por bueno el trabajo. Brief/contrato de dirección en `.impeccable/surfaces/frontend-src-app.md`; sistema de diseño vigente en `DESIGN.md` (mundo **Polvo de Ladrillo**: polvo `#B65434`, cal `#F7F3EA`, feltro `#D9E24F` solo acción primaria, rojo cupo, verde pagado). Evidencia de capturas en `.impeccable/review/`.
+
 ### BD real.
 
 Los credenciales de la BD (de jockey) **no están en el repo**. Sin `.env` real, las rutas que tocan datos devuelven 500 (esperado). Los flujos contra la BD se verifican en Render tras el push del usuario. El schema ya está ejecutado (`backend/sql/schema.sql`).

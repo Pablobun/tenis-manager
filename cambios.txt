@@ -1,0 +1,10 @@
+﻿deja que los alumnos se bajen de las clases ya sea abierta (24hs antes)
+extras son fijas y se pueden bajar y ( eliminar la postulacion) agregar directamnte a la clase
+dar herramienta a la profe para que pueda agregar tambien ( forzar)
+fijas se pueden bajar de la clase 
+al momento de replicar el mes se envia las clases fijas con alumnos y las extras sin alumnos. las abiertas no se traslada la gente
+clases extras que tenga contorno rojo
+todo alumno que se suma a una clase extra que no es de el se le cobra el 50% del valor.
+hacer estructura clases fijas con alumnos fijos para replica en plantilla mensual. ( sea al crear plantilla ya se agrega los alumnos de esa clase)
+Fata ediciones en subida y bajada de alumnos vista profe.
+notificacion por mail de bajadas y subidas de clases.

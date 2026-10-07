@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T22:39:13-03:00",
+  "title": "Design System: Riverside Tenis (Polvo de Ladrillo)",
+  "extensions": {
+    "colorMeta": {
+      "polvo": {
+        "role": "primary",
+        "displayName": "Polvo de Ladrillo",
+        "canonical": "#B65434",
+        "tonalRamp": ["#4E2317", "#6B301E", "#873D26", "#A24A2E", "#B65434", "#D27F60", "#EFC7B4", "#FBF2ED"]
+      },
+      "polvo-dark": {
+        "role": "primary",
+        "displayName": "Polvo Oscuro",
+        "canonical": "#964226",
+        "tonalRamp": ["#4E2317", "#6B301E", "#873D26", "#964226", "#A24A2E", "#B65434", "#D27F60", "#EFC7B4"]
+      },
+      "polvo-deep": {
+        "role": "primary",
+        "displayName": "Polvo Profundo",
+        "canonical": "#6B301E",
+        "tonalRamp": ["#4E2317", "#6B301E", "#873D26", "#A24A2E", "#B65434", "#D27F60", "#EFC7B4", "#FBF2ED"]
+      },
+      "cal": {
+        "role": "neutral",
+        "displayName": "Cal",
+        "canonical": "#F7F3EA",
+        "tonalRamp": ["#4A443B", "#6E6357", "#948B7B", "#B8AF9E", "#D8CFBD", "#EBE4D6", "#F7F3EA", "#FCFAF5"]
+      },
+      "ficha": {
+        "role": "neutral",
+        "displayName": "Ficha Blanca",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#3A362F", "#5F5A50", "#857F73", "#ABA598", "#D1CCC1", "#E9E5DC", "#F7F5F0", "#FFFFFF"]
+      },
+      "feltro": {
+        "role": "secondary",
+        "displayName": "Feltro",
+        "canonical": "#D9E24F",
+        "tonalRamp": ["#3E4210", "#666C16", "#8E961D", "#B6BF27", "#D9E24F", "#E2E979", "#EDF2AB", "#F8FAE2"]
+      },
+      "feltro-dark": {
+        "role": "secondary",
+        "displayName": "Feltro Borde",
+        "canonical": "#C3CC3F",
+        "tonalRamp": ["#3E4210", "#666C16", "#8E961D", "#B6BF27", "#C3CC3F", "#D9E24F", "#E2E979", "#EDF2AB"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Línea de Cancha",
+        "canonical": "#E4DBCB",
+        "tonalRamp": ["#4B453A", "#6B6355", "#8C8271", "#ADA290", "#C9BFAC", "#DBD2C0", "#E4DBCB", "#F1EBDF"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#241C15",
+        "tonalRamp": ["#0C0906", "#171210", "#241C15", "#3A2F26", "#51463C", "#6E6357", "#8B8175", "#B5ADA1"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Tierra",
+        "canonical": "#6E6357",
+        "tonalRamp": ["#2A251F", "#3F382F", "#544B41", "#6E6357", "#857C71", "#9C948A", "#B9B2A9", "#D8D3CB"]
+      },
+      "cupo-red": {
+        "role": "semantic",
+        "displayName": "Rojo Cupo",
+        "canonical": "#C43A2A",
+        "tonalRamp": ["#5C130E", "#751812", "#8F1E18", "#B3261E", "#C43A2A", "#D06A5E", "#ECBAB3", "#FBECEA"]
+      },
+      "cupo-red-tint": {
+        "role": "semantic",
+        "displayName": "Rojo Cupo Tinte",
+        "canonical": "#FBECEA",
+        "tonalRamp": ["#5C130E", "#751812", "#8F1E18", "#B3261E", "#C43A2A", "#D06A5E", "#ECBAB3", "#FBECEA"]
+      },
+      "cupo-red-text": {
+        "role": "semantic",
+        "displayName": "Rojo Cupo Texto",
+        "canonical": "#8F1E18",
+        "tonalRamp": ["#5C130E", "#751812", "#8F1E18", "#B3261E", "#C43A2A", "#D06A5E", "#ECBAB3", "#FBECEA"]
+      },
+      "alert-red": {
+        "role": "semantic",
+        "displayName": "Rojo Alerta",
+        "canonical": "#B3261E",
+        "tonalRamp": ["#5C130E", "#751812", "#8F1E18", "#B3261E", "#C43A2A", "#D06A5E", "#ECBAB3", "#FBECEA"]
+      },
+      "paid-green-tint": {
+        "role": "semantic",
+        "displayName": "Verde Pagado Tinte",
+        "canonical": "#EAF4EC",
+        "tonalRamp": ["#0C391C", "#124D26", "#186130", "#1F7A3D", "#2E9150", "#4EA571", "#AAD5BC", "#EAF4EC"]
+      },
+      "paid-green-text": {
+        "role": "semantic",
+        "displayName": "Verde Pagado Texto",
+        "canonical": "#186130",
+        "tonalRamp": ["#0C391C", "#124D26", "#186130", "#1F7A3D", "#2E9150", "#4EA571", "#AAD5BC", "#EAF4EC"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Condensada",
+        "purpose": "Headings, wordmark, dates and times only — echo of the club's condensed wordmark. Loaded via next/font as --font-display; applied to h1-h4."
+      },
+      "body": {
+        "displayName": "UI System Stack",
+        "purpose": "All UI, body and control text. Neutral system voice doing the work."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels and table heads: 12px, 600, uppercase, 0.025em tracking, muted #6E6357."
+      }
+    },
+    "shadows": [
+      {
+        "name": "resting-ficha",
+        "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        "purpose": "Default ambient shadow on every resting ficha, table container and form card."
+      },
+      {
+        "name": "raised",
+        "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        "purpose": "Hover on cards; the day strip and day court panel."
+      },
+      {
+        "name": "lit",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Only the in-progress class on the day court, combined with ring-2 ring-white. The single lit element."
+      }
+    ],
+    "motion": [
+      {
+        "name": "day-in",
+        "value": "180ms ease-out (opacity 0→1, translateY 6px→0)",
+        "purpose": "The one motion moment: redrawing the day court on day change. Guarded by prefers-reduced-motion: reduce → animation: none."
+      },
+      {
+        "name": "state-transition",
+        "value": "150ms (Tailwind default transition on color/background/border/opacity)",
+        "purpose": "Hover, focus and disabled feedback on buttons, cards, links and nav items."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single feltro action of a screen: sign in, enroll, create.",
+      "html": "<button class=\"ds-btn-primary\">Inscribir Alumno</button>",
+      "css": ".ds-btn-primary { background: #D9E24F; color: #241C15; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; padding: 8px 16px; border: 1px solid #C3CC3F; border-radius: 12px; cursor: pointer; transition: filter 150ms, opacity 150ms; } .ds-btn-primary:hover { filter: brightness(0.95); } .ds-btn-primary:active { filter: brightness(0.9); } .ds-btn-primary:disabled { opacity: 0.5; cursor: default; } .ds-btn-primary:focus-visible { outline: 2px solid #B65434; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet companion action: white ficha with the warm keyline.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { background: #FFFFFF; color: #241C15; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; padding: 8px 16px; border: 1px solid #E4DBCB; border-radius: 12px; cursor: pointer; transition: background 150ms; } .ds-btn-secondary:hover { background: #F7F3EA; } .ds-btn-secondary:focus-visible { outline: 2px solid #B65434; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "White field with warm stroke; polvo ring and caret on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email</span><input class=\"ds-input\" type=\"email\" placeholder=\"nombre@correo.com\"></label>",
+      "css": ".ds-field { display: block; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; } .ds-field-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.025em; text-transform: uppercase; color: #6E6357; margin-bottom: 4px; } .ds-input { width: 100%; box-sizing: border-box; background: #FFFFFF; color: #241C15; font-size: 16px; padding: 8px 12px; border: 1px solid #E4DBCB; border-radius: 12px; caret-color: #B65434; transition: border-color 150ms, box-shadow 150ms; } .ds-input:hover { border-color: #cdc2ae; } .ds-input:focus { outline: none; border-color: #B65434; box-shadow: 0 0 0 2px rgba(182, 84, 52, 0.4); } .ds-input:disabled { background: #F1EFEA; color: #6E6357; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Pill status marker: neutral, cupo-full red, with-space green, and the polvo state marker (Ahora/Hoy).",
+      "html": "<span class=\"ds-chip ds-chip--neutral\">Fija</span> <span class=\"ds-chip ds-chip--full\">4/4 Lleno</span> <span class=\"ds-chip ds-chip--space\">2/4</span> <span class=\"ds-chip ds-chip--live\">Ahora</span>",
+      "css": ".ds-chip { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; line-height: 1.4; white-space: nowrap; } .ds-chip--neutral { background: #F7F3EA; color: #6E6357; border: 1px solid #E4DBCB; } .ds-chip--full { background: #FBECEA; color: #8F1E18; } .ds-chip--space { background: #EAF4EC; color: #186130; } .ds-chip--live { background: #B65434; color: #FFFFFF; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The universal reading surface: white ficha on cal with the 1.5px keyline, lifting on hover.",
+      "html": "<div class=\"ds-card ds-card--cupo\">\n  <p class=\"ds-card-title\">Clases recurrentes del mes</p>\n  <p class=\"ds-card-body\">Fichas blancas sobre cal, keyline de cancha.</p>\n</div>",
+      "css": ".ds-card { background: #FFFFFF; color: #241C15; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; border: 1.5px solid #E4DBCB; border-left-width: 1.5px; border-radius: 16px; padding: 20px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: box-shadow 150ms; } .ds-card:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); } .ds-card--cupo { border-left-width: 1px; border-left-color: #B65434; } .ds-card--full { border-left-width: 1px; border-left-color: #C43A2A; } .ds-card-title { font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif; font-weight: 700; font-size: 20px; margin: 0 0 6px; } .ds-card-body { font-size: 16px; line-height: 1.5; margin: 0; color: #241C15; }"
+    },
+    {
+      "name": "Class Card (day cell)",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "A class sitting on the day court: tabular time, cupo keyline, chips — lit when in progress.",
+      "html": "<button class=\"ds-class-card ds-class-card--live\">\n  <div class=\"ds-class-row\">\n    <span class=\"ds-class-time\">22:10 - 23:10</span>\n    <span class=\"ds-chip ds-chip--live\">Ahora</span>\n  </div>\n  <p class=\"ds-class-names\">VALENTINA DUARTE / MATEO SOSA</p>\n  <span class=\"ds-chip ds-chip--neutral\">Fija</span>\n</button>",
+      "css": ".ds-class-card { display: block; width: 100%; text-align: left; background: #FFFFFF; color: #241C15; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; border: 1.5px solid #E4DBCB; border-left-width: 1px; border-left-color: #B65434; border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); cursor: pointer; transition: box-shadow 150ms; } .ds-class-card:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); } .ds-class-card--full { border-left-color: #C43A2A; } .ds-class-card--live { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); outline: 2px solid #FFFFFF; outline-offset: -2px; } .ds-class-card:focus-visible { outline: 2px solid #B65434; outline-offset: 2px; } .ds-class-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; } .ds-class-time { font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif; font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; } .ds-class-names { font-size: 14px; margin: 4px 0 8px; }"
+    },
+    {
+      "name": "Header (placa)",
+      "kind": "nav",
+      "refersTo": "placa",
+      "description": "Sticky full-bleed polvo chrome with the condensed wordmark and the white court line.",
+      "html": "<header class=\"ds-header\">\n  <a class=\"ds-header-brand\">\n    <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 5l-7 7 7 7\"/></svg>\n    <span class=\"ds-header-title\">Tablero</span>\n  </a>\n  <nav class=\"ds-header-nav\"><a class=\"is-active\">Tablero</a><a>Facturación</a><a>Pagos</a></nav>\n  <button class=\"ds-header-exit\">Salir</button>\n</header>",
+      "css": ".ds-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; background: #B65434; color: #FFFFFF; padding: 12px 16px; border-bottom: 2px solid rgba(255, 255, 255, 0.35); font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; } .ds-header-brand { display: flex; align-items: center; gap: 8px; color: #FFFFFF; text-decoration: none; } .ds-header-title { font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif; font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 0.025em; } .ds-header-nav { display: flex; gap: 20px; font-size: 14px; } .ds-header-nav a { color: #FFFFFF; text-decoration: none; transition: text-decoration 150ms; } .ds-header-nav a:hover { text-decoration: underline; text-underline-offset: 4px; } .ds-header-nav a.is-active { font-weight: 600; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; } .ds-header-exit { background: rgba(255, 255, 255, 0.15); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 14px; cursor: pointer; transition: background 150ms; } .ds-header-exit:hover { background: rgba(255, 255, 255, 0.25); }"
+    },
+    {
+      "name": "Bottom Nav",
+      "kind": "nav",
+      "refersTo": "placa",
+      "description": "Mobile placa fixed to the bottom: 12px labels, active wash, white top court line.",
+      "html": "<nav class=\"ds-bottomnav\">\n  <a class=\"is-active\">Tablero</a>\n  <a>Clases Abiertas</a>\n  <a>Facturación</a>\n  <a>Pagos</a>\n  <a>Menú ▾</a>\n</nav>",
+      "css": ".ds-bottomnav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: #B65434; border-top: 2px solid rgba(255, 255, 255, 0.35); font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; } .ds-bottomnav a { flex: 1; padding: 12px 4px; font-size: 12px; text-align: center; color: #FFFFFF; text-decoration: none; transition: background 150ms; } .ds-bottomnav a:hover { background: rgba(0, 0, 0, 0.1); } .ds-bottomnav a.is-active { background: rgba(0, 0, 0, 0.2); font-weight: 600; }"
+    },
+    {
+      "name": "Day Court",
+      "kind": "custom",
+      "refersTo": "placa",
+      "description": "The signature: the day drawn as a court — polvo panel, white hour franjas, fichas on the dust, one day-in redraw.",
+      "html": "<div class=\"ds-day-court\">\n  <div class=\"ds-hour-row\">\n    <span class=\"ds-hour\">08:00</span>\n    <div class=\"ds-hour-lane\">\n      <div class=\"ds-class-card\">\n        <div class=\"ds-class-row\"><span class=\"ds-class-time\">08:00 - 09:00</span><span class=\"ds-chip ds-chip--space\">2/4</span></div>\n        <p class=\"ds-class-names\">LUCÍA FERRER / TOMÁS ROCA</p>\n      </div>\n    </div>\n  </div>\n</div>",
+      "css": ".ds-day-court { background: #B65434; border-radius: 16px; border-bottom: 2px solid rgba(255, 255, 255, 0.35); padding: 8px 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); animation: ds-day-in 180ms ease-out both; } @keyframes ds-day-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } } @media (prefers-reduced-motion: reduce) { .ds-day-court { animation: none; } } .ds-hour-row { display: grid; grid-template-columns: 3.5rem 1fr; gap: 12px; border-top: 1px solid rgba(255, 255, 255, 0.4); padding: 12px 0; } .ds-hour-row:first-child { border-top: 0; } .ds-hour { font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.9); text-align: right; padding-top: 4px; } .ds-hour-lane { display: grid; grid-template-columns: 1fr; gap: 12px; } @media (min-width: 640px) { .ds-hour-lane { grid-template-columns: 1fr 1fr; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Polvo de Ladrillo",
+    "overview": "The club's court, rendered as interface: a surface of sun-baked brick dust (#B65434) holding the chrome — header, bottom bar, section plates, the day strip — with white chalk court lines cutting across it, and everything you read sitting on lime wash (#F7F3EA) as clean white fichas (#FFFFFF). It is warm, outdoor, and tactile: the opposite of the gray SaaS dashboard with a sidebar and pastel cards that this world explicitly replaces. The atmosphere is an afternoon at a Río Cuarto club — dust, lime, chalk, felt — not a productivity product.\n\nDensity is practical and mobile-first (375px is the main case, sunlight and glare assumed): one screen = one job, big legible figures, chips instead of prose, and the day itself as the primary composition. Type splits into two voices that both echo the club's identity — a condensed grotesque (Archivo Narrow, echoing the \"Tenis\" wordmark) for anything that names or dates, and a plain system stack for anything you operate. Money and hours are tabular figures, because every number has to show its account.\n\nDepth stays flat and honest: white on lime, a 1.5px warm keyline, and a small ambient shadow that only lifts on state. Exactly one thing on screen is ever lit, and exactly one moment animates.",
+    "keyCharacteristics": [
+      "Full-bleed polvo chrome with white court-line keylines; content always on cal with white fichas.",
+      "Feltro yellow (#D9E24F) reserved for the single primary action — its rarity is the point.",
+      "Semantic color (red = cupo/extra, green = paid/space) is meaning, never palette.",
+      "Condensed display type for headings, wordmark, dates and times; system stack for UI; tabular figures for all numbers.",
+      "One motion moment (`day-in`, 180ms) with a reduced-motion guard; everything else transitions only on state.",
+      "Spanish copy throughout; ENUM values (`fija`, `extra`, `abierta`, `programada`) stay Spanish."
+    ],
+    "rules": [
+      {
+        "name": "The Feltro Rule",
+        "body": "Feltro #D9E24F is the only source of yellow and it means one thing: the primary action of the screen (plus the selection highlight). If a second element is feltro, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Keyline Rule",
+        "body": "A colored left keyline is 1px, never thicker, and always carries cupo/modality meaning — red for full or `extra`, polvo for with-space, gray for cancelled. The ficha's own border stays 1.5px of #E4DBCB. Keylines are semantics; they are not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Polvo Chrome Rule",
+        "body": "Header, bottom nav, section plates, day strip and day court are full-bleed polvo with white text and a white 35% court line. Cal never bleeds into chrome; polvo never becomes a small card.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Voice Rule",
+        "body": "Archivo Narrow is for headings, the wordmark, dates and times — nothing else. UI text is the system stack; every figure is tabular. A paragraph set in the display face, or a price set in proportional figures, breaks the world.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest; shadows appear only as a response to state (hover, elevation, the live class). Warm thin scrollbars (#CDC2AE on transparent) keep even the chrome earthy.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give each screen exactly one feltro primary action (#D9E24F on #241C15) and let everything else be secondary (white ficha + line border) or a text link.",
+      "Do keep the colored left keyline at exactly 1px and semantic: red (#C43A2A) = full/`extra`, polvo (#B65434) = with space, gray = cancelled.",
+      "Do render header, bottom nav, section plates, day strip and day court full-bleed polvo with white text and the white/35 court line.",
+      "Do set headings, the wordmark, dates and times in Archivo Narrow; all money, hours and counts in tabular-nums.",
+      "Do put reading surfaces on cal with white fichas (16px radius, 1.5px #E4DBCB keyline) and shadow only on state.",
+      "Do animate only the day change (`day-in`, 180ms ease-out) and respect `prefers-reduced-motion`.",
+      "Do keep copy and ENUM values in Spanish (`fija`, `extra`, `abierta`, `programada`, `completada`)."
+    ],
+    "donts": [
+      "Don't use feltro anywhere except the primary action (and the selection highlight) — not for badges, not for backgrounds, not for secondary buttons.",
+      "Don't thicken the semantic keyline past 1px or attach color to a left keyline that carries no cupo/modality meaning.",
+      "Don't introduce a second decorative accent: red and green in this system are semantics (cupo, pagado), not palette.",
+      "Don't set body or UI text, paragraphs, or tables in the display face; don't render figures without tabular-nums.",
+      "Don't add new shadow styles beyond the resting/raised/lit trio, or use hard, offset, or colored shadows.",
+      "Don't shrink the mobile gutter below 16px or drop the bottom-nav clearance (`pb-24`) on small screens."
+    ]
+  }
+}

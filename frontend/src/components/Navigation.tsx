@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { ChevronDown, ChevronUp } from '@/components/icons';
 
 interface NavUser {
   full_name?: string;
@@ -70,15 +72,23 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
     router.push('/login');
   };
 
-  const isActive = (href: string) => pathname === href;
+  const normalize = (p: string) => p.replace(/\/+$/, '') || '/';
+  const isActive = (href: string) => normalize(pathname) === normalize(href);
 
   return (
     <>
-      {/* Barra superior (PC y mobile) — header oscuro */}
-      <header className="bg-primary-800 text-white shadow-md sticky top-0 z-40">
+      {/* Header polvo con wordmark condensado + keyline de cancha */}
+      <header className="bg-polvo text-white shadow-md sticky top-0 z-40 court-line">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Link href={isAdminOrProfesor ? '/tablero' : '/mis-clases'} className="flex items-center gap-2 min-w-0">
-            <span className="font-bold text-lg truncate">{title}</span>
+            <Image
+              src="/logo.jpeg"
+              alt=""
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-md object-cover shrink-0"
+            />
+            <span className="font-display font-bold text-lg uppercase tracking-wide truncate">{title}</span>
           </Link>
 
           {/* Enlaces en PC */}
@@ -87,7 +97,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
               <Link
                 key={l.href}
                 href={l.href}
-                className={`transition ${isActive(l.href) ? 'text-white font-semibold underline underline-offset-4' : 'text-primary-100 hover:text-white'}`}
+                className={`transition ${isActive(l.href) ? 'text-white font-semibold underline underline-offset-4 decoration-2' : 'text-white hover:underline hover:underline-offset-4'}`}
               >
                 {l.label}
               </Link>
@@ -96,21 +106,21 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
               <Link
                 key={l.href}
                 href={l.href}
-                className={`transition ${isActive(l.href) ? 'text-white font-semibold underline underline-offset-4' : 'text-primary-100 hover:text-white'}`}
+                className={`transition ${isActive(l.href) ? 'text-white font-semibold underline underline-offset-4 decoration-2' : 'text-white hover:underline hover:underline-offset-4'}`}
               >
                 {l.label}
               </Link>
             ))}
-            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="text-primary-100 hover:text-white transition">
+            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="text-white hover:underline underline-offset-4 transition">
               Manual
             </a>
           </nav>
 
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-sm text-primary-100">{user?.full_name}</span>
+            <span className="hidden sm:inline text-sm text-white">{user?.full_name}</span>
             <button
               onClick={handleLogout}
-              className="text-sm text-white bg-primary-700 hover:bg-primary-600 px-3 py-1.5 rounded-lg transition"
+              className="text-sm text-white bg-white/15 hover:bg-white/25 border border-white/30 px-3 py-1.5 rounded-lg transition"
             >
               Salir
             </button>
@@ -118,20 +128,20 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
         </div>
       </header>
 
-      {/* Barra inferior fija (mobile) — todo en una sola zona */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-primary-900 text-white border-t border-primary-700">
+      {/* Placa polvo: barra inferior fija (mobile) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-polvo text-white border-t-2 border-white/35">
         <div className="flex items-stretch">
           {mainLinks.slice(0, 4).map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`flex-1 py-3 text-xs text-center transition ${isActive(l.href) ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
+              className={`flex-1 py-3 text-xs text-center transition ${isActive(l.href) ? 'bg-black/20 font-semibold' : 'hover:bg-black/10'}`}
             >
               {l.label}
             </Link>
           ))}
           {!isAdminOrProfesor && (
-            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 text-xs text-center transition hover:bg-primary-800">
+            <a href={manualHref} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 text-xs text-center transition hover:bg-black/10">
               Manual
             </a>
           )}
@@ -139,22 +149,27 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
             <button
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
-              className={`flex-1 py-3 text-xs text-center transition ${menuOpen ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
+              className={`flex-1 py-3 text-xs text-center transition ${menuOpen ? 'bg-black/20 font-semibold' : 'hover:bg-black/10'}`}
             >
-              Menú {menuOpen ? '▴' : '▾'}
+              Menú{' '}
+              {menuOpen ? (
+                <ChevronUp className="w-3 h-3 inline -mt-0.5" />
+              ) : (
+                <ChevronDown className="w-3 h-3 inline -mt-0.5" />
+              )}
             </button>
           )}
         </div>
 
         {/* Segunda fila expandible del bottom nav (módulos adicionales + Manual) */}
         {menuOpen && menuLinks.length > 0 && (
-          <div className="grid grid-cols-5 border-t border-primary-700">
+          <div className="grid grid-cols-5 border-t border-white/35">
             {menuLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setMenuOpen(false)}
-                className={`py-3 px-1 text-[11px] text-center truncate transition ${isActive(l.href) ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-800'}`}
+                className={`py-3 px-1 text-[11px] text-center truncate transition ${isActive(l.href) ? 'bg-black/20 font-semibold' : 'hover:bg-black/10'}`}
               >
                 {l.label}
               </Link>
@@ -164,7 +179,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="py-3 px-1 text-[11px] text-center truncate transition hover:bg-primary-800"
+              className="py-3 px-1 text-[11px] text-center truncate transition hover:bg-black/10"
             >
               Manual
             </a>

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import LevelChip from '@/components/LevelChip';
+import { ChevronLeft, ChevronRight } from '@/components/icons';
 
 interface User {
   id: number;
@@ -148,8 +149,9 @@ export default function InstanciasPage() {
 
   const grouped: Record<string, Instance[]> = {};
   for (const inst of instances) {
-    if (!grouped[inst.instance_date]) grouped[inst.instance_date] = [];
-    grouped[inst.instance_date].push(inst);
+    const key = String(inst.instance_date ?? '').split('T')[0] || 'sin-fecha';
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(inst);
   }
   const dates = Object.keys(grouped).sort();
 
@@ -166,27 +168,29 @@ export default function InstanciasPage() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 text-sm disabled:opacity-50"
+            className="btn-primary text-sm"
           >
-            {generating ? 'Generando...' : '⚙ Generar Mes'}
+            {generating ? 'Generando...' : 'Generar Mes'}
           </button>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg px-4 py-3 mb-6 flex items-center justify-between">
+        <div className="bg-ficha border border-line shadow-sm rounded-2xl px-4 py-3 mb-6 flex items-center justify-between">
           <button
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
-            className="text-primary-600 font-semibold px-3 py-1 hover:bg-gray-100 rounded-lg"
+            aria-label="Mes anterior"
+            className="flex items-center justify-center text-primary-600 font-semibold w-9 h-9 hover:bg-gray-100 rounded-lg"
           >
-            ◀
+            <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="font-semibold capitalize text-lg">
+          <span className="font-semibold text-lg">
             {formatMonthLabel(month)}
           </span>
           <button
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
-            className="text-primary-600 font-semibold px-3 py-1 hover:bg-gray-100 rounded-lg"
+            aria-label="Mes siguiente"
+            className="flex items-center justify-center text-primary-600 font-semibold w-9 h-9 hover:bg-gray-100 rounded-lg"
           >
-            ▶
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
@@ -212,11 +216,14 @@ export default function InstanciasPage() {
           <div className="space-y-6">
             {dates.map((date) => {
               const d = new Date(`${date}T12:00:00`);
-              const weekday = WEEKDAYS[(d.getDay() + 6) % 7];
+              const valid = !Number.isNaN(d.getTime());
+              const heading = valid
+                ? `${WEEKDAYS[(d.getDay() + 6) % 7]} ${d.getDate()}`
+                : date;
               return (
                 <div key={date}>
-                  <h3 className="font-semibold text-sm text-gray-700 mb-2 capitalize">
-                    {weekday} {d.getDate()}
+                  <h3 className="font-semibold text-sm text-gray-700 mb-2">
+                    {heading}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {grouped[date].map((instance) => {
@@ -227,7 +234,7 @@ export default function InstanciasPage() {
                           className={`card ${
                             instance.status === 'cancelada'
                               ? 'border-gray-300 opacity-60'
-                              : 'card-accent border-l-primary-500'
+                              : `card-accent ${instance.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'}`
                           }`}
                         >
                           <div className="flex justify-between items-start">

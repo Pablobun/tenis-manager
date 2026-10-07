@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -54,19 +55,32 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-canvas px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white text-3xl font-bold mb-4">
-            RT
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Riverside Tenis</h1>
-          <p className="text-gray-500 mt-2">Iniciar sesión</p>
+    <main className="min-h-screen bg-cal">
+      {/* Placa polvo a sangre con wordmark condensado */}
+      <div className="bg-polvo court-line px-4 pt-12 pb-14 text-center">
+        <div className="inline-flex mb-4">
+          <Image
+            src="/logo.jpeg"
+            alt="Riverside Tenis"
+            width={64}
+            height={64}
+            priority
+            className="w-16 h-16 rounded-2xl object-cover"
+          />
         </div>
+        <h1 className="font-display text-white text-4xl font-bold uppercase tracking-wide">
+          Riverside Tenis
+        </h1>
+        <p className="text-white text-sm mt-2">Sistema de gestión de clases</p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+      <div className="w-full max-w-sm mx-auto px-4 -mt-8">
+        <form onSubmit={handleSubmit} className="card p-6 space-y-4 shadow-md">
+          <div className="text-center mb-2">
+            <h2 className="text-xl font-bold">Iniciar sesión</h2>
+          </div>
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>
+            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>
           )}
 
           <div>
@@ -94,7 +108,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50 transition"
+            className="w-full btn-primary"
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>

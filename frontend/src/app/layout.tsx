@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Archivo_Narrow } from 'next/font/google';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+// Display condensed (eco del logo del club): headers en Archivo Narrow.
+// UI: system stack (definido en tailwind.config → fontFamily.sans).
+const archivo = Archivo_Narrow({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Riverside Tenis - Gestión de Clases',
@@ -16,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={`${archivo.variable} font-sans`}>{children}</body>
     </html>
   );
 }

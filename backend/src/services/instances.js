@@ -64,6 +64,17 @@ async function generateInstancesForMonth(yearMonth, { includePast = true } = {})
   const today = new Date().toISOString().split('T')[0];
 
   for (const t of templates) {
+    // Item 5 (cambios.txt): las fijas se replican con su roster (plantilla_alumnos);
+    // extras y abiertas se generan sin alumnos.
+    let roster = [];
+    if (t.modalidad === 'fija') {
+      const [rosterRows] = await db.query(
+        'SELECT alumno_id FROM plantilla_alumnos WHERE plantilla_id = ?',
+        [t.id]
+      );
+      roster = rosterRows.map((r) => r.alumno_id);
+    }
+
     // dia_semana: 0 = Lunes, ..., 6 = Domingo en nuestra convención (ver dayOfweek)
     // En JS Date: 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
     // Mapeo JS day to nuestra convención (0=Lunes..6=Domingo): (jsDay + 6) % 7
@@ -100,6 +111,24 @@ async function generateInstancesForMonth(yearMonth, { includePast = true } = {})
           );
           if (res.affectedRows > 0) {
             generatedCount++;
+            // Inscribir roster en la instancia recién creada (solo fijas nuevas)
+            if (roster.length > 0) {
+              try {
+                const [groups] = await db.query('SELECT id FROM grupos WHERE instancia_id = ? LIMIT 1', [res.insertId]);
+                let groupId;
+                if (groups.length === 0) {
+                  const [gRes] = await db.query('INSERT INTO grupos (instancia_id, nombre) VALUES (?, ?)', [res.insertId, 'Grupo Principal']);
+                  groupId = gRes.insertId;
+                } else {
+                  groupId = groups[0].id;
+                }
+                for (const alumnoId of roster) {
+                  await db.query('INSERT IGNORE INTO grupo_alumnos (grupo_id, alumno_id) VALUES (?, ?)', [groupId, alumnoId]);
+                }
+              } catch (errRoster) {
+                console.error(`Error inscribiendo roster de plantilla ${t.id} en instancia ${res.insertId}:`, errRoster);
+              }
+            }
           }
         } catch (err) {
           console.error(`Error generando instancia para plantilla ${t.id} en fecha ${dateStr}:`, err);

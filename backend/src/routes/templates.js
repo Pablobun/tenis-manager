@@ -5,6 +5,17 @@ const { generateInstancesForMonth, cancelFutureInstances } = require('../service
 
 const router = express.Router();
 
+// Reemplaza el roster (alumnos por defecto) de una plantilla — item 8
+async function replaceRoster(connection, templateId, studentIds) {
+  await connection.query('DELETE FROM plantilla_alumnos WHERE plantilla_id = ?', [templateId]);
+  for (const alumnoId of studentIds) {
+    await connection.query(
+      'INSERT IGNORE INTO plantilla_alumnos (plantilla_id, alumno_id) VALUES (?, ?)',
+      [templateId, alumnoId]
+    );
+  }
+}
+
 // Listar plantillas
 router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   try {
@@ -17,7 +28,27 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
        JOIN perfiles p ON t.profesor_id = p.id
        ORDER BY t.dia_semana, t.hora_inicio`
     );
-    res.json(rows);
+
+    // Item 8: adjuntar roster (alumnos por defecto) de cada plantilla
+    const ids = rows.map((r) => r.id);
+    const rosterByTemplate = {};
+    if (ids.length > 0) {
+      const [roster] = await db.query(
+        `SELECT pa.plantilla_id, pa.alumno_id as id, p.nombre_completo as full_name
+         FROM plantilla_alumnos pa
+         JOIN perfiles p ON pa.alumno_id = p.id
+         WHERE pa.plantilla_id IN (${ids.map(() => '?').join(',')})
+         ORDER BY p.nombre_completo`,
+        ids
+      );
+      for (const r of roster) {
+        if (!rosterByTemplate[r.plantilla_id]) rosterByTemplate[r.plantilla_id] = [];
+        rosterByTemplate[r.plantilla_id].push({ id: r.id, full_name: r.full_name });
+      }
+    }
+    const withRoster = rows.map((r) => ({ ...r, students: rosterByTemplate[r.id] || [] }));
+
+    res.json(withRoster);
   } catch (err) {
     console.error('Error listando plantillas:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -26,7 +57,7 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
 
 // Crear plantilla — item 6: profesor_id del body (default quien crea). item 14: include_past.
 router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
-  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, profesor_id, include_past } = req.body;
+  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, profesor_id, include_past, student_ids } = req.body;
 
   if (day_of_week === undefined || !start_hour || !end_hour || !modality || !price_per_class) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
@@ -78,6 +109,11 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
 
     const templateId = result.insertId;
 
+    // Item 8: roster de alumnos por defecto (se replica al generar instancias)
+    if (Array.isArray(student_ids) && student_ids.length > 0) {
+      await replaceRoster(db, templateId, student_ids);
+    }
+
     // Generar instancias para el mes actual (item 14: puede excluir fechas pasadas)
     const currentMonth = new Date().toISOString().slice(0, 7);
     await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });
@@ -91,7 +127,7 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (
 
 // Actualizar plantilla o activar/desactivar
 router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
-  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, is_active, profesor_id, include_past } = req.body;
+  const { day_of_week, start_hour, end_hour, level, modality, max_students, price_per_class, frequency, is_active, profesor_id, include_past, student_ids } = req.body;
 
   try {
     const [rows] = await db.query('SELECT * FROM plantillas_clases WHERE id = ?', [req.params.id]);
@@ -130,6 +166,11 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async
       WHERE id = ?`,
       [newProfesor, newDay, newStart, newEnd, level, modality, max_students, price_per_class, frequency, req.params.id]
     );
+
+    // Item 8: reemplazar roster si vino student_ids (array, puede ser vacío)
+    if (Array.isArray(student_ids)) {
+      await replaceRoster(db, req.params.id, student_ids);
+    }
 
     const currentMonth = new Date().toISOString().slice(0, 7);
     await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });

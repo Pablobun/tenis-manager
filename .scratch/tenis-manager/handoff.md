@@ -1,8 +1,8 @@
 # Handoff — Sistema de Gestión de Clases de Tenis (Riverside)
 
-**Fecha**: 2026-08-14
-**Estado**: Items 1-15 + pulido estético + manuales + acceso "Manual" por rol + skill `doesntbreak` + **responsive mobile (items 16-18: menú móvil unificado, tablas con scroll horizontal propio, headers con wrap)** — todo **commiteado y pusheado** (último commit `d93719b resposive`) + **`backend/sql/seed-demo.sql` creado (solo INSERT, pendiente de ejecutar por el usuario en la BD real)**. Backend: `node --check` OK en los 12 archivos. Frontend: `npm run build` OK (16 rutas). **Pendiente del usuario**: ejecutar `seed-demo.sql` contra la BD real, limpiar luego lo `demo.*`, y verificación final en Render/Droplet con hard refresh.
-**Próxima acción**: usuario ejecuta `backend/sql/seed-demo.sql` en la BD real (SQLYog o similar) para probar todos los escenarios con datos demo (contraseña `demo123`, emails `demo.*`); luego verificar responsive en el droplet con hard refresh (menú móvil en una sola zona, tablas de facturación/plantillas/alumnos con scroll horizontal) y flujos de BD contra los datos demo. El usuario limpia lo `demo.*` al terminar.
+**Fecha**: 2026-10-06
+**Estado**: Items 1-15 + responsive (16-18) + manuales — commiteados y pusheados (último commit `d93719b`). **NUEVO ESTA SESIÓN (sin commitear — el usuario hace add/commit/push)**: **lote 2 completo** (issue `13-cambios-lote2`, los 10 puntos de `cambios.txt`) + **rediseño visual total "Polvo de Ladrillo"** guiado por la skill `impeccable`, con flujo de cierre terminado: detector limpio, finish review **ship** (3 materiales corregidos: cancha de horas en el tablero, NaN en instancias, iconos SVG), **`DESIGN.md` + `.impeccable/design.json` escritos**, provenance del logo embebida (`embed-prompt --scan` limpio). Backend `node --check` OK; frontend `npm.cmd run build` OK (16 rutas).
+**Próxima acción**: usuario commitea/pushea (tras push: hard refresh o incógnito por caché de HTML). Contra la BD real sigue pendiente `backend/sql/seed-demo.sql`. Menores abiertos del finish review: (a) confirmaciones nativas `confirm()`/`alert()` en varios flujos, (b) mitad derecha del campo-cancha vacía en desktop cuando no hay2 clases en la misma hora, (c) utilidades `gray/emerald/amber` fuera de paleta en páginas no capturadas (dashboard/admin/pagos/facturación), (d) SMTP real pendiente de credenciales.
 
 ---
 
@@ -260,6 +260,38 @@ C:\GesttionSoftware\
 - **Manuales** (en `frontend/public/`, servidos como estáticos): `manual-sistema.html` (todo, con Arquitectura), `manual-profesor.html` (sin Arquitectura), `manual-usuario.html` (alumno, sin Arquitectura ni manual interno). Acceso desde la nav con el enlace **"Manual"** que redirige por rol. Recordar: los cambios a `frontend/public/` salen en el build de Next (output: export los copia a `out/`).
 - **Skill `doesntbreak`**: `.opencode/skills/doesntbreak/` — solo markdown (sin scripts/red). Ya se aplicó para los items 16-18 (regla 9 "contain the scroll": envolver tablas anchas en `overflow-x-auto`, nunca dejar scroll horizontal en la página).
 - **Seed demo** (`backend/sql/seed-demo.sql`): solo INSERT (sin DELETE), contraseña `demo123`, emails `demo.*`. Ejecutar contra la BD real para probar; el usuario limpia lo `demo.*` al terminar. Montos de mensualidad se calculan con `COUNT(*)` de instancias del mes (precio × clases), coherentes con facturación.
+
+---
+
+## Lote 2 + rediseño "Polvo de Ladrillo" (sesión 2026-10-06, SIN COMMITEAR)
+
+**Spec**: `.scratch/tenis-manager/issues/13-cambios-lote2.md` (decisiones grill: baja propia alumno24h antes UTC-3, baja en fija = solo esa instancia, extras inscripción directa `aceptada`/`lista_espera` sin candidatos, 50% del precio regular, replicación con roster solo en fijas, mails alumno+profe con Gmail App Password → desactivado silencioso si faltan env vars `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/MAIL_FROM`).
+
+**Backend (node --check OK)**:
+- `backend/sql/migrations/002_plantilla_alumnos.sql` + `schema.sql`: tabla `plantilla_alumnos` (roster de plantillas fijas).
+- `backend/src/services/mailer.js` (nuevo): nodemailer no-op sin credenciales; `notifyClassChange` confirma alumno + aviso profe (omite si él es actor).
+- `backend/src/services/instances.js`: `generateInstancesForMonth` inscribe roster solo en `modalidad='fija'`; instancia nueva → grupo 'Grupo Principal' + INSERT IGNORE.
+- `backend/src/routes/templates.js`: GET enriquecido con `students[]`; POST/PUT aceptan `student_ids`.
+- `backend/src/routes/board.js`: `POST /board/drop` (alumno, límite24h con startMs-24h, transacción), `POST /board/enroll` con `force`, `DELETE /board/enroll` — mails en ambos.
+- `backend/src/routes/instances.js`: open/postulate → extra aceptada/lista_espera directo + mail; accept permite desde `lista_espera`; DELETE postulate cancela `pendiente`/`lista_espera`.
+
+**Frontend (build OK,16 rutas)** — mundo visual `Polvo de Ladrillo` (polvo #B65434 / cal #F7F3EA / ficha #FFF / feltro #D9E24F solo acción primaria / rojo cupo / verde pagado; display Archivo Narrow vía next/font; system stack UI; cifras tabular):
+- Tokens: `tailwind.config.js` + `globals.css` (`.card` border-[1.5px], `.card-accent` left1px, court-line, day-in con reduced-motion, ::selection/caret/focus/scrollbars tematizados).
+- `Navigation.tsx`: header/bottom-nav placa polvo, logo28px, `isActive` normaliza trailing slash.
+- Tablero: **día = cancha** (campo polvo con franjas horarias blancas y fichas encima), clase "Ahora" arriba con ring-white, `cupoColor` (extra/full → rojo), force-add con warning.
+- Mis-clases: baja propia24h (`canDropSelf`), inscripción extra/waitlist, deuda.
+- Plantillas: picker de alumnos (roster), hint 50%.
+- Clases-abiertas: extras → "Lista de espera", agregar/quitar directo, border rojo.
+- Iconos: `frontend/src/components/icons.tsx` (chevrones/X SVG stroke-2 — sin glifos Unicode).
+- Logo: `frontend/public/logo.jpeg` (placa negra sin procesar, login64px + nav28px, next/image); provenance embebida.
+
+**Cierre impeccable**: detect limpio (`[]`); finish review **fix → ship** (resueltos: cancha de horas, NaN fechas instancias, iconos SVG, copy "de octubre", nav activa, keylines1.5px); **`DESIGN.md` + `.impeccable/design.json` escritos en la raíz**. Brief: `.impeccable/surfaces/frontend-src-app.md`; screenshots de evidencia: `.impeccable/review/*.png` (captura con fixtures + localStorage falso — script temporal `capture.mjs` en el temp del agente, no en el repo).
+
+**Gotchas de la sesión**:
+- Captura headless: `localStorage.setItem('user', {"a":1})` guarda "[object Object]" — hay que serializar el JSON como string.
+- `new Date('YYYY-MM-DDTHH:mm:ss' + 'T12:00:00')` → NaN; normalizar con `split('T')[0]` antes de agrupar.
+- Craft floor: **colored border-left >1px está prohibido** (side-tab) — el acento cupo vive en1px, el resto de la keyline en1.5px.
+- El harness de imágenes mezcla attachments al leer PNGs (los subagentes leen bien; verificar contenido con `document.body.innerText` en la captura).
 
 ---
 

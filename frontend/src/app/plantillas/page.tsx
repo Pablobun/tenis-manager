@@ -25,11 +25,18 @@ interface Template {
   price_per_class: string;
   is_active: number;
   created_at: string;
+  students?: { id: number; full_name: string }[];
 }
 
 interface Profesor {
   id: number;
   full_name: string;
+}
+
+interface Student {
+  id: number;
+  full_name: string;
+  email: string;
 }
 
 const DAYS: { value: number; label: string }[] = [
@@ -71,6 +78,8 @@ export default function PlantillasPage() {
   const [user, setUser] = useState<User | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [profesores, setProfesores] = useState<Profesor[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [roster, setRoster] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -95,11 +104,25 @@ export default function PlantillasPage() {
     if (user) {
       fetchTemplates();
       fetchProfesores();
+      fetchStudents();
       if (user.role === 'profesor') {
         setForm((f) => ({ ...f, profesor_id: String(user.id) }));
       }
     }
   }, [user]);
+
+  const fetchStudents = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/students`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setStudents(data);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+    }
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -161,7 +184,9 @@ export default function PlantillasPage() {
       max_students: Number(form.max_students),
       price_per_class: Number(form.price_per_class),
       profesor_id: form.profesor_id ? Number(form.profesor_id) : undefined,
-      include_past: includePast
+      include_past: includePast,
+      // Item 8: roster de alumnos por defecto (solo fijas se replica al mes)
+      student_ids: form.modality === 'fija' ? roster : undefined
     };
 
     try {
@@ -196,6 +221,7 @@ export default function PlantillasPage() {
 
   const handleEdit = (template: Template) => {
     setEditingTemplate(template);
+    setRoster((template.students || []).map((s) => s.id));
     setForm({
       day_of_week: String(template.day_of_week),
       start_hour: template.start_hour,
@@ -246,6 +272,7 @@ export default function PlantillasPage() {
           <button
             onClick={() => {
               setEditingTemplate(null);
+              setRoster([]);
               setForm({ ...EMPTY_FORM, profesor_id: user.role === 'profesor' ? String(user.id) : '' });
               setShowForm(true);
             }}
@@ -368,11 +395,48 @@ export default function PlantillasPage() {
                     placeholder="0.00"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    La mensualidad mensual = este precio × cantidad de clases del mes.
+                  <p className="text-xs text-muted mt-1">
+                    {form.modality === 'extra'
+                      ? 'Sugerido: 50% de la clase habitual (se cobra por asistencia).'
+                      : 'La mensualidad mensual = este precio × cantidad de clases del mes.'}
                   </p>
                 </div>
               </div>
+
+              {/* Item 8: roster de alumnos por defecto (se replica al generar el mes) */}
+              {form.modality === 'fija' && (
+                <div>
+                  <label className="label">Alumnos de la clase (se replican cada mes)</label>
+                  <div className="border border-line rounded-xl bg-ficha max-h-52 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    {students.length === 0 ? (
+                      <p className="text-sm text-muted px-2 py-1">No hay alumnos cargados.</p>
+                    ) : (
+                      students.map((s) => (
+                        <label
+                          key={s.id}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cal cursor-pointer text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={roster.includes(s.id)}
+                            onChange={() =>
+                              setRoster((r) =>
+                                r.includes(s.id) ? r.filter((id) => id !== s.id) : [...r, s.id]
+                              )
+                            }
+                            className="w-4 h-4 accent-polvo"
+                          />
+                          <span className="truncate">{s.full_name}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  <p className="text-xs text-muted mt-1">
+                    {roster.length} alumno(s) seleccionado(s). Las instancias futuras de esta fija nacen con ellos inscriptos.
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <button type="submit" className="btn-primary">
                   {editingTemplate ? 'Guardar Cambios' : 'Crear Plantilla'}
@@ -399,12 +463,13 @@ export default function PlantillasPage() {
         ) : (
           <div className="card overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-cal">
                 <tr>
                   <th className="table-head">Día</th>
                   <th className="table-head">Horario</th>
                   <th className="table-head">Nivel</th>
                   <th className="table-head">Modalidad</th>
+                  <th className="table-head">Alumnos</th>
                   <th className="table-head">Cupo</th>
                   <th className="table-head">Precio</th>
                   <th className="table-head">Profesor/a</th>
@@ -414,7 +479,7 @@ export default function PlantillasPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {templates.map((template) => (
-                  <tr key={template.id} className="hover:bg-gray-50">
+                  <tr key={template.id} className="hover:bg-cal">
                     <td className="px-4 py-3 text-sm">
                       {DAYS.find((d) => d.value === template.day_of_week)?.label || '-'}
                     </td>
@@ -424,12 +489,20 @@ export default function PlantillasPage() {
                     <td className="px-4 py-3 text-sm">
                       <LevelChip level={template.level} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 capitalize">
+                    <td className="px-4 py-3 text-sm text-muted capitalize">
                       {MODALITIES.find((m) => m.value === template.modality)?.label || template.modality}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{template.max_students}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">${template.price_per_class}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{template.professor_name || '-'}</td>
+                    <td
+                      className="px-4 py-3 text-sm text-muted"
+                      title={(template.students || []).map((s) => s.full_name).join(', ')}
+                    >
+                      {template.modality === 'fija'
+                        ? `${(template.students || []).length} en roster`
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted">{template.max_students}</td>
+                    <td className="px-4 py-3 text-sm text-muted">${template.price_per_class}</td>
+                    <td className="px-4 py-3 text-sm text-muted">{template.professor_name || '-'}</td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`chip ${template.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {template.is_active ? 'Activa' : 'Inactiva'}

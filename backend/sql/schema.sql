@@ -39,6 +39,17 @@ CREATE TABLE IF NOT EXISTS plantillas_clases (
   FOREIGN KEY (profesor_id) REFERENCES perfiles(id) ON DELETE CASCADE
 );
 
+-- Alumnos por defecto de una plantilla (roster que se replica al generar instancias)
+CREATE TABLE IF NOT EXISTS plantilla_alumnos (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  plantilla_id BIGINT UNSIGNED NOT NULL,
+  alumno_id BIGINT UNSIGNED NOT NULL,
+  agregado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_plantilla_alumno (plantilla_id, alumno_id),
+  FOREIGN KEY (plantilla_id) REFERENCES plantillas_clases(id) ON DELETE CASCADE,
+  FOREIGN KEY (alumno_id) REFERENCES perfiles(id) ON DELETE CASCADE
+);
+
 -- Instancias de clases (generadas mensualmente desde las plantillas)
 CREATE TABLE IF NOT EXISTS instancias_clases (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

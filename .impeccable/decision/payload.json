@@ -1,0 +1,176 @@
+{
+  "title": "Elegir el mundo visual",
+  "question": "El roll asignó Cartelería del Club. ¿La mantenés, tomás una alternativa o re-roll?",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Cartelería del Club",
+      "kicker": "THE ROLL",
+      "lineage": "rotulación a mano y placas esmaltadas de clubhouses",
+      "thesis": "Cada módulo es un cartel del clubhouse: placas de esmalte negro con letras blancas sobre muro claro, y el script \"Tenis\" como voz de marca.",
+      "palette": ["#151515", "#F4F1EC", "#FBFAF6", "#C25B33"],
+      "materials": ["esmalte pintado", "muro encalado"],
+      "viewport": "Header en placa de esmalte negro con el wordmark script; el día se lee como cartel de horarios y las clases como fichas atornilladas al muro.",
+      "risk": "Si la cartelería se vuelve puro decorado, la operación diaria pierde legibilidad.",
+      "raised": [
+        { "from": "mapa de orientación", "raise": "Leyenda rankeada: un solo cuadro decodifica todos los colores de estado (cupo, deuda, nivel), como la leyenda de un mapa." },
+        { "from": "feed a pantalla completa", "raise": "Clase \"ahora\" manda: la clase en curso domina el arranque del tablero, con foco de un solo elemento." },
+        { "from": "datamatics", "raise": "Compromiso total de valor: el negro esmalte ocupa regiones enteras (headers, nav), nunca un acento tímido." }
+      ],
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "placa esmalte negra + script", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true },
+        { "label": "cartel del día / franjas", "x": 0, "y": 2, "w": 12, "h": 2 },
+        { "label": "fichas de clase atornilladas", "x": 0, "y": 4, "w": 8, "h": 6 },
+        { "label": "placa de leyenda", "x": 8, "y": 4, "w": 4, "h": 6 }
+      ]}
+    },
+    {
+      "id": "model-pick",
+      "label": "Polvo de Ladrillo",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "canchas de polvo de ladrillo",
+      "thesis": "La app es la cancha: fondo de polvo, líneas blancas como grilla y la caja de servicio como sistema de layout.",
+      "palette": ["#B65434", "#F7F3EA", "#FFFFFF", "#D9E24F"],
+      "materials": ["ladrillo triturado", "línea de cal"],
+      "viewport": "El tablero del día dibujado como la cancha desde arriba: franjas horarias en líneas blancas sobre polvo, partidos como fichas.",
+      "risk": "El fondo terracota cálido es la estética más agrupada en interfaces generadas; si algo se ve genérico en esta categoría, es esto.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "header sobre polvo", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true },
+        { "label": "grilla de líneas blancas (horas)", "x": 0, "y": 2, "w": 12, "h": 6 },
+        { "label": "fichas de clase", "x": 2, "y": 3, "w": 8, "h": 4 },
+        { "label": "día / semana", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ]}
+    },
+    {
+      "id": "challenger-manual",
+      "label": "Manual con Pestañas",
+      "verdict": "competitive",
+      "lineage": "manuales de software con hojas de acetato",
+      "thesis": "El sistema como manual del club: un riel de pestañas por módulo y un tono de sección a plena fuerza.",
+      "palette": ["#B4471F", "#0E6E63", "#F2E9D8"],
+      "materials": ["acetato punzonado", "cartón divisor"],
+      "viewport": "Riel de pestañas al costado; el módulo activo es la propia pestaña que se extiende como tablero de color.",
+      "case": "Fusiona bien: las pestañas ya son la navegación y el cliente hasta tiene manuales de papel; pierde en identificación de audiencia — nostálgico de software genérico, no del club.",
+      "risk": "Si cada módulo toma un tono fuerte, la operación diaria se vuelve arcoíris.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "riel de pestañas (1 por módulo)", "x": 0, "y": 0, "w": 2, "h": 10, "accent": true },
+        { "label": "tablero de sección activa", "x": 2, "y": 0, "w": 10, "h": 3 },
+        { "label": "contenido del módulo", "x": 2, "y": 3, "w": 10, "h": 7 }
+      ]}
+    },
+    {
+      "id": "challenger-monochrome",
+      "label": "Blanco y Negro Estricto",
+      "verdict": "competitive",
+      "lineage": "marketing de producto monocromo",
+      "thesis": "Casi sin color: una escala de casi-negro a casi-blanco con un solo acento, y cada cifra mostrada junto a su cuenta.",
+      "palette": ["#0F1115", "#F7F7F5", "#C9A227"],
+      "materials": ["escala neutra fina", "cifras tabulares"],
+      "viewport": "Cada pantalla empareja afirmación y prueba: la deuda con su desglose, el cupo con sus nombres.",
+      "case": "Fusiona bien: neutros + un acento es el substrato más claro para plata y cupos e invierte con el logo; pierde en identificación — voz de software premium, no de Riverside.",
+      "risk": "Sin la voz del club se confunde con cualquier dashboard SaaS.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "nav plana", "x": 0, "y": 0, "w": 12, "h": 1 },
+        { "label": "cifra principal", "x": 0, "y": 1, "w": 5, "h": 4, "accent": true },
+        { "label": "prueba / desglose", "x": 5, "y": 1, "w": 7, "h": 4 },
+        { "label": "filas densas", "x": 0, "y": 5, "w": 12, "h": 5 }
+      ]}
+    },
+    {
+      "id": "challenger-gateboard",
+      "label": "Tablero de Salidas",
+      "verdict": "competitive",
+      "lineage": "pases de abordaje y tableros de puerta",
+      "thesis": "El día como tablero de salidas: las clases ordenadas por hora, los cambios destellando y reordenándose en el lugar.",
+      "palette": ["#16181C", "#F4F4F1", "#D8402F"],
+      "materials": ["panel esmaltado", "monoespaciado tabular"],
+      "viewport": "Filas de hora con columnas fijas; un cambio (cupo lleno, cancelación) enciende su fila con el color de alerta y la mantiene encendida.",
+      "case": "Fusiona muy bien: ranking por hora con destello de cambio es exactamente el tablero diario de la profe; pierde en identificación — la vernácula del viaje no es el mundo del club.",
+      "risk": "Si el tiempo manda sobre todo, la plata y los alumnos quedan escondidos.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "pase segmentado del día", "x": 0, "y": 0, "w": 4, "h": 10 },
+        { "label": "filas rankeadas por hora", "x": 4, "y": 0, "w": 8, "h": 8, "accent": true },
+        { "label": "cambio destacado", "x": 4, "y": 8, "w": 8, "h": 2 }
+      ]}
+    },
+    {
+      "id": "challenger-orient",
+      "label": "Mapa de Orientación",
+      "verdict": "declined",
+      "lineage": "mapas de orientación ISO",
+      "thesis": "La operación como mapa con leyenda de colores fijos y cursores numerados.",
+      "palette": ["#F2E8D5", "#7A8B4F", "#8B4A9E"],
+      "materials": ["curvas de nivel", "tinta púrpura"],
+      "viewport": "Terreno en colores ISO debajo, cursores numerados arriba.",
+      "case": "Fusiona mal: la parrilla del club es horaria, no geográfica; un mapa no aclara deudas ni cupos.",
+      "kept": "Leyenda rankeada: un solo cuadro que decodifica todos los colores de estado.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "terreno de colores", "x": 0, "y": 0, "w": 8, "h": 10 },
+        { "label": "leyenda rankeada", "x": 8, "y": 0, "w": 4, "h": 10, "accent": true }
+      ]}
+    },
+    {
+      "id": "challenger-feed",
+      "label": "Feed a Pantalla Completa",
+      "verdict": "declined",
+      "lineage": "feeds verticales de video",
+      "thesis": "Una clase posee toda la pantalla y la siguiente espera a un flick de distancia.",
+      "palette": ["#000000", "#FFFFFF"],
+      "materials": ["scrim", "glifos puros"],
+      "viewport": "La clase actual llena el viewport con acciones apiladas a la derecha.",
+      "case": "Fusiona mal: una clase por pantalla esconde la grilla del día y la plata que la profe debe ver de un vistazo.",
+      "kept": "Foco de una sola clase: la clase \"ahora\" domina el arranque del tablero.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "clase que llena la pantalla", "x": 1, "y": 0, "w": 10, "h": 9, "accent": true },
+        { "label": "rail de acciones", "x": 11, "y": 2, "w": 1, "h": 6 }
+      ]}
+    },
+    {
+      "id": "challenger-datamatics",
+      "label": "Datamatics",
+      "verdict": "declined",
+      "lineage": "obra Datamatics (blanco y negro puro)",
+      "thesis": "Campos de barras tipo código de barras y numerales monoespaciados en blanco y negro puro.",
+      "palette": ["#000000", "#FFFFFF"],
+      "materials": ["barras hairline", "numerales mono"],
+      "viewport": "Un muro de columnas de barras con la cifra del día empaquetada en el margen.",
+      "case": "Fusiona mal: campos estroboscópicos no aclaran roster ni facturación para una profesora.",
+      "kept": "Compromiso total de valor: blanco y negro ocupan regiones enteras, nunca tímidos.",
+      "hero": "https://impeccable.style/worlds/cards/ikeda-datamatics-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/ikeda-datamatics.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "campo de barras", "x": 0, "y": 0, "w": 9, "h": 10, "accent": true },
+        { "label": "numerales de margen", "x": 9, "y": 0, "w": 3, "h": 10 }
+      ]}
+    },
+    {
+      "id": "canon",
+      "label": "El estándar de la categoría",
+      "kicker": "CANON",
+      "thesis": "El dashboard administrativo limpio que esta categoría siempre envía, ejecutado impecablemente.",
+      "palette": ["#FFFFFF", "#111827", "#2563EB"],
+      "materials": ["grilla limpia", "cards con sombra"],
+      "viewport": "El arreglo que el visitante espera, a plena craft.",
+      "risk": "Indistinguible de la competencia por diseño.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "sidebar", "x": 0, "y": 0, "w": 3, "h": 10 },
+        { "label": "cards", "x": 3, "y": 0, "w": 9, "h": 5 },
+        { "label": "tabla", "x": 3, "y": 5, "w": 9, "h": 5 }
+      ]}
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "steer": true
+}

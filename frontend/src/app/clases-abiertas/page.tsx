@@ -363,8 +363,8 @@ export default function ClasesAbiertasPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
           <div>
-            <h2 className="text-lg font-semibold">Clases Abiertas / Rotativas y Extras</h2>
-            <p className="text-sm text-gray-500">Clases de una sola fecha donde los alumnos se postulan libremente</p>
+            <h2 className="text-xl font-bold">Clases Abiertas / Rotativas y Extras</h2>
+            <p className="text-sm text-muted">Abiertas: los alumnos se postulan. Extras: inscripción directa al cupo.</p>
           </div>
           <button
             onClick={() => {
@@ -533,80 +533,93 @@ export default function ClasesAbiertasPage() {
               const capitalizedLabel = `${label[0].toUpperCase()}${label.slice(1)}`;
 
               return (
-                <div key={c.id} className="card card-accent flex flex-col justify-between">
+                <div
+                  key={c.id}
+                  className={`card card-accent ${c.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'} flex flex-col justify-between`}
+                >
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-gray-800 capitalize">{capitalizedLabel}</h4>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${c.status === 'cancelada' ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-800'}`}>
+                      <h4 className="font-bold text-lg text-ink">{capitalizedLabel}</h4>
+                      <span className={`chip ${c.status === 'cancelada' ? 'bg-cal text-muted border border-line' : 'bg-green-50 text-green-700'}`}>
                         {c.status === 'cancelada' ? 'Cancelada' : 'Programada'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted">
                       Horario: {c.start_hour.slice(0, 5)} - {c.end_hour.slice(0, 5)}
                     </p>
                     <div className="flex items-center gap-2 flex-wrap mt-1">
                       <LevelChip level={c.level} />
-                      <span className="text-sm text-gray-600 capitalize">
+                      <span className={`chip ${c.modality === 'extra' ? 'bg-red-50 text-red-700' : 'bg-cal text-muted border border-line'}`}>
                         {c.modality === 'extra' ? 'Extra' : 'Abierta'}
                       </span>
                       {c.professor_name && (
-                        <span className="text-xs text-gray-500">· {c.professor_name}</span>
+                        <span className="text-xs text-muted">· {c.professor_name}</span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">Precio: ${c.price}</p>
+                    <p className="text-sm text-muted">Precio: ${c.price}</p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <p className="text-sm font-semibold text-gray-700">
+                      <p className="text-sm font-semibold text-ink">
                         Cupo: {c.enrolled_count}/{c.max_students} alumnos inscriptos
                       </p>
                       {c.pending_candidates > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                        <span className="chip bg-primary-50 text-primary-700">
                           {c.pending_candidates} postulante{c.pending_candidates > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 justify-end">
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-line justify-end">
                     <button
                       onClick={() => toggleCandidates(c.id)}
-                      className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
+                      className="text-polvo hover:text-polvo-dark text-sm font-semibold px-3 py-1 rounded hover:bg-cal"
                     >
-                      {expandedCandidates[c.id] ? 'Ocultar candidatos' : 'Candidatos'}
+                      {expandedCandidates[c.id]
+                        ? 'Ocultar'
+                        : c.modality === 'extra'
+                          ? 'Lista de espera'
+                          : 'Candidatos'}
                     </button>
                     <button
                       onClick={() => toggleAttendance(c.id)}
-                      className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
+                      className="text-polvo hover:text-polvo-dark text-sm font-semibold px-3 py-1 rounded hover:bg-cal"
                     >
                       {expandedAttendance[c.id] ? 'Ocultar asistencia' : 'Asistencia'}
                     </button>
                     <button
                       onClick={() => handleEdit(c)}
-                      className="text-primary-600 hover:text-primary-800 text-sm font-semibold px-3 py-1 rounded hover:bg-gray-50"
+                      className="text-polvo hover:text-polvo-dark text-sm font-semibold px-3 py-1 rounded hover:bg-cal"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleDelete(c.id)}
-                      className="text-red-600 hover:text-red-800 text-sm font-semibold px-3 py-1 rounded hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 text-sm font-semibold px-3 py-1 rounded hover:bg-red-50"
                     >
                       Eliminar
                     </button>
                   </div>
 
                   {expandedCandidates[c.id] && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Postulaciones recibidas</h5>
+                    <div className="mt-4 pt-4 border-t border-line">
+                      <h5 className="text-sm font-semibold text-ink mb-3">
+                        {c.modality === 'extra' ? 'Alumnos esperando cupo' : 'Postulaciones recibidas'}
+                      </h5>
                       {loadingCandidates[c.id] ? (
-                        <p className="text-sm text-gray-500">Cargando candidatos...</p>
+                        <p className="text-sm text-muted">Cargando...</p>
                       ) : (candidates[c.id] || []).length === 0 ? (
-                        <p className="text-sm text-gray-500">No hay postulaciones para esta clase.</p>
+                        <p className="text-sm text-muted">
+                          {c.modality === 'extra'
+                            ? 'No hay alumnos esperando cupo.'
+                            : 'No hay postulaciones para esta clase.'}
+                        </p>
                       ) : (
                         <ul className="space-y-3">
                           {(candidates[c.id] || []).map((cd) => (
-                            <li key={cd.postulation_id} className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex justify-between items-start">
+                            <li key={cd.postulation_id} className="bg-cal rounded-xl p-3 border border-line">
+                              <div className="flex justify-between items-start gap-2">
                                 <div>
                                   <p className="text-sm font-semibold">{cd.full_name}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-muted">
                                     {cd.level ? `Nivel: ${cd.level} · ` : ''}
                                     {(() => {
                                       const net = Number(cd.balance) - Number(cd.balance_favor);
@@ -615,13 +628,13 @@ export default function ClasesAbiertasPage() {
                                       return 'Sin deuda';
                                     })()}
                                   </p>
-                                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    cd.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'
+                                  <span className={`inline-block mt-1 chip ${
+                                    cd.status === 'pendiente' ? 'bg-primary-50 text-primary-700' : 'bg-cal text-muted border border-line'
                                   }`}>
                                     {cd.status === 'pendiente' ? 'Pendiente' : cd.status === 'lista_espera' ? 'Lista de espera' : cd.status}
                                   </span>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-wrap justify-end">
                                   {cd.status === 'pendiente' && (
                                     <>
                                       <button
@@ -639,19 +652,30 @@ export default function ClasesAbiertasPage() {
                                       <button
                                         onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'override')}
                                         title="Forzar aceptación a pesar de deuda o cupo"
-                                        className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-purple-700"
+                                        className="bg-ink text-white text-xs font-semibold px-2 py-1 rounded hover:bg-black"
                                       >
                                         Forzar
                                       </button>
                                     </>
                                   )}
                                   {cd.status === 'lista_espera' && (
-                                    <button
-                                      onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'override')}
-                                      className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-purple-700"
-                                    >
-                                      Forzar ingreso
-                                    </button>
+                                    <>
+                                      {c.modality === 'extra' && (
+                                        <button
+                                          onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'accept')}
+                                          title="Agregar si hay cupo libre"
+                                          className="bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-green-700"
+                                        >
+                                          Agregar
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => handleCandidateAction(c.id, cd.postulation_id, 'override')}
+                                        className="bg-ink text-white text-xs font-semibold px-2 py-1 rounded hover:bg-black"
+                                      >
+                                        Forzar ingreso
+                                      </button>
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -663,12 +687,12 @@ export default function ClasesAbiertasPage() {
                   )}
 
                   {expandedAttendance[c.id] && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Asistencia</h5>
+                    <div className="mt-4 pt-4 border-t border-line">
+                      <h5 className="text-sm font-semibold text-ink mb-3">Asistencia</h5>
                       {loadingAttendance[c.id] ? (
-                        <p className="text-sm text-gray-500">Cargando asistencia...</p>
+                        <p className="text-sm text-muted">Cargando asistencia...</p>
                       ) : (attendance[c.id] || []).length === 0 ? (
-                        <p className="text-sm text-gray-500">Aún no hay alumnos inscriptos.</p>
+                        <p className="text-sm text-muted">Aún no hay alumnos inscriptos.</p>
                       ) : (
                         <>
                           <ul className="space-y-2">
@@ -680,16 +704,16 @@ export default function ClasesAbiertasPage() {
                                     type="checkbox"
                                     checked={!!a.asistio}
                                     onChange={() => toggleAsistio(c.id, a.student_id)}
-                                    className="w-4 h-4 text-primary-600"
+                                    className="w-4 h-4 accent-polvo"
                                   />
-                                  <span className="text-sm text-gray-600">{a.asistio ? 'Asistió' : 'No asistió'}</span>
+                                  <span className="text-sm text-muted">{a.asistio ? 'Asistió' : 'No asistió'}</span>
                                 </label>
                               </li>
                             ))}
                           </ul>
                           <button
                             onClick={() => saveAttendance(c.id)}
-                            className="mt-4 bg-primary-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-primary-700"
+                            className="mt-4 btn-primary text-sm"
                           >
                             Guardar asistencia
                           </button>

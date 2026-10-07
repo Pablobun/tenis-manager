@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import LevelChip from '@/components/LevelChip';
+import { ChevronUp, ChevronDown } from '@/components/icons';
 
 interface User {
   id: number;
@@ -70,10 +71,30 @@ interface PaymentRecord {
   nota: string | null;
 }
 
+// ¿Se puede darme de baja? Solo hasta 24h antes del inicio (UTC-3).
+function canDropSelf(instance_date: string, start_hour: string, status: string): boolean {
+  if (status !== 'programada') return false;
+  const dateStr = instance_date.split('T')[0];
+  const startMs = Date.parse(`${dateStr}T${start_hour.slice(0, 8)}-03:00`);
+  if (Number.isNaN(startMs)) return false;
+  return Date.now() < startMs - 24 * 60 * 60 * 1000;
+}
+
+const MODALITY_CHIP: Record<string, string> = {
+  fija: 'bg-primary-50 text-primary-700',
+  abierta: 'bg-cal text-muted border border-line',
+  extra: 'bg-red-50 text-red-700'
+};
+
+const MODALITY_LABEL: Record<string, string> = {
+  fija: 'Clase fija',
+  abierta: 'Clase abierta',
+  extra: 'Clase extra'
+};
+
 export default function MisClasesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [openClasses, setOpenClasses] = useState<OpenClass[]>([]);
   const [myClasses, setMyClasses] = useState<MyClass[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
@@ -81,13 +102,9 @@ export default function MisClasesPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [showDebtDetail, setShowDebtDetail] = useState(false);
   const [loadingDebt, setLoadingDebt] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ full_name: '', phone: '' });
   const [loading, setLoading] = useState(true);
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingMine, setLoadingMine] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -113,9 +130,7 @@ export default function MisClasesPage() {
         credentials: 'include'
       });
       if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-        setForm({ full_name: data.full_name, phone: data.phone || '' });
+        await res.json();
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -204,6 +219,7 @@ export default function MisClasesPage() {
       }
       alert(data.message || '¡Postulación enviada correctamente!');
       fetchOpenClasses();
+      fetchMyClasses();
     } catch (err) {
       alert('Error de conexión');
     }
@@ -224,37 +240,34 @@ export default function MisClasesPage() {
       }
       alert(data.message || 'Postulación cancelada');
       fetchOpenClasses();
+      fetchMyClasses();
     } catch (err) {
       alert('Error de conexión');
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage('');
-
+  // Baja propia (items 1/2 de cambios.txt): válida hasta 24h antes del inicio,
+  // y siempre de la instancia puntual (una fija no pierde la mensualidad).
+  const handleDrop = async (classId: number, label: string) => {
+    if (!confirm(`¿Darte de baja de la clase del ${label}?\n\nSolo podés darte de baja hasta 24 horas antes del inicio.`)) return;
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/api/students/profile`, {
-        method: 'PUT',
+      const res = await fetch(`${apiUrl}/api/board/drop`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(form)
+        body: JSON.stringify({ instance_id: classId })
       });
-
-      if (res.ok) {
-        setMessage('Perfil actualizado correctamente');
-        setEditing(false);
-        fetchProfile();
-      } else {
-        const data = await res.json();
-        setMessage(data.error || 'Error al actualizar');
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al darte de baja');
+        return;
       }
+      alert(data.message || 'Baja registrada');
+      fetchMyClasses();
+      fetchOpenClasses();
     } catch (err) {
-      setMessage('Error de conexión');
-    } finally {
-      setSaving(false);
+      alert('Error de conexión');
     }
   };
 
@@ -266,92 +279,13 @@ export default function MisClasesPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Mi Deuda</h2>
-          {loadingMine ? (
-            <div className="card">
-              <p className="text-gray-500">Calculando saldo...</p>
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="p-6 flex items-center justify-between cursor-pointer" onClick={toggleDebtDetail}>
-                <p className="text-gray-700">Saldo pendiente</p>
-                <div className="flex items-center gap-3">
-                  <span className={`text-2xl font-bold ${(balance ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {(balance ?? 0) < 0
-                      ? `A favor: $${Math.abs(balance ?? 0).toLocaleString('es-AR')}`
-                      : `$${Number(balance ?? 0).toLocaleString('es-AR')}`}
-                  </span>
-                  <span className="text-sm text-gray-400">{showDebtDetail ? '▲' : '▼'}</span>
-                </div>
-              </div>
-              {showDebtDetail && (
-                <div className="px-6 pb-6 pt-2 border-t border-gray-100">
-                  {loadingDebt ? (
-                    <p className="text-gray-500 text-sm">Cargando detalle...</p>
-                  ) : (
-                    <>
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Desglose por mes</h5>
-                      {debts.length === 0 ? (
-                        <p className="text-sm text-gray-500">No tenés deudas registradas.</p>
-                      ) : (
-                        <ul className="space-y-2 mb-4">
-                          {debts.map((d) => (
-                            <li key={d.id} className="flex justify-between text-sm border-t border-gray-100 pt-2">
-                              <span>
-                                {d.mes || 'Sin mes'} ·{' '}
-                                {d.tipo === 'mensualidad'
-                                  ? 'Mensualidad'
-                                  : d.tipo === 'clase_extra'
-                                  ? 'Clase extra'
-                                  : d.tipo === 'clase_abierta'
-                                  ? 'Clase abierta'
-                                  : d.tipo}
-                              </span>
-                              <span className="text-gray-600">
-                                ${Number(d.monto).toLocaleString('es-AR')} - pagado ${Number(d.monto_pagado).toLocaleString('es-AR')} ={' '}
-                                <strong className={Number(d.saldo) > 0 ? 'text-red-600' : 'text-green-600'}>
-                                  ${Number(d.saldo).toLocaleString('es-AR')}
-                                </strong>
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Historial de pagos</h5>
-                      {payments.length === 0 ? (
-                        <p className="text-sm text-gray-500">Aún no hay pagos registrados.</p>
-                      ) : (
-                        <ul className="space-y-2">
-                          {payments.map((p) => (
-                            <li key={p.id} className="flex justify-between text-sm border-t border-gray-100 pt-2">
-                              <span>
-                                {p.fecha}
-                                {p.nota ? ` · ${p.nota}` : ''}
-                              </span>
-                              <span className="text-green-600 font-semibold">
-                                ${Number(p.monto).toLocaleString('es-AR')}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Mis Clases</h2>
+          <h2 className="text-xl font-bold mb-4">Mis Clases</h2>
 
           {loadingMine ? (
-            <p className="text-gray-500">Cargando tus clases...</p>
+            <p className="text-muted">Cargando tus clases...</p>
           ) : myClasses.length === 0 ? (
             <div className="card text-center">
-              <p className="text-gray-500">Todavía no estás inscripto en ninguna clase.</p>
+              <p className="text-muted">Todavía no estás inscripto en ninguna clase.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -364,22 +298,40 @@ export default function MisClasesPage() {
                   month: 'long'
                 });
                 const capitalizedLabel = `${label[0].toUpperCase()}${label.slice(1)}`;
-                const modalityLabel =
-                  c.modality === 'fija' ? 'Clase fija' : c.modality === 'abierta' ? 'Clase abierta' : 'Clase extra';
+                const dropOk = canDropSelf(c.instance_date, c.start_hour, c.status);
 
                 return (
-                  <div key={c.id} className="card card-accent border-l-primary-500">
-                    <h4 className="font-bold text-gray-800 capitalize">{capitalizedLabel}</h4>
+                  <div key={c.id} className={`card card-accent ${c.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'}`}>
+                    <div className="flex justify-between items-start gap-2">
+                      <h4 className="font-bold text-lg">{capitalizedLabel}</h4>
+                      <span className={`chip whitespace-nowrap ${MODALITY_CHIP[c.modality] || 'bg-cal text-muted'}`}>
+                        {MODALITY_LABEL[c.modality] || c.modality}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted">
                         {c.start_hour.slice(0, 5)} - {c.end_hour.slice(0, 5)}
                       </p>
                       <LevelChip level={c.level} />
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">Profesor: {c.professor_name}</p>
-                    <span className="inline-block mt-2 text-xs font-semibold px-3 py-1 rounded-full bg-primary-50 text-primary-700">
-                      {modalityLabel}
-                    </span>
+                    <p className="text-sm text-muted mt-1">Profesor/a: {c.professor_name}</p>
+                    <div className="mt-3 pt-3 border-t border-line flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted">
+                        {c.modality === 'fija' ? 'La baja es solo de esta fecha' : 'Inscripto'}
+                      </span>
+                      {dropOk ? (
+                        <button
+                          onClick={() => handleDrop(c.id, capitalizedLabel)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition"
+                        >
+                          Darme de baja
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted text-right">
+                          Baja solo hasta 24h antes
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -388,16 +340,16 @@ export default function MisClasesPage() {
         </div>
 
         <div className="mt-10">
-          <h2 className="text-lg font-semibold mb-4">Clases Disponibles</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Clases abiertas y rotativas para las que podés postularte.
+          <h2 className="text-xl font-bold mb-2">Clases Disponibles</h2>
+          <p className="text-sm text-muted mb-4">
+            Clases extras se inscriben al instante; las abiertas pasan por la profesora.
           </p>
 
           {loadingClasses ? (
-            <p className="text-gray-500">Cargando clases disponibles...</p>
+            <p className="text-muted">Cargando clases disponibles...</p>
           ) : openClasses.length === 0 ? (
             <div className="card text-center">
-              <p className="text-gray-500">No hay clases abiertas disponibles por ahora.</p>
+              <p className="text-muted">No hay clases abiertas disponibles por ahora.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -414,61 +366,154 @@ export default function MisClasesPage() {
                 const pending = c.postulation_status === 'pendiente';
                 const enrolled = c.postulation_status === 'aceptada';
                 const waitlisted = c.postulation_status === 'lista_espera';
+                const isExtra = c.modality === 'extra';
 
                 return (
                   <div
                     key={c.id}
                     className={`card card-accent ${
-                      full ? 'border-l-red-500' : 'border-l-primary-500'
+                      full ? 'border-l-red-500' : 'border-l-polvo'
                     }`}
                   >
-                    <h4 className="font-bold text-gray-800 capitalize">{capitalizedLabel}</h4>
+                    <div className="flex justify-between items-start gap-2">
+                      <h4 className="font-bold text-lg">{capitalizedLabel}</h4>
+                      <span className={`chip whitespace-nowrap ${MODALITY_CHIP[c.modality] || 'bg-cal text-muted'}`}>
+                        {MODALITY_LABEL[c.modality] || c.modality}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted">
                         {c.start_hour.slice(0, 5)} - {c.end_hour.slice(0, 5)}
                       </p>
                       <LevelChip level={c.level} />
                     </div>
-                    <p className="text-sm text-gray-600">Profesor: {c.professor_name}</p>
-                    <p className="text-sm text-gray-600">Precio: ${c.price}</p>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className={`text-sm font-medium ${full ? 'text-red-600' : 'text-gray-700'}`}>
+                    <p className="text-sm text-muted">Profesor/a: {c.professor_name}</p>
+                    <p className="text-sm text-muted">Precio: ${c.price}</p>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-line gap-2">
+                      <span className={`text-sm font-semibold ${full ? 'text-red-600' : 'text-ink'}`}>
                         Cupo: {c.enrolled_count}/{c.max_students}
                       </span>
                       {pending ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-2">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 text-primary-700 flex items-center gap-2">
                           Postulado (Pendiente)
                           <button
                             onClick={() => handleCancelPostulation(c.id)}
-                            className="text-yellow-800 underline hover:text-yellow-900"
+                            className="underline hover:no-underline"
                           >
                             Cancelar
                           </button>
                         </span>
                       ) : enrolled ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-100 text-green-800">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700">
                           Inscripto
                         </span>
                       ) : waitlisted ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-orange-100 text-orange-800">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-50 text-red-700 flex items-center gap-2">
                           Lista de espera
+                          <button
+                            onClick={() => handleCancelPostulation(c.id)}
+                            className="underline hover:no-underline"
+                          >
+                            Salir
+                          </button>
                         </span>
-                      ) : full ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600">
+                      ) : full && !isExtra ? (
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-cal text-muted border border-line">
                           Lleno
                         </span>
                       ) : (
                         <button
                           onClick={() => handlePostulate(c.id)}
-                          className="bg-primary-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-700"
+                          className="btn-primary text-sm px-4 py-1.5"
                         >
-                          Postularme
+                          {isExtra ? (full ? 'Anotarme en lista' : 'Inscribirme') : 'Postularme'}
                         </button>
                       )}
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-10 mb-8">
+          <h2 className="text-xl font-bold mb-4">Mi Deuda</h2>
+          {loadingMine ? (
+            <div className="card">
+              <p className="text-muted">Calculando saldo...</p>
+            </div>
+          ) : (
+            <div className="card overflow-hidden">
+              <div className="flex items-center justify-between cursor-pointer" onClick={toggleDebtDetail}>
+                <p className="text-muted">Saldo pendiente</p>
+                <div className="flex items-center gap-3">
+                  <span className={`text-2xl font-bold ${(balance ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {(balance ?? 0) < 0
+                      ? `A favor: $${Math.abs(balance ?? 0).toLocaleString('es-AR')}`
+                      : `$${Number(balance ?? 0).toLocaleString('es-AR')}`}
+                  </span>
+                  <span className="text-sm text-muted">
+                    {showDebtDetail ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </span>
+                </div>
+              </div>
+              {showDebtDetail && (
+                <div className="px-6 pb-6 pt-6 mt-4 border-t border-line">
+                  {loadingDebt ? (
+                    <p className="text-muted text-sm">Cargando detalle...</p>
+                  ) : (
+                    <>
+                      <h5 className="text-sm font-semibold text-ink mb-3">Desglose por mes</h5>
+                      {debts.length === 0 ? (
+                        <p className="text-sm text-muted">No tenés deudas registradas.</p>
+                      ) : (
+                        <ul className="space-y-2 mb-4">
+                          {debts.map((d) => (
+                            <li key={d.id} className="flex justify-between text-sm border-t border-line pt-2 gap-3">
+                              <span>
+                                {d.mes || 'Sin mes'} ·{' '}
+                                {d.tipo === 'mensualidad'
+                                  ? 'Mensualidad'
+                                  : d.tipo === 'clase_extra'
+                                  ? 'Clase extra'
+                                  : d.tipo === 'clase_abierta'
+                                  ? 'Clase abierta'
+                                  : d.tipo}
+                              </span>
+                              <span className="text-muted text-right">
+                                ${Number(d.monto).toLocaleString('es-AR')} - pagado ${Number(d.monto_pagado).toLocaleString('es-AR')} ={' '}
+                                <strong className={Number(d.saldo) > 0 ? 'text-red-600' : 'text-green-600'}>
+                                  ${Number(d.saldo).toLocaleString('es-AR')}
+                                </strong>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      <h5 className="text-sm font-semibold text-ink mb-3">Historial de pagos</h5>
+                      {payments.length === 0 ? (
+                        <p className="text-sm text-muted">Aún no hay pagos registrados.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {payments.map((p) => (
+                            <li key={p.id} className="flex justify-between text-sm border-t border-line pt-2">
+                              <span>
+                                {p.fecha}
+                                {p.nota ? ` · ${p.nota}` : ''}
+                              </span>
+                              <span className="text-green-600 font-semibold">
+                                ${Number(p.monto).toLocaleString('es-AR')}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

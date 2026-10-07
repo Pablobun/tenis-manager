@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { generateInstancesForMonth, enrichInstancesWithStudents } = require('../services/instances');
+const { notifyClassChange } = require('../services/mailer');
 
 const router = express.Router();
 
@@ -87,6 +88,7 @@ router.get('/open', authenticateToken, async (req, res) => {
 // Alumno se postula a una clase abierta/rotativa
 router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), async (req, res) => {
   const { force } = req.body; // force: la profe autorizó postularse con deuda (override)
+  let connection = null;
   try {
     // Verificar si ya está inscripto
     const [enrolled] = await db.query(
@@ -132,14 +134,19 @@ router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), 
       }
     }
 
-    // Verificar cupo: si está lleno, la postulación va directo a lista de espera
+    // Verificar cupo e inscripción directa para extras (item 2/3 de cambios.txt)
     const [instRows] = await db.query(
-      'SELECT cupo_maximo FROM instancias_clases WHERE id = ?',
+      `SELECT i.cupo_maximo, i.modalidad, i.fecha, i.hora_inicio, i.hora_fin,
+              p.email as profe_email, p.nombre_completo as profe_nombre
+       FROM instancias_clases i
+       JOIN perfiles p ON i.profesor_id = p.id
+       WHERE i.id = ?`,
       [req.params.id]
     );
     if (instRows.length === 0) {
       return res.status(404).json({ error: 'Clase no encontrada' });
     }
+    const inst = instRows[0];
 
     const [enrolledCount] = await db.query(
       `SELECT COUNT(*) as total FROM grupo_alumnos ga JOIN grupos g ON ga.grupo_id = g.id
@@ -147,30 +154,84 @@ router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), 
       [req.params.id]
     );
 
-    const status = Number(enrolledCount[0].total) >= Number(instRows[0].cupo_maximo) ? 'lista_espera' : 'pendiente';
+    const full = Number(enrolledCount[0].total) >= Number(inst.cupo_maximo);
+    // Extra: sin candidatos — inscripción directa (aceptada) o lista de espera si el cupo está lleno.
+    // Abierta: flujo de candidatos (pendiente) que la profesora acepta.
+    const status = inst.modalidad === 'extra'
+      ? (full ? 'lista_espera' : 'aceptada')
+      : (full ? 'lista_espera' : 'pendiente');
 
-    // Si va directo a lista de espera, podría ocupar cupo de otro candidato, pero por ahora
-    // se registra como lista_espera y la profe decide.
+    if (inst.modalidad === 'extra' && status === 'aceptada') {
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+      try {
+        const [groups] = await connection.query('SELECT id FROM grupos WHERE instancia_id = ? LIMIT 1', [req.params.id]);
+        let groupId;
+        if (groups.length === 0) {
+          const [gRes] = await connection.query('INSERT INTO grupos (instancia_id, nombre) VALUES (?, ?)', [req.params.id, 'Grupo Extra']);
+          groupId = gRes.insertId;
+        } else {
+          groupId = groups[0].id;
+        }
+        await connection.query('INSERT IGNORE INTO grupo_alumnos (grupo_id, alumno_id) VALUES (?, ?)', [groupId, req.user.id]);
+      } catch (errTx) {
+        await connection.rollback();
+        connection.release();
+        throw errTx;
+      }
+    }
+
+    const conn = connection || db;
     let result;
     if (existing.length > 0) {
       // Re-postulación tras cancelada/rechazada: reactivar la misma fila
-      [result] = await db.query(
-        'UPDATE postulaciones SET estado = ?, respondida_en = NULL, postulada_en = NOW() WHERE id = ?',
-        [status, existing[0].id]
+      [result] = await conn.query(
+        'UPDATE postulaciones SET estado = ?, respondida_en = ? WHERE id = ?',
+        [status, status === 'pendiente' ? null : new Date(), existing[0].id]
       );
     } else {
-      [result] = await db.query(
-        'INSERT INTO postulaciones (alumno_id, instancia_id, estado) VALUES (?, ?, ?)',
-        [req.user.id, req.params.id, status]
+      [result] = await conn.query(
+        'INSERT INTO postulaciones (alumno_id, instancia_id, estado, respondida_en) VALUES (?, ?, ?, ?)',
+        [req.user.id, req.params.id, status, status === 'pendiente' ? null : new Date()]
       );
+    }
+
+    if (connection) {
+      await connection.commit();
+      connection.release();
+      connection = null;
     }
 
     const message = status === 'lista_espera'
       ? 'El cupo está lleno. Quedaste en lista de espera.'
-      : 'Postulación enviada exitosamente';
+      : status === 'aceptada'
+        ? 'Inscripción confirmada. Te esperamos en la cancha.'
+        : 'Postulación enviada exitosamente';
+
+    // Item 10: mail de confirmación de subida (extras inscritos directamente)
+    if (status === 'aceptada') {
+      notifyClassChange({
+        action: 'inscripcion',
+        instance: {
+          instance_date: inst.fecha,
+          start_hour: inst.hora_inicio,
+          end_hour: inst.hora_fin,
+          modality: inst.modalidad,
+          professor_name: inst.profe_nombre
+        },
+        student: { email: req.user.email, nombre: req.user.nombre_completo },
+        profe: { email: inst.profe_email, nombre: inst.profe_nombre },
+        actorEmail: req.user.email
+      }).catch(() => {});
+    }
 
     res.json({ message, status, id: result.insertId || existing[0].id });
   } catch (err) {
+    if (connection) {
+      try { await connection.rollback(); } catch (e) { /* ya cerrada */ }
+      connection.release();
+      connection = null;
+    }
     console.error('Error postulando a clase abierta:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
@@ -200,6 +261,7 @@ router.get('/open/:id/candidates', authenticateToken, authorizeRoles('admin', 'p
 });
 
 // Aceptar postulación — el alumno ocupa cupo automáticamente (al grupo de la instancia)
+// En extras se puede aceptar directo desde lista de espera (no hay paso de pendiente).
 router.post('/open/:id/candidates/:postulationId/accept', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
   const connection = await db.getConnection();
   try {
@@ -214,22 +276,40 @@ router.post('/open/:id/candidates/:postulationId/accept', authenticateToken, aut
       return res.status(404).json({ error: 'Postulación no encontrada' });
     }
     const { alumno_id, estado } = postRows[0];
-    if (estado !== 'pendiente') {
+
+    // Verificar cupo disponible antes de aceptar
+    const [instRows] = await connection.query(
+      `SELECT i.cupo_maximo, i.modalidad, i.fecha, i.hora_inicio, i.hora_fin,
+              p.email as profe_email, p.nombre_completo as profe_nombre
+       FROM instancias_clases i
+       JOIN perfiles p ON i.profesor_id = p.id
+       WHERE i.id = ?`,
+      [req.params.id]
+    );
+    if (instRows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+    const inst = instRows[0];
+
+    const aceptable = estado === 'pendiente' || (inst.modalidad === 'extra' && estado === 'lista_espera');
+    if (!aceptable) {
       await connection.rollback();
       return res.status(400).json({ error: `La postulación ya fue respondida (${estado})` });
     }
 
-    // Verificar cupo disponible antes de aceptar
-    const [instRows] = await connection.query(
-      'SELECT cupo_maximo FROM instancias_clases WHERE id = ?',
-      [req.params.id]
+    const [stuRows] = await connection.query(
+      'SELECT email, nombre_completo FROM perfiles WHERE id = ?',
+      [alumno_id]
     );
+    const student = stuRows.length ? { email: stuRows[0].email, nombre: stuRows[0].nombre_completo } : null;
+
     const [enrolledCount] = await connection.query(
       `SELECT COUNT(*) as total FROM grupo_alumnos ga JOIN grupos g ON ga.grupo_id = g.id
        WHERE g.instancia_id = ?`,
       [req.params.id]
     );
-    const room = Number(instRows[0].cupo_maximo) - Number(enrolledCount[0].total);
+    const room = Number(inst.cupo_maximo) - Number(enrolledCount[0].total);
 
     // Crear o reutilizar el grupo de la instancia
     const [groups] = await connection.query('SELECT id FROM grupos WHERE instancia_id = ? LIMIT 1', [req.params.id]);
@@ -253,6 +333,22 @@ router.post('/open/:id/candidates/:postulationId/accept', authenticateToken, aut
     await connection.query('UPDATE postulaciones SET estado = \'aceptada\', respondida_en = NOW() WHERE id = ?', [req.params.postulationId]);
 
     await connection.commit();
+
+    // Item 10: mail de confirmación de subida
+    notifyClassChange({
+      action: 'inscripcion',
+      instance: {
+        instance_date: inst.fecha,
+        start_hour: inst.hora_inicio,
+        end_hour: inst.hora_fin,
+        modality: inst.modalidad,
+        professor_name: inst.profe_nombre
+      },
+      student,
+      profe: { email: inst.profe_email, nombre: inst.profe_nombre },
+      actorEmail: req.user.email
+    }).catch(() => {});
+
     res.json({ message: 'Candidato aceptado y ocupa cupo', enrolled: true });
   } catch (err) {
     await connection.rollback();
@@ -342,8 +438,8 @@ router.delete('/open/:id/postulate', authenticateToken, authorizeRoles('alumno')
     if (postRows.length === 0) {
       return res.status(404).json({ error: 'No tenés una postulación para esta clase' });
     }
-    if (postRows[0].estado !== 'pendiente') {
-      return res.status(400).json({ error: `Solo podés cancelar una postulación pendiente (estado actual: ${postRows[0].estado})` });
+    if (postRows[0].estado !== 'pendiente' && postRows[0].estado !== 'lista_espera') {
+      return res.status(400).json({ error: `Solo podés cancelar una postulación pendiente o en lista de espera (estado actual: ${postRows[0].estado})` });
     }
 
     await db.query('UPDATE postulaciones SET estado = \'cancelada\', respondida_en = NOW() WHERE id = ?', [postRows[0].id]);

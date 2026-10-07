@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import LevelChip from '@/components/LevelChip';
+import { ChevronLeft, ChevronRight, Close } from '@/components/icons';
 
 interface User {
   id: number;
@@ -187,6 +188,10 @@ export default function TableroPage() {
     e.preventDefault();
     if (!selectedInstance || !selectedStudentToAdd) return;
 
+    // Item 3: con cupo completo la profe puede forzar el alta (excepción)
+    const isFull = selectedInstance.students.length >= selectedInstance.max_students;
+    if (isFull && !confirm('Cupo completo. ¿Agregar a este alumno igual? (excepción)')) return;
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${apiUrl}/api/board/enroll`, {
@@ -195,7 +200,8 @@ export default function TableroPage() {
         credentials: 'include',
         body: JSON.stringify({
           instance_id: selectedInstance.id,
-          student_id: Number(selectedStudentToAdd)
+          student_id: Number(selectedStudentToAdd),
+          force: isFull
         })
       });
       const data = await res.json();
@@ -238,63 +244,85 @@ export default function TableroPage() {
   if (!user) return null;
 
   const isToday = selectedDate === todayISO();
-  const dayRows = Array.from(new Set(dayData.map((i) => i.start_hour))).sort();
+
+  // La clase en curso (hoy, dentro de su franja) va arriba — momento "ahora"
+  const nowMs = Date.now();
+  const isInProgress = (instance: Instance): boolean => {
+    if (!isToday || instance.status !== 'programada') return false;
+    const s = Date.parse(`${selectedDate}T${instance.start_hour.slice(0, 8)}-03:00`);
+    const e = Date.parse(`${selectedDate}T${instance.end_hour.slice(0, 8)}-03:00`);
+    if (Number.isNaN(s) || Number.isNaN(e)) return false;
+    return nowMs >= s && nowMs < e;
+  };
+
+  let dayRows = Array.from(new Set(dayData.map((i) => i.start_hour))).sort();
+  const liveHour = dayData.find((i) => isInProgress(i))?.start_hour;
+  if (liveHour) {
+    dayRows = [liveHour, ...dayRows.filter((h) => h !== liveHour)];
+  }
+
   const instancesByHour: Record<string, Instance[]> = {};
   for (const instance of dayData) {
     if (!instancesByHour[instance.start_hour]) instancesByHour[instance.start_hour] = [];
     instancesByHour[instance.start_hour].push(instance);
   }
 
+  // Borde de tarjeta = cupo; extras siempre en rojo (semántica)
   const cupoColor = (instance: Instance) => {
     const used = instance.students.length;
-    if (instance.status === 'cancelada') return 'border-gray-300 opacity-60';
-    if (used >= instance.max_students) return 'border-red-500';
-    return 'border-primary-500';
+    if (instance.status === 'cancelada') return 'border-l-gray-300 opacity-60';
+    if (instance.modality === 'extra') return 'border-l-red-500';
+    if (used >= instance.max_students) return 'border-l-red-500';
+    return 'border-l-polvo';
   };
 
   const cupoBadge = (instance: Instance) => {
     const used = instance.students.length;
     if (instance.status === 'cancelada') {
-      return { text: 'Cancelada', className: 'bg-gray-100 text-gray-600' };
+      return { text: 'Cancelada', className: 'bg-cal text-muted border border-line' };
     }
     if (used >= instance.max_students) {
-      return { text: `${used}/${instance.max_students} Lleno`, className: 'bg-red-100 text-red-700' };
+      return { text: `${used}/${instance.max_students} Lleno`, className: 'bg-red-50 text-red-700' };
     }
     if (used === 0) {
-      return { text: `${used}/${instance.max_students}`, className: 'bg-gray-100 text-gray-600' };
+      return { text: `${used}/${instance.max_students}`, className: 'bg-cal text-muted border border-line' };
     }
-    return { text: `${used}/${instance.max_students}`, className: 'bg-green-100 text-green-700' };
+    return { text: `${used}/${instance.max_students}`, className: 'bg-green-50 text-green-700' };
   };
 
   const renderInstanceCell = (instance: Instance) => {
     const names = instance.students.map((s) => s.full_name.toUpperCase()).join(' / ');
     const badge = cupoBadge(instance);
+    const live = isInProgress(instance);
     return (
       <button
         key={instance.id}
         onClick={() => openSheet(instance)}
-        className={`w-full text-left bg-white rounded-xl border border-gray-200 shadow-sm p-4 border-l-4 ${cupoColor(instance)} hover:shadow-md transition`}
+        className={`w-full text-left bg-ficha rounded-2xl border-[1.5px] border-l-px border-line shadow-sm p-4 transition hover:shadow-md ${cupoColor(instance)} ${live ? 'ring-2 ring-white shadow-lg' : ''}`}
       >
         <div className="flex justify-between items-start gap-2">
-          <p className="font-semibold text-sm">
-            {instance.start_hour} - {instance.end_hour}
+          <p className="font-display font-bold text-base tabular-nums">
+            {instance.start_hour.slice(0, 5)} - {instance.end_hour.slice(0, 5)}
           </p>
-          <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${badge.className}`}>
-            {badge.text}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {live && <span className="chip bg-polvo text-white">Ahora</span>}
+            <span className={`chip whitespace-nowrap ${badge.className}`}>
+              {badge.text}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2 mt-1">
           <p className="text-sm">
-            {names || <span className="text-gray-400">Sin alumnos</span>}
+            {names || <span className="text-muted">Sin alumnos</span>}
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className="text-xs text-gray-500 capitalize">
+          <span className={`chip capitalize ${instance.modality === 'extra' ? 'bg-red-50 text-red-700' : 'bg-cal text-muted border border-line'}`}>
             {MODALITIES[instance.modality] || instance.modality}
           </span>
           <LevelChip level={instance.level} />
           {instance.professor_name && (
-            <span className="text-xs text-gray-500">· {instance.professor_name}</span>
+            <span className="text-xs text-muted">· {instance.professor_name}</span>
           )}
         </div>
       </button>
@@ -307,40 +335,42 @@ export default function TableroPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="flex bg-ficha border border-line rounded-xl shadow-sm overflow-hidden">
             <button
               onClick={() => setView('day')}
-              className={`px-4 py-2 text-sm font-medium ${view === 'day' ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-4 py-2 text-sm font-semibold transition ${view === 'day' ? 'bg-polvo text-white' : 'text-ink hover:bg-cal'}`}
             >
               Día
             </button>
             <button
               onClick={() => setView('week')}
-              className={`px-4 py-2 text-sm font-medium ${view === 'week' ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-4 py-2 text-sm font-semibold transition ${view === 'week' ? 'bg-polvo text-white' : 'text-ink hover:bg-cal'}`}
             >
               Semana
             </button>
           </div>
-          {isToday && <span className="text-xs text-gray-500">Hoy</span>}
+          {isToday && <span className="chip bg-polvo text-white">Hoy</span>}
         </div>
 
+        {/* Tira de días: línea de base del día (swipe cambia de día) */}
         <div
-          className="bg-white shadow-md rounded-lg px-4 py-3 mb-4 flex items-center justify-between"
+          className="bg-polvo text-white shadow-md rounded-2xl px-3 py-3 mb-4 flex items-center justify-between"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
           <button
             onClick={() => changeDay(-1)}
-            className="text-primary-600 font-semibold px-3 py-1 hover:bg-gray-100 rounded-lg"
+            aria-label="Día anterior"
+            className="flex items-center justify-center text-white font-semibold w-9 h-9 hover:bg-white/15 rounded-lg transition"
           >
-            ◀
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="text-center">
-            <p className="font-semibold capitalize">{formatDayLabel(selectedDate)}</p>
+            <p className="font-display font-bold text-lg">{formatDayLabel(selectedDate)}</p>
             {!isToday && (
               <button
                 onClick={() => setSelectedDate(todayISO())}
-                className="text-xs text-primary-600 hover:underline"
+                className="text-xs text-white underline underline-offset-2 hover:no-underline"
               >
                 Volver a hoy
               </button>
@@ -348,32 +378,48 @@ export default function TableroPage() {
           </div>
           <button
             onClick={() => changeDay(1)}
-            className="text-primary-600 font-semibold px-3 py-1 hover:bg-gray-100 rounded-lg"
+            aria-label="Día siguiente"
+            className="flex items-center justify-center text-white font-semibold w-9 h-9 hover:bg-white/15 rounded-lg transition"
           >
-            ▶
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded text-sm mb-4">{error}</div>}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-4">{error}</div>}
 
         {loading ? (
-          <p className="text-gray-500">Cargando tablero...</p>
+          <p className="text-muted">Cargando tablero...</p>
         ) : view === 'day' ? (
           dayData.length === 0 ? (
             <div className="card text-center">
-              <p className="text-gray-500">No hay clases para este día.</p>
+              <p className="text-muted">No hay clases para este día.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {dayRows.flatMap((hour) =>
-                (instancesByHour[hour] || []).map((instance) => renderInstanceCell(instance))
-              )}
+            <div
+              key={selectedDate}
+              className="bg-polvo court-line rounded-2xl shadow-md px-4 py-2 day-in"
+            >
+              {dayRows.map((hour) => (
+                <div
+                  key={hour}
+                  className="grid grid-cols-[3.5rem_1fr] gap-3 border-t border-white/40 first:border-t-0 py-3"
+                >
+                  <span className="font-display font-bold text-sm text-white/90 tabular-nums pt-1 text-right">
+                    {hour.slice(0, 5)}
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(instancesByHour[hour] || []).map((instance) =>
+                      renderInstanceCell(instance)
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )
         ) : weekData.length === 0 ? (
-          <p className="text-gray-500">Cargando semana...</p>
+          <p className="text-muted">Cargando semana...</p>
         ) : (
-          <div className="space-y-4">
+          <div key={selectedDate} className="space-y-4 day-in">
             {weekData.map((day) => (
               <div key={day.date} className="card">
                 <div className="flex items-center justify-between mb-2">
@@ -381,11 +427,11 @@ export default function TableroPage() {
                     {weekdayOf(day.date)} {Number(day.date.slice(8, 10))}
                   </p>
                   {day.date === todayISO() && (
-                    <span className="text-xs text-primary-600 font-medium">Hoy</span>
+                    <span className="chip bg-polvo text-white">Hoy</span>
                   )}
                 </div>
                 {day.instances.length === 0 ? (
-                  <p className="text-xs text-gray-400">Sin clases</p>
+                  <p className="text-xs text-muted">Sin clases</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {day.instances.map((instance) => {
@@ -394,10 +440,10 @@ export default function TableroPage() {
                         <button
                           key={instance.id}
                           onClick={() => openSheet(instance)}
-                          className={`px-3 py-1.5 rounded-lg border-l-4 bg-white border border-gray-200 text-sm hover:shadow transition ${cupoColor(instance)}`}
+                          className={`px-3 py-1.5 rounded-xl border border-line bg-ficha text-sm hover:shadow transition ${cupoColor(instance)}`}
                         >
-                          {instance.start_hour}
-                          <span className={`ml-2 px-1.5 py-0.5 rounded-full text-xs ${badge.className}`}>
+                          {instance.start_hour.slice(0, 5)}
+                          <span className={`ml-2 chip ${badge.className}`}>
                             {badge.text}
                           </span>
                         </button>
@@ -434,8 +480,12 @@ export default function TableroPage() {
                   <p className="text-xs text-gray-500 mt-1">Profesor/a: {selectedInstance.professor_name}</p>
                 )}
               </div>
-              <button onClick={closeSheet} className="text-gray-400 hover:text-gray-600 text-xl">
-                ✕
+              <button
+                onClick={closeSheet}
+                aria-label="Cerrar"
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <Close className="w-5 h-5" />
               </button>
             </div>
 
@@ -443,9 +493,10 @@ export default function TableroPage() {
               <div>
                 <button
                   onClick={() => setSheetView('options')}
-                  className="text-sm text-primary-600 mb-3 hover:underline"
+                  className="flex items-center gap-1 text-sm text-primary-600 mb-3 hover:underline"
                 >
-                  ← Volver
+                  <ChevronLeft className="w-4 h-4" />
+                  Volver
                 </button>
                 <p className="font-semibold mb-2">
                   Alumnos ({selectedInstance.students.length}/{selectedInstance.max_students})
@@ -475,16 +526,22 @@ export default function TableroPage() {
               <div>
                 <button
                   onClick={() => setSheetView('options')}
-                  className="text-sm text-primary-600 mb-3 hover:underline"
+                  className="flex items-center gap-1 text-sm text-polvo font-semibold mb-3 hover:underline"
                 >
-                  ← Volver
+                  <ChevronLeft className="w-4 h-4" />
+                  Volver
                 </button>
                 <p className="font-semibold mb-2">Agregar alumno a la clase</p>
+                {selectedInstance.students.length >= selectedInstance.max_students && (
+                  <p className="text-xs font-semibold bg-red-50 text-red-700 border border-red-100 rounded-lg px-3 py-2 mb-3">
+                    Cupo completo — se agregaría por excepción (fuerza la profesora).
+                  </p>
+                )}
                 <form onSubmit={handleAddStudent} className="space-y-4">
                   <select
                     value={selectedStudentToAdd}
                     onChange={(e) => setSelectedStudentToAdd(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="input"
                     required
                   >
                     <option value="">Seleccionar alumno...</option>
@@ -496,9 +553,11 @@ export default function TableroPage() {
                   </select>
                   <button
                     type="submit"
-                    className="w-full bg-primary-600 text-white py-2 rounded-lg text-sm hover:bg-primary-700"
+                    className="w-full btn-primary"
                   >
-                    Inscribir Alumno
+                    {selectedInstance.students.length >= selectedInstance.max_students
+                      ? 'Agregar por excepción'
+                      : 'Inscribir Alumno'}
                   </button>
                 </form>
               </div>
@@ -506,13 +565,13 @@ export default function TableroPage() {
               <div className="space-y-2">
                 <button
                   onClick={() => setSheetView('students')}
-                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm font-medium"
+                  className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium"
                 >
                   Ver alumnos ({selectedInstance.students.length}/{selectedInstance.max_students})
                 </button>
                 <button
                   onClick={() => setSheetView('add')}
-                  className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm font-medium text-primary-700"
+                  className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium text-polvo font-semibold"
                 >
                   + Agregar alumno
                 </button>

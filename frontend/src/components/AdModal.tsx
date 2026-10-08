@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ADS, ADS_SUBTITLE, ADS_TITLE } from '@/ads';
+import { ADS, ADS_SUBTITLE, ADS_TITLE, SPONSOR_WHATSAPP } from '@/ads';
 import { Close } from '@/components/icons';
 
 const PENDING_KEY = 'ads_pending';
@@ -44,9 +44,16 @@ export default function AdModal() {
         className="bg-ficha w-full max-w-3xl rounded-2xl p-4 sm:p-5 max-h-[85vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Barra verde con título + cierre (referencia de la clienta) */}
-        <div className="relative bg-green-600 rounded-xl px-4 py-3 mb-4">
-          <p className="text-white font-bold text-lg text-center pr-8">{ADS_TITLE}</p>
+        {/* Barra verde: botón al chat de WhatsApp del sponsor + cierre */}
+        <div className="relative bg-green-600 rounded-xl mb-4">
+          <a
+            href={SPONSOR_WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block px-4 py-3 pr-10 text-white font-bold text-lg text-center rounded-xl hover:bg-green-700 transition"
+          >
+            {ADS_TITLE}
+          </a>
           <button
             onClick={close}
             aria-label="Cerrar publicidades"

@@ -19,6 +19,9 @@ export interface AdBanner {
 export const ADS_TITLE = '¿Querés ser sponsor?';
 export const ADS_SUBTITLE = 'Apoyan este sistema';
 
+// Botón "¿Querés ser sponsor?" del modal: abre chat de WhatsApp
+export const SPONSOR_WHATSAPP = 'https://wa.me/5493584024658';
+
 export const ADS: AdBanner[] = [
   // Ejemplo:
   // { src: '/banners/mitienda.jpg', href: 'https://instagram.com/mitienda.riocuarto', alt: 'Mi Tienda Río Cuarto' },

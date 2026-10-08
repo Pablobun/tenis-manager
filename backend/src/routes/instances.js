@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const { generateInstancesForMonth, enrichInstancesWithStudents } = require('../services/instances');
+const { generateInstancesForMonth, enrichInstancesWithStudents, attachStudents } = require('../services/instances');
 const { notifyClassChange } = require('../services/mailer');
 
 const router = express.Router();
@@ -16,7 +16,7 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
   try {
     const [rows] = await db.query(
       `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
-      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level, i.modalidad, 
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level, i.modalidad as modality, 
       i.cupo_maximo as max_students, i.precio as price, i.estado as status,
       p.nombre_completo as professor_name
       FROM instancias_clases i
@@ -78,6 +78,8 @@ router.get('/open', authenticateToken, async (req, res) => {
     query += ` ORDER BY i.fecha, i.hora_inicio`;
 
     const [rows] = await db.query(query, params);
+    // Compañeros de clase (lote 3): nombres de los ya inscriptos (sin tocar enrolled_count/etc.)
+    await attachStudents(rows);
     res.json(rows);
   } catch (err) {
     console.error('Error listando clases abiertas:', err);
@@ -249,7 +251,7 @@ router.get('/open/:id/candidates', authenticateToken, authorizeRoles('admin', 'p
               a.saldo_a_favor as balance_favor
        FROM postulaciones p
        JOIN perfiles a ON p.alumno_id = a.id
-       WHERE p.instancia_id = ?
+       WHERE p.instancia_id = ? AND p.estado != 'aceptada'
        ORDER BY p.postulada_en ASC`,
       [req.params.id]
     );
@@ -418,6 +420,41 @@ router.post('/open/:id/candidates/:postulationId/override', authenticateToken, a
     await connection.query('UPDATE postulaciones SET estado = \'aceptada\', respondida_en = NOW() WHERE id = ?', [req.params.postulationId]);
 
     await connection.commit();
+
+    // Item 10 (lote 3): mail de subida también en override ("Forzar")
+    try {
+      const [instRows] = await connection.query(
+        `SELECT i.fecha, i.hora_inicio, i.hora_fin, i.modalidad,
+                p.email as profe_email, p.nombre_completo as profe_nombre
+         FROM instancias_clases i
+         JOIN perfiles p ON i.profesor_id = p.id
+         WHERE i.id = ?`,
+        [req.params.id]
+      );
+      if (instRows.length > 0) {
+        const inst = instRows[0];
+        const [stuRows] = await connection.query(
+          'SELECT email, nombre_completo FROM perfiles WHERE id = ?',
+          [alumno_id]
+        );
+        notifyClassChange({
+          action: 'inscripcion',
+          instance: {
+            instance_date: inst.fecha,
+            start_hour: inst.hora_inicio,
+            end_hour: inst.hora_fin,
+            modality: inst.modalidad,
+            professor_name: inst.profe_nombre
+          },
+          student: stuRows.length ? { email: stuRows[0].email, nombre: stuRows[0].nombre_completo } : null,
+          profe: { email: inst.profe_email, nombre: inst.profe_nombre },
+          actorEmail: req.user.email
+        }).catch(() => {});
+      }
+    } catch (mailErr) {
+      console.error('Error enviando mail de override:', mailErr);
+    }
+
     res.json({ message: 'Candidato aceptado por excepción (override)', enrolled: true });
   } catch (err) {
     await connection.rollback();

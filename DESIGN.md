@@ -37,7 +37,7 @@ rounded:
   control: "12px"
   small: "8px"
   pill: "9999px"
-  sheet: "16px 16px 0 0"
+  modal: "16px"
 spacing:
   xs: "8px"
   sm: "12px"
@@ -93,7 +93,7 @@ Depth stays flat and honest: white on lime, a 1.5px warm keyline, and a small am
 **Key Characteristics:**
 - Full-bleed polvo chrome with white court-line keylines; content always on cal with white fichas.
 - Feltro yellow (#D9E24F) reserved for the single primary action — its rarity is the point.
-- Semantic color (red = cupo/extra, green = paid/space) is meaning, never palette.
+- Semantic color (red = full cupo, green = paid/space and `extra`) is meaning, never palette.
 - Condensed display type for headings, wordmark, dates and times; system stack for UI; tabular figures for all numbers.
 - One motion moment (`day-in`, 180ms) with a reduced-motion guard; everything else transitions only on state.
 - Spanish copy throughout; ENUM values (`fija`, `extra`, `abierta`, `programada`) stay Spanish.
@@ -110,8 +110,8 @@ The palette is a warm earth ladder — brick dust, lime, chalk, felt — where t
 - **Feltro** (#D9E24F): the yellow clay-court felt. Primary action buttons only (plus the text-selection highlight, an interaction echo of the same signal). **Feltro Dark** (#C3CC3F) is its 1px border. Never a background, never text on light, never a second button.
 
 ### Tertiary (semantic, not palette)
-- **Rojo Cupo** (#C43A2A keyline, #FBECEA tint, #8F1E18 text): full cupo and modality `extra`. **Rojo Alerta** (#B3261E): error banners and the danger button.
-- **Verde Pagado / con espacio** (#EAF4EC tint, #186130 text): cupo with room, cycle `completada`, paid states.
+- **Rojo Cupo** (#C43A2A keyline, #FBECEA tint, #8F1E18 text): full cupo. **Rojo Alerta** (#B3261E): error banners and the danger button.
+- **Verde Pagado / Extra / con espacio** (#2E9150 perimeter, #EAF4EC tint, #186130 text): modality `extra` (decisión de la clienta, lote 3 — contorno perimetral completo + tinte), cupo with room, cycle `completada`, paid states.
 
 ### Neutral
 - **Cal** (#F7F3EA): the page ground (body background, empty states, table totals band; `canvas` is an alias of the same value).
@@ -124,7 +124,7 @@ The palette is a warm earth ladder — brick dust, lime, chalk, felt — where t
 ### Named Rules
 **The Feltro Rule.** Feltro #D9E24F is the only source of yellow and it means one thing: the primary action of the screen (plus the selection highlight). If a second element is feltro, one of them is wrong.
 
-**The Keyline Rule.** A colored left keyline is 1px, never thicker, and always carries cupo/modality meaning — red for full or `extra`, polvo for with-space, gray for cancelled. The ficha's own border stays 1.5px of #E4DBCB. Keylines are semantics; they are not decoration.
+**The Keyline Rule.** A colored left keyline is 1px, never thicker, and always carries cupo/modality meaning — red for full, polvo for with-space, gray for cancelled. `extra` fichas swap the left keyline for a full 1px #2E9150 perimeter over the #EAF4EC tint (`.card-extra`). The ficha's own border stays 1.5px of #E4DBCB. Keylines are semantics; they are not decoration.
 
 **The Polvo Chrome Rule.** Header, bottom nav, section plates, day strip and day court are full-bleed polvo with white text and a white 35% court line. Cal never bleeds into chrome; polvo never becomes a small card.
 
@@ -172,7 +172,7 @@ Hybrid, flat by default. Depth is first tonal — white ficha on cal, white fich
 
 ## Shapes
 
-Soft and consistent: fichas and panels at 16px (`rounded-2xl`), controls at 12px (`rounded-xl` — buttons, inputs, segmented control, error banners), small chrome buttons and option rows at 8px (`rounded-lg`), chips fully pill (`rounded-full`), the bottom sheet round only on top (16px top corners). Full-bleed chrome has no radius — its edge *is* a court line. Borders: 1.5px #E4DBCB on fichas (a hair heavier than default, readable in sun), 1px on inputs/buttons, the semantic 1px colored left keyline, 2px white/35 under headers/plates/court, 1px white/40 between hour rows. Clipping is never used for shape; no squared, notched or decorative corners exist in this world.
+Soft and consistent: fichas and panels at 16px (`rounded-2xl`), controls at 12px (`rounded-xl` — buttons, inputs, segmented control, error banners), small chrome buttons and option rows at 8px (`rounded-lg`), chips fully pill (`rounded-full`), modals round on all corners (16px). Full-bleed chrome has no radius — its edge *is* a court line. Borders: 1.5px #E4DBCB on fichas (a hair heavier than default, readable in sun), 1px on inputs/buttons, the semantic 1px colored left keyline, 2px white/35 under headers/plates/court, 1px white/40 between hour rows. Clipping is never used for shape; no squared, notched or decorative corners exist in this world.
 
 ## Components
 
@@ -192,7 +192,7 @@ Character: tactile, legible in sunlight, one job per element.
 
 ### Chips
 - **Style:** pill, 2px 8px padding, 12px semibold.
-- **Variants:** neutral (cal bg, muted text, line border — modality `fija`/`abierta`, cancelled); red tint (`#FBECEA`/`#8F1E18` — "4/4 Lleno", `Extra`); green tint (`#EAF4EC`/`#186130` — space available); polvo/white — reserved for state markers "Ahora" and "Hoy"; level chips: principiante = red tint, intermedio = green tint, avanzado = amber tint.
+- **Variants:** neutral (cal bg, muted text, line border — modality `fija`/`abierta`, cancelled); red tint (`#FBECEA`/`#8F1E18` — "4/4 Lleno"); green tint (`#EAF4EC`/`#186130` — space available, `Extra`); polvo/white — reserved for state markers "Ahora" and "Hoy"; level chips: principiante = red tint, intermedio = green tint, avanzado = amber tint.
 
 ### Cards / Containers
 - **Corner Style:** 16px.
@@ -210,9 +210,9 @@ Label-style head (12px uppercase semibold muted) on a light band, 1px row divide
 
 ### Signature: The Day Court
 The tablero's day view is the world's centerpiece: a full-width polvo panel (16px radius, white/35 court line at its base) whose hour rows are separated by white/40 rules, hour markers set right-aligned in condensed tabular white, and white class fichas sitting on the dust with their semantic keylines. The in-progress class is hoisted to the first row and lit (white ring + deepest shadow) with an "Ahora" chip. Changing the day re-draws the court with the one motion moment: **`day-in` — 180ms ease-out, 6px rise + fade**, disabled entirely under `prefers-reduced-motion: reduce`.
+### Modal
 
-### Bottom Sheet
-Class details open as a modal sheet: black/40 backdrop, white panel with 16px top corners, full width (max 512px), stacked cal option rows (12px radius) and a feltro primary action inside.
+Class details open as a **centered modal** (lote 3 — antes era un bottom sheet): black/40 backdrop, ficha panel centered on screen (all corners 16px, max 512px wide, 85vh with own scroll), 16px lateral gutter on small screens, stacked cal option rows (12px radius) and a feltro primary action inside. Shared component: `components/Modal.tsx`.
 
 ### Icons
 Inline SVG only, 24×24 viewBox, 2px stroke, `currentColor`, round caps/joins (chevrons, close). Icons inherit the surrounding text color — white on polvo, tinta on ficha.
@@ -221,7 +221,7 @@ Inline SVG only, 24×24 viewBox, 2px stroke, `currentColor`, round caps/joins (c
 
 ### Do:
 - **Do** give each screen exactly one feltro primary action (#D9E24F on #241C15) and let everything else be secondary (white ficha + line border) or a text link.
-- **Do** keep the colored left keyline at exactly 1px and semantic: red (#C43A2A) = full/`extra`, polvo (#B65434) = with space, gray = cancelled.
+- **Do** keep the colored left keyline at exactly 1px and semantic: red (#C43A2A) = full, green (#2E9150) = `extra`, polvo (#B65434) = with space, gray = cancelled.
 - **Do** render header, bottom nav, section plates, day strip and day court full-bleed polvo with white text and the white/35 court line.
 - **Do** set headings, the wordmark, dates and times in Archivo Narrow; all money, hours and counts in tabular-nums.
 - **Do** put reading surfaces on cal with white fichas (16px radius, 1.5px #E4DBCB keyline) and shadow only on state.

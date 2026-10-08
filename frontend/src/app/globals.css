@@ -75,6 +75,11 @@
   .card-accent {
     border-left-width: 1px;
   }
+  /* Extra (lote 3): contorno perimetral verde + tinte suave — llamativo.
+     Va después de .card y sin .card-accent para que el contorno sea uniforme. */
+  .card-extra {
+    @apply border-green-500 bg-green-50;
+  }
   /* Acción primaria: feltro (única fuente de amarillo) */
   .btn-primary {
     @apply bg-feltro text-ink font-semibold px-4 py-2 rounded-xl border border-feltro-dark hover:brightness-95 disabled:opacity-50 transition;

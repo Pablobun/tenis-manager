@@ -35,7 +35,7 @@ Sistema todo-en-uno de gestión de club de tenis con facturación **semi-automá
 - Modalidades de clase: **fija** (mensualidad, asista o no), **extra** (50% del valor de la clase habitual, cobro por asistencia), **abierta/rotativa** (postulación con cupo).
 - Ciclo mensual de facturación: deudas, pagos individuales y por lote, saldo a favor, liberación de cupos.
 - Deuda condiciona inscripciones y postulaciones; la profe puede forzar excepciones (override).
-- **10 cambios en curso** (`cambios.txt`): bajas de alumnos (abiertas con 24h de anticipación, fijas, extras), extras con inscripción directa sin candidatos, alta forzada por la profe, replicación mensual con alumnos en fijas y vacías en extras, borde rojo en extras, cobro 50% en extras, plantillas con alumnos fijos precargados, edición de altas/bajas en vista profe, notificaciones por mail al subir/bajar de clases.
+- **10 cambios en curso** (`cambios.txt`): bajas de alumnos (abiertas con 24h de anticipación, fijas, extras), extras con inscripción directa sin candidatos, alta forzada por la profe, replicación mensual con alumnos en fijas y vacías en extras, borde verde en extras (decisión de la clienta: verde en todas las vistas, no rojo), cobro 50% en extras, plantillas con alumnos fijos precargados, edición de altas/bajas en vista profe, notificaciones por mail al subir/bajar de clases.
 - **Abierto / decisión pendiente**: `POST /auth/register` acepta `role` del body sin restricción (posible escalada de privilegios).
 
 ## Brand Commitments

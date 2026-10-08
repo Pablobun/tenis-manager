@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import Modal from '@/components/Modal';
 import LevelChip from '@/components/LevelChip';
 import { ChevronLeft, ChevronRight, Close } from '@/components/icons';
 
@@ -267,11 +268,12 @@ export default function TableroPage() {
     instancesByHour[instance.start_hour].push(instance);
   }
 
-  // Borde de tarjeta = cupo; extras siempre en rojo (semántica)
+  // Borde de tarjeta = cupo. Extras (lote 3): contorno verde uniforme por rama
+  // propia en el render; acá solo cupo/cancelada.
   const cupoColor = (instance: Instance) => {
     const used = instance.students.length;
     if (instance.status === 'cancelada') return 'border-l-gray-300 opacity-60';
-    if (instance.modality === 'extra') return 'border-l-red-500';
+    if (instance.modality === 'extra') return '';
     if (used >= instance.max_students) return 'border-l-red-500';
     return 'border-l-polvo';
   };
@@ -298,7 +300,11 @@ export default function TableroPage() {
       <button
         key={instance.id}
         onClick={() => openSheet(instance)}
-        className={`w-full text-left bg-ficha rounded-2xl border-[1.5px] border-l-px border-line shadow-sm p-4 transition hover:shadow-md ${cupoColor(instance)} ${live ? 'ring-2 ring-white shadow-lg' : ''}`}
+        className={`w-full text-left rounded-2xl border-[1.5px] shadow-sm p-4 transition hover:shadow-md ${
+          instance.status !== 'cancelada' && instance.modality === 'extra'
+            ? 'border-green-500 bg-green-50'
+            : 'bg-ficha border-line border-l-px'
+        } ${cupoColor(instance)} ${live ? 'ring-2 ring-white shadow-lg' : ''}`}
       >
         <div className="flex justify-between items-start gap-2">
           <p className="font-display font-bold text-base tabular-nums">
@@ -317,7 +323,7 @@ export default function TableroPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className={`chip capitalize ${instance.modality === 'extra' ? 'bg-red-50 text-red-700' : 'bg-cal text-muted border border-line'}`}>
+          <span className={`chip capitalize ${instance.modality === 'extra' ? 'bg-green-100 text-green-800' : 'bg-cal text-muted border border-line'}`}>
             {MODALITIES[instance.modality] || instance.modality}
           </span>
           <LevelChip level={instance.level} />
@@ -440,7 +446,11 @@ export default function TableroPage() {
                         <button
                           key={instance.id}
                           onClick={() => openSheet(instance)}
-                          className={`px-3 py-1.5 rounded-xl border border-line bg-ficha text-sm hover:shadow transition ${cupoColor(instance)}`}
+                          className={`px-3 py-1.5 rounded-xl border text-sm hover:shadow transition ${
+                            instance.status !== 'cancelada' && instance.modality === 'extra'
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-line bg-ficha'
+                          } ${cupoColor(instance)}`}
                         >
                           {instance.start_hour.slice(0, 5)}
                           <span className={`ml-2 chip ${badge.className}`}>
@@ -458,11 +468,7 @@ export default function TableroPage() {
       </div>
 
       {selectedInstance && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={closeSheet}>
-          <div
-            className="bg-white w-full max-w-lg rounded-t-2xl p-6 pb-8 max-h-[75vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal onClose={closeSheet} ariaLabel="Detalle de la clase">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold">
@@ -577,8 +583,7 @@ export default function TableroPage() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </main>
   );

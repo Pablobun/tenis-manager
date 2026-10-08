@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp } from '@/components/icons';
+import AdModal from '@/components/AdModal';
 
 interface NavUser {
   full_name?: string;
@@ -77,6 +78,9 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
 
   return (
     <>
+      {/* Modal de sponsors (lote 3): solo alumno, 1 vez por día */}
+      {user?.role === 'alumno' && <AdModal />}
+
       {/* Header polvo con wordmark condensado + keyline de cancha */}
       <header className="bg-polvo text-white shadow-md sticky top-0 z-40 court-line">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">

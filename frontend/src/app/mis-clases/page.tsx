@@ -21,6 +21,12 @@ interface Profile {
   level: string | null;
 }
 
+interface StudentRef {
+  id: number;
+  full_name: string;
+  level: string | null;
+}
+
 interface OpenClass {
   id: number;
   template_id: number;
@@ -36,6 +42,7 @@ interface OpenClass {
   professor_name: string;
   enrolled_count: number;
   postulation_status: string | null;
+  students?: StudentRef[];
 }
 
 interface MyClass {
@@ -51,6 +58,7 @@ interface MyClass {
   price: string;
   status: string;
   professor_name: string;
+  students?: StudentRef[];
 }
 
 interface DebtDetail {
@@ -83,7 +91,7 @@ function canDropSelf(instance_date: string, start_hour: string, status: string):
 const MODALITY_CHIP: Record<string, string> = {
   fija: 'bg-primary-50 text-primary-700',
   abierta: 'bg-cal text-muted border border-line',
-  extra: 'bg-red-50 text-red-700'
+  extra: 'bg-green-100 text-green-800'
 };
 
 const MODALITY_LABEL: Record<string, string> = {
@@ -301,7 +309,7 @@ export default function MisClasesPage() {
                 const dropOk = canDropSelf(c.instance_date, c.start_hour, c.status);
 
                 return (
-                  <div key={c.id} className={`card card-accent ${c.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'}`}>
+                  <div key={c.id} className={`card ${c.modality === 'extra' ? 'card-extra' : 'card-accent border-l-polvo'}`}>
                     <div className="flex justify-between items-start gap-2">
                       <h4 className="font-bold text-lg">{capitalizedLabel}</h4>
                       <span className={`chip whitespace-nowrap ${MODALITY_CHIP[c.modality] || 'bg-cal text-muted'}`}>
@@ -315,6 +323,12 @@ export default function MisClasesPage() {
                       <LevelChip level={c.level} />
                     </div>
                     <p className="text-sm text-muted mt-1">Profesor/a: {c.professor_name}</p>
+                    {c.students && c.students.length > 0 && (
+                      <p className="text-xs text-muted mt-1">
+                        <span className="font-semibold text-ink">Compañeros ({c.students.length}): </span>
+                        {c.students.map((s) => s.full_name).join(' · ')}
+                      </p>
+                    )}
                     <div className="mt-3 pt-3 border-t border-line flex items-center justify-between gap-2">
                       <span className="text-xs text-muted">
                         {c.modality === 'fija' ? 'La baja es solo de esta fecha' : 'Inscripto'}
@@ -367,12 +381,16 @@ export default function MisClasesPage() {
                 const enrolled = c.postulation_status === 'aceptada';
                 const waitlisted = c.postulation_status === 'lista_espera';
                 const isExtra = c.modality === 'extra';
+                // F4e (lote 3): baja propia también desde Clases Disponibles (mismo criterio 24h)
+                const dropOk = canDropSelf(c.instance_date, c.start_hour, c.status);
 
                 return (
                   <div
                     key={c.id}
-                    className={`card card-accent ${
-                      full ? 'border-l-red-500' : 'border-l-polvo'
+                    className={`card ${
+                      isExtra
+                        ? 'card-extra'
+                        : `card-accent ${full ? 'border-l-red-500' : 'border-l-polvo'}`
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2">
@@ -389,6 +407,12 @@ export default function MisClasesPage() {
                     </div>
                     <p className="text-sm text-muted">Profesor/a: {c.professor_name}</p>
                     <p className="text-sm text-muted">Precio: ${c.price}</p>
+                    {c.students && c.students.length > 0 && (
+                      <p className="text-xs text-muted mt-1">
+                        <span className="font-semibold text-ink">Ya se anotaron ({c.students.length}): </span>
+                        {c.students.map((s) => s.full_name).join(' · ')}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-line gap-2">
                       <span className={`text-sm font-semibold ${full ? 'text-red-600' : 'text-ink'}`}>
                         Cupo: {c.enrolled_count}/{c.max_students}
@@ -404,8 +428,16 @@ export default function MisClasesPage() {
                           </button>
                         </span>
                       ) : enrolled ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 text-green-700 flex items-center gap-2">
                           Inscripto
+                          {dropOk && (
+                            <button
+                              onClick={() => handleDrop(c.id, capitalizedLabel)}
+                              className="underline hover:no-underline text-red-600"
+                            >
+                              Darme de baja
+                            </button>
+                          )}
                         </span>
                       ) : waitlisted ? (
                         <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-50 text-red-700 flex items-center gap-2">

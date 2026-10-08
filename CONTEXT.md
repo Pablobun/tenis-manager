@@ -43,7 +43,7 @@ Sistema para una profesora de tenis que administra clases, inscripciones y deuda
 - **Registro de usuarios**: **mix** — hay alta por la profesora/admin y también registro/ingreso de alumnos con login.
 - **Plataforma**: página **web responsive**, optimizada para ser usada principalmente desde el celular.
 - **Vista del tablero**: **ambas vistas** — diaria (por defecto, swipe entre días) y semanal (toggle secundario). Navegación por mes con barra superior + picker.
-- **Acciones por tap**: **bottom sheet** contextual (tap grupo → opciones: ver alumnos, agregar, mover, borrar).
+- **Acciones por tap**: **modal centrado** contextual (tap grupo → opciones: ver alumnos, agregar, mover, borrar; antes bottom sheet, migrado en lote 3 a `components/Modal.tsx`).
 - **Indicador de grupo**: nombres + nivel + cupo (ej: "SCOPPA / MALANO · Avanzado · 2/4"). La deuda NO se muestra en la grilla.
 - **Reasignación de alumnos**: **tap + menú "Mover a..."** como flujo principal (no drag real en celular). Menú muestra **lista de todos los grupos del día** con nivel y cupo. Si el destino queda completo, aviso de confirmación ("Queda 4/4. ¿Mover?").
 - **Vista del alumno**: pantalla principal = **Mis clases** (fijas + abiertas aceptadas + saldo de deuda arriba). Postulación a clases abiertas desde "Clases disponibles" en su dashboard. Deuda: saldo + desglose (clases del mes - pagos). Puede cancelar postulación mientras esté pendiente. Editar perfil: solo nombre y teléfono.

@@ -1,18 +1,18 @@
 const db = require('../db');
 
-// Enriquecer instancias con sus alumnos (y profesor). Reutilizado por tablero e instancias.
-async function enrichInstancesWithStudents(instances) {
-  if (instances.length === 0) return [];
+// Agrega students[] a filas ya armadas (sin tocar sus otros campos).
+// Fuente: grupos/grupo_alumnos por instancia (mismo criterio que el tablero).
+async function attachStudents(rows) {
+  if (rows.length === 0) return rows;
 
-  const instanceIds = instances.map((i) => i.id);
+  const instanceIds = rows.map((r) => r.id);
   const placeholders = instanceIds.map(() => '?').join(',');
 
-  // Buscar grupos y alumnos para estas instancias
   const [links] = await db.query(
-    `SELECT g.instancia_id, p.id as student_id, p.nombre_completo as full_name, p.nivel as level 
-    FROM grupos g 
-    JOIN grupo_alumnos ga ON g.id = ga.grupo_id 
-    JOIN perfiles p ON ga.alumno_id = p.id 
+    `SELECT g.instancia_id, p.id as student_id, p.nombre_completo as full_name, p.nivel as level
+    FROM grupos g
+    JOIN grupo_alumnos ga ON g.id = ga.grupo_id
+    JOIN perfiles p ON ga.alumno_id = p.id
     WHERE g.instancia_id IN (${placeholders})`,
     instanceIds
   );
@@ -29,7 +29,17 @@ async function enrichInstancesWithStudents(instances) {
     });
   }
 
-  return instances.map((inst) => ({
+  for (const row of rows) {
+    row.students = studentsByInstance[row.id] || [];
+  }
+  return rows;
+}
+
+// Enriquecer instancias con sus alumnos (y profesor). Reutilizado por tablero e instancias.
+async function enrichInstancesWithStudents(instances) {
+  if (instances.length === 0) return [];
+
+  const mapped = instances.map((inst) => ({
     id: inst.id,
     template_id: inst.template_id,
     profesor_id: inst.profesor_id,
@@ -41,9 +51,10 @@ async function enrichInstancesWithStudents(instances) {
     modality: inst.modality,
     max_students: inst.max_students,
     price: inst.price,
-    status: inst.status,
-    students: studentsByInstance[inst.id] || []
+    status: inst.status
   }));
+
+  return attachStudents(mapped);
 }
 
 // Genera instancias para un mes dado (YYYY-MM) basándose en las plantillas activas.
@@ -152,5 +163,6 @@ async function cancelFutureInstances(templateId) {
 module.exports = {
   generateInstancesForMonth,
   cancelFutureInstances,
-  enrichInstancesWithStudents
+  enrichInstancesWithStudents,
+  attachStudents
 };

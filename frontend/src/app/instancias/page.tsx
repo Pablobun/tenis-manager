@@ -234,7 +234,9 @@ export default function InstanciasPage() {
                           className={`card ${
                             instance.status === 'cancelada'
                               ? 'border-gray-300 opacity-60'
-                              : `card-accent ${instance.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'}`
+                              : instance.modality === 'extra'
+                                ? 'card-extra'
+                                : 'card-accent border-l-polvo'
                           }`}
                         >
                           <div className="flex justify-between items-start">
@@ -243,12 +245,12 @@ export default function InstanciasPage() {
                                 {instance.start_hour} - {instance.end_hour}
                               </p>
                               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                <span className="text-sm text-gray-600 capitalize">
+                                <span className="text-sm text-muted capitalize">
                                   {MODALITIES[instance.modality] || instance.modality}
                                 </span>
                                 <LevelChip level={instance.level} />
                                 {instance.professor_name && (
-                                  <span className="text-xs text-gray-500">· {instance.professor_name}</span>
+                                  <span className="text-xs text-muted">· {instance.professor_name}</span>
                                 )}
                               </div>
                             </div>
@@ -262,18 +264,18 @@ export default function InstanciasPage() {
                               {instance.status === 'cancelada' ? 'Cancelada' : 'Programada'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-500 mt-2">
+                          <p className="text-sm text-muted mt-2">
                             Cupo: {instance.max_students} · Precio: ${instance.price}
                           </p>
                           <p className="text-sm mt-2">
-                            <span className="font-semibold text-gray-700">
+                            <span className="font-semibold text-ink">
                               Alumnos: {students.length}/{instance.max_students}
                             </span>
                           </p>
                           {students.length === 0 ? (
-                            <p className="text-xs text-gray-400 mt-1">Sin alumnos</p>
+                            <p className="text-xs text-muted mt-1">Sin alumnos</p>
                           ) : (
-                            <p className="text-xs text-gray-600 mt-1">
+                            <p className="text-xs text-muted mt-1">
                               {students.map((s) => s.full_name).join(' · ')}
                             </p>
                           )}

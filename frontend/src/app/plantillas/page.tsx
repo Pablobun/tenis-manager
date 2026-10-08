@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import LevelChip from '@/components/LevelChip';
+import { suggestExtraPrice } from '@/lib/extraPrice';
 
 interface User {
   id: number;
@@ -257,6 +258,9 @@ export default function PlantillasPage() {
     }
   };
 
+  // P7 (lote 3): sugerencia de 50% para extras — pre-carga editable
+  const sugeridoExtra = suggestExtraPrice(templates, form.level);
+
   if (!user) return null;
 
   return (
@@ -276,7 +280,7 @@ export default function PlantillasPage() {
               setForm({ ...EMPTY_FORM, profesor_id: user.role === 'profesor' ? String(user.id) : '' });
               setShowForm(true);
             }}
-            className="btn-primary text-sm"
+            className={showForm ? 'btn-secondary text-sm' : 'btn-primary text-sm'}
           >
             + Nueva Plantilla
           </button>
@@ -312,7 +316,18 @@ export default function PlantillasPage() {
                   <label className="label">Modalidad</label>
                   <select
                     value={form.modality}
-                    onChange={(e) => setForm({ ...form, modality: e.target.value })}
+                    onChange={(e) => {
+                      const m = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        modality: m,
+                        // P7: al elegir extra en una plantilla nueva, pre-cargar 50% de la fija del nivel
+                        price_per_class:
+                          m === 'extra' && !editingTemplate && !f.price_per_class
+                            ? String(suggestExtraPrice(templates, f.level) ?? '')
+                            : f.price_per_class
+                      }));
+                    }}
                     className="input"
                     required
                   >
@@ -347,7 +362,17 @@ export default function PlantillasPage() {
                   <label className="label">Nivel</label>
                   <select
                     value={form.level}
-                    onChange={(e) => setForm({ ...form, level: e.target.value })}
+                    onChange={(e) => {
+                      const lvl = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        level: lvl,
+                        price_per_class:
+                          f.modality === 'extra' && !editingTemplate && !f.price_per_class
+                            ? String(suggestExtraPrice(templates, lvl) ?? '')
+                            : f.price_per_class
+                      }));
+                    }}
                     className="input"
                   >
                     {LEVELS.map((level) => (
@@ -397,7 +422,9 @@ export default function PlantillasPage() {
                   />
                   <p className="text-xs text-muted mt-1">
                     {form.modality === 'extra'
-                      ? 'Sugerido: 50% de la clase habitual (se cobra por asistencia).'
+                      ? sugeridoExtra !== null
+                        ? `Sugerido: 50% de la clase habitual = $${sugeridoExtra.toLocaleString('es-AR')} (editable, se cobra por asistencia).`
+                        : 'Sugerido: 50% de la clase habitual (se cobra por asistencia).'
                       : 'La mensualidad mensual = este precio × cantidad de clases del mes.'}
                   </p>
                 </div>

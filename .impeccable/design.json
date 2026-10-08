@@ -179,7 +179,7 @@
       "name": "Chip",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Pill status marker: neutral, cupo-full red, with-space green, and the polvo state marker (Ahora/Hoy).",
+      "description": "Pill status marker: neutral, cupo-full red, extra/space green, and the polvo state marker (Ahora/Hoy).",
       "html": "<span class=\"ds-chip ds-chip--neutral\">Fija</span> <span class=\"ds-chip ds-chip--full\">4/4 Lleno</span> <span class=\"ds-chip ds-chip--space\">2/4</span> <span class=\"ds-chip ds-chip--live\">Ahora</span>",
       "css": ".ds-chip { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; line-height: 1.4; white-space: nowrap; } .ds-chip--neutral { background: #F7F3EA; color: #6E6357; border: 1px solid #E4DBCB; } .ds-chip--full { background: #FBECEA; color: #8F1E18; } .ds-chip--space { background: #EAF4EC; color: #186130; } .ds-chip--live { background: #B65434; color: #FFFFFF; }"
     },
@@ -230,7 +230,7 @@
     "keyCharacteristics": [
       "Full-bleed polvo chrome with white court-line keylines; content always on cal with white fichas.",
       "Feltro yellow (#D9E24F) reserved for the single primary action — its rarity is the point.",
-      "Semantic color (red = cupo/extra, green = paid/space) is meaning, never palette.",
+      "Semantic color (red = full cupo, green = paid/space and `extra`) is meaning, never palette.",
       "Condensed display type for headings, wordmark, dates and times; system stack for UI; tabular figures for all numbers.",
       "One motion moment (`day-in`, 180ms) with a reduced-motion guard; everything else transitions only on state.",
       "Spanish copy throughout; ENUM values (`fija`, `extra`, `abierta`, `programada`) stay Spanish."
@@ -243,7 +243,7 @@
       },
       {
         "name": "The Keyline Rule",
-        "body": "A colored left keyline is 1px, never thicker, and always carries cupo/modality meaning — red for full or `extra`, polvo for with-space, gray for cancelled. The ficha's own border stays 1.5px of #E4DBCB. Keylines are semantics; they are not decoration.",
+        "body": "A colored left keyline is 1px, never thicker, and always carries cupo/modality meaning — red for full, polvo for with-space, gray for cancelled. `extra` fichas swap the left keyline for a full 1px #2E9150 perimeter over the #EAF4EC tint (`.card-extra`). The ficha's own border stays 1.5px of #E4DBCB. Keylines are semantics; they are not decoration.",
         "section": "colors"
       },
       {
@@ -264,7 +264,7 @@
     ],
     "dos": [
       "Do give each screen exactly one feltro primary action (#D9E24F on #241C15) and let everything else be secondary (white ficha + line border) or a text link.",
-      "Do keep the colored left keyline at exactly 1px and semantic: red (#C43A2A) = full/`extra`, polvo (#B65434) = with space, gray = cancelled.",
+      "Do keep the colored left keyline at exactly 1px and semantic: red (#C43A2A) = full, green (#2E9150) = `extra`, polvo (#B65434) = with space, gray = cancelled.",
       "Do render header, bottom nav, section plates, day strip and day court full-bleed polvo with white text and the white/35 court line.",
       "Do set headings, the wordmark, dates and times in Archivo Narrow; all money, hours and counts in tabular-nums.",
       "Do put reading surfaces on cal with white fichas (16px radius, 1.5px #E4DBCB keyline) and shadow only on state.",

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import LevelChip from '@/components/LevelChip';
+import { suggestExtraPrice } from '@/lib/extraPrice';
 
 interface User {
   id: number;
@@ -15,6 +16,26 @@ interface User {
 interface Profesor {
   id: number;
   full_name: string;
+}
+
+interface Student {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
+interface StudentRef {
+  id: number;
+  full_name: string;
+  level: string | null;
+}
+
+interface Template {
+  id: number;
+  modality: string;
+  level: string | null;
+  price_per_class: string;
+  is_active: number;
 }
 
 interface OpenClass {
@@ -32,6 +53,7 @@ interface OpenClass {
   professor_name: string;
   enrolled_count: number;
   pending_candidates: number;
+  students?: StudentRef[];
 }
 
 interface Candidate {
@@ -92,6 +114,10 @@ export default function ClasesAbiertasPage() {
   const [attendance, setAttendance] = useState<Record<number, AttendanceItem[]>>({});
   const [loadingAttendance, setLoadingAttendance] = useState<Record<number, boolean>>({});
   const [expandedAttendance, setExpandedAttendance] = useState<Record<number, boolean>>({});
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [expandedInscriptos, setExpandedInscriptos] = useState<Record<number, boolean>>({});
+  const [addStudentSel, setAddStudentSel] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -133,6 +159,8 @@ export default function ClasesAbiertasPage() {
     if (user) {
       fetchClasses();
       fetchProfesores();
+      fetchStudents();
+      fetchTemplates();
       if (user.role === 'profesor') {
         setForm((f) => ({ ...f, profesor_id: String(user.id) }));
       }
@@ -150,6 +178,87 @@ export default function ClasesAbiertasPage() {
       }
     } catch (err) {
       console.error('Error fetching profesores:', err);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/students`, { credentials: 'include' });
+      if (res.ok) {
+        setAllStudents(await res.json());
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/templates`, { credentials: 'include' });
+      if (res.ok) {
+        setTemplates(await res.json());
+      }
+    } catch (err) {
+      console.error('Error fetching templates:', err);
+    }
+  };
+
+  // F4b (lote 3): quitar un inscripto desde la vista de Clases Abiertas
+  const handleQuitarInscripto = async (classId: number, studentId: number, name: string) => {
+    if (!confirm(`¿Quitar a ${name} de esta clase?`)) return;
+    setError('');
+    setInfo('');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/board/enroll`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ instance_id: classId, student_id: studentId })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Error al quitar al alumno');
+        return;
+      }
+      setInfo('Alumno quitado de la clase');
+      fetchClasses();
+      setCandidates((prev) => { const next = { ...prev }; delete next[classId]; return next; });
+      setAttendance((prev) => { const next = { ...prev }; delete next[classId]; return next; });
+    } catch (err) {
+      setError('Error de conexión');
+    }
+  };
+
+  // F4b (lote 3): agregar inscripto (forzar si el cupo está completo)
+  const handleAgregarInscripto = async (classId: number, isFull: boolean) => {
+    const studentId = Number(addStudentSel[classId] || 0);
+    if (!studentId) return;
+    if (isFull && !confirm('Cupo completo. ¿Agregar a este alumno igual? (excepción)')) return;
+    setError('');
+    setInfo('');
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/board/enroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ instance_id: classId, student_id: studentId, force: isFull })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Error al agregar al alumno');
+        return;
+      }
+      setInfo(data.message || 'Alumno inscripto');
+      setAddStudentSel((prev) => ({ ...prev, [classId]: '' }));
+      fetchClasses();
+      setCandidates((prev) => { const next = { ...prev }; delete next[classId]; return next; });
+      setAttendance((prev) => { const next = { ...prev }; delete next[classId]; return next; });
+    } catch (err) {
+      setError('Error de conexión');
     }
   };
 
@@ -354,6 +463,9 @@ export default function ClasesAbiertasPage() {
     }
   };
 
+  // P7 (lote 3): sugerencia de 50% para extras — pre-carga editable
+  const sugeridoExtra = suggestExtraPrice(templates, form.nivel);
+
   if (!user) return null;
 
   return (
@@ -372,7 +484,7 @@ export default function ClasesAbiertasPage() {
               setForm({ ...EMPTY_FORM, profesor_id: user.role === 'profesor' ? String(user.id) : '' });
               setShowForm(true);
             }}
-            className="btn-primary text-sm"
+            className={showForm ? 'btn-secondary text-sm' : 'btn-primary text-sm'}
           >
             + Nueva Clase
           </button>
@@ -396,7 +508,18 @@ export default function ClasesAbiertasPage() {
                   <label className="label">Modalidad</label>
                   <select
                     value={form.modalidad}
-                    onChange={(e) => setForm({ ...form, modalidad: e.target.value })}
+                    onChange={(e) => {
+                      const m = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        modalidad: m,
+                        // P7: al elegir extra en una clase nueva, pre-cargar 50% de la fija del nivel
+                        price:
+                          m === 'extra' && !editingClass && !f.price
+                            ? String(suggestExtraPrice(templates, f.nivel) ?? '')
+                            : f.price
+                      }));
+                    }}
                     className="input"
                     required
                   >
@@ -421,7 +544,17 @@ export default function ClasesAbiertasPage() {
                   <label className="label">Nivel sugerido</label>
                   <select
                     value={form.nivel}
-                    onChange={(e) => setForm({ ...form, nivel: e.target.value })}
+                    onChange={(e) => {
+                      const lvl = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        nivel: lvl,
+                        price:
+                          f.modalidad === 'extra' && !editingClass && !f.price
+                            ? String(suggestExtraPrice(templates, lvl) ?? '')
+                            : f.price
+                      }));
+                    }}
                     className="input"
                     required
                   >
@@ -491,7 +624,11 @@ export default function ClasesAbiertasPage() {
                     required
                   />
                   {form.modalidad === 'extra' && (
-                    <p className="text-xs text-gray-500 mt-1">Sugerido: 50% de la clase habitual.</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {sugeridoExtra !== null
+                        ? `Sugerido: 50% de la clase habitual = $${sugeridoExtra.toLocaleString('es-AR')} (editable).`
+                        : 'Sugerido: 50% de la clase habitual.'}
+                    </p>
                   )}
                 </div>
               </div>
@@ -522,7 +659,7 @@ export default function ClasesAbiertasPage() {
         ) : classes.length === 0 ? (
           <p className="text-gray-500">No hay clases abiertas registradas.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {classes.map((c) => {
               const d = new Date(`${c.instance_date.split('T')[0]}T12:00:00`);
               const label = d.toLocaleDateString('es-AR', {
@@ -535,7 +672,7 @@ export default function ClasesAbiertasPage() {
               return (
                 <div
                   key={c.id}
-                  className={`card card-accent ${c.modality === 'extra' ? 'border-l-red-500' : 'border-l-polvo'} flex flex-col justify-between`}
+                  className={`card ${c.modality === 'extra' ? 'card-extra' : 'card-accent border-l-polvo'} flex flex-col justify-between`}
                 >
                   <div>
                     <div className="flex justify-between items-start mb-2">
@@ -549,7 +686,7 @@ export default function ClasesAbiertasPage() {
                     </p>
                     <div className="flex items-center gap-2 flex-wrap mt-1">
                       <LevelChip level={c.level} />
-                      <span className={`chip ${c.modality === 'extra' ? 'bg-red-50 text-red-700' : 'bg-cal text-muted border border-line'}`}>
+                      <span className={`chip ${c.modality === 'extra' ? 'bg-green-100 text-green-800' : 'bg-cal text-muted border border-line'}`}>
                         {c.modality === 'extra' ? 'Extra' : 'Abierta'}
                       </span>
                       {c.professor_name && (
@@ -569,6 +706,16 @@ export default function ClasesAbiertasPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-line justify-end">
+                    <button
+                      onClick={() =>
+                        setExpandedInscriptos((prev) => ({ ...prev, [c.id]: !prev[c.id] }))
+                      }
+                      className="text-polvo hover:text-polvo-dark text-sm font-semibold px-3 py-1 rounded hover:bg-cal"
+                    >
+                      {expandedInscriptos[c.id]
+                        ? 'Ocultar inscriptos'
+                        : `Inscriptos (${(c.students || []).length})`}
+                    </button>
                     <button
                       onClick={() => toggleCandidates(c.id)}
                       className="text-polvo hover:text-polvo-dark text-sm font-semibold px-3 py-1 rounded hover:bg-cal"
@@ -598,6 +745,69 @@ export default function ClasesAbiertasPage() {
                       Eliminar
                     </button>
                   </div>
+
+                  {expandedInscriptos[c.id] && (
+                    <div className="mt-4 pt-4 border-t border-line">
+                      <h5 className="text-sm font-semibold text-ink mb-3">
+                        Alumnos inscriptos ({(c.students || []).length})
+                      </h5>
+                      {(c.students || []).length === 0 ? (
+                        <p className="text-sm text-muted">No hay alumnos inscriptos.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {(c.students || []).map((s) => (
+                            <li
+                              key={s.id}
+                              className="flex items-center justify-between gap-2 bg-cal rounded-xl p-3 border border-line"
+                            >
+                              <div>
+                                <p className="text-sm font-semibold">{s.full_name}</p>
+                                {s.level && <p className="text-xs text-muted">Nivel: {s.level}</p>}
+                              </div>
+                              <button
+                                onClick={() => handleQuitarInscripto(c.id, s.id, s.full_name)}
+                                className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded hover:bg-red-600"
+                              >
+                                Quitar
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="flex gap-2 mt-3">
+                        <select
+                          value={addStudentSel[c.id] || ''}
+                          onChange={(e) =>
+                            setAddStudentSel((prev) => ({ ...prev, [c.id]: e.target.value }))
+                          }
+                          className="input flex-1"
+                        >
+                          <option value="">— Agregar alumno —</option>
+                          {allStudents
+                            .filter((s) => !(c.students || []).some((st) => st.id === s.id))
+                            .map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.full_name}
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          onClick={() =>
+                            handleAgregarInscripto(c.id, c.enrolled_count >= c.max_students)
+                          }
+                          disabled={!addStudentSel[c.id]}
+                          className="btn-primary text-sm disabled:opacity-50"
+                        >
+                          Inscribir
+                        </button>
+                      </div>
+                      {c.enrolled_count >= c.max_students && (
+                        <p className="text-xs text-muted mt-1">
+                          Cupo completo: agregar igualmente queda como excepción.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {expandedCandidates[c.id] && (
                     <div className="mt-4 pt-4 border-t border-line">

@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { ensureDebtForEnrollment } = require('../services/billing');
-const { enrichInstancesWithStudents } = require('../services/instances');
+const { enrichInstancesWithStudents, attachStudents } = require('../services/instances');
 const { notifyClassChange } = require('../services/mailer');
 
 const router = express.Router();
@@ -43,8 +43,8 @@ router.get('/day', authenticateToken, authorizeRoles('admin', 'profesor'), async
   try {
     const [rows] = await db.query(
       `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
-      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel, i.modalidad, 
-      i.cupo_maximo as max_students, i.precio, i.estado as status,
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level, i.modalidad as modality, 
+      i.cupo_maximo as max_students, i.precio as price, i.estado as status,
       p.nombre_completo as professor_name
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
@@ -88,8 +88,8 @@ router.get('/week', authenticateToken, authorizeRoles('admin', 'profesor'), asyn
 
     const [rows] = await db.query(
       `SELECT i.id, i.plantilla_id as template_id, i.profesor_id, i.fecha as instance_date, 
-      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel, i.modalidad, 
-      i.cupo_maximo as max_students, i.precio, i.estado as status,
+      i.hora_inicio as start_hour, i.hora_fin as end_hour, i.nivel as level, i.modalidad as modality, 
+      i.cupo_maximo as max_students, i.precio as price, i.estado as status,
       p.nombre_completo as professor_name
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
@@ -139,6 +139,9 @@ router.get('/mine', authenticateToken, authorizeRoles('alumno'), async (req, res
       [req.user.id]
     );
 
+    // Compañeros de clase (lote 3): quiénes más están en cada instancia
+    const enriched = await attachStudents(classes);
+
     const [debtRows] = await db.query(
       `SELECT COALESCE(SUM(monto - monto_pagado), 0) as balance
        FROM deudas
@@ -153,7 +156,7 @@ router.get('/mine', authenticateToken, authorizeRoles('alumno'), async (req, res
     const saldoAFavor = Number(saldoRows[0].saldo);
     const balance = Number(debtRows[0].balance) - saldoAFavor;
 
-    res.json({ classes, balance, saldo_a_favor: saldoAFavor });
+    res.json({ classes: enriched, balance, saldo_a_favor: saldoAFavor });
   } catch (err) {
     console.error('Error obteniendo clases del alumno:', err);
     res.status(500).json({ error: 'Error interno del servidor' });

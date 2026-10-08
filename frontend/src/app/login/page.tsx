@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { LOGIN_AD } from '@/ads';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,6 +43,12 @@ export default function LoginPage() {
           router.push('/tablero');
           break;
         case 'alumno':
+          // Marca para que el modal de sponsors se abra tras el login
+          try {
+            sessionStorage.setItem('ads_pending', '1');
+          } catch {
+            // sin sessionStorage: seguir sin modal
+          }
           router.push('/mis-clases');
           break;
         default:
@@ -113,6 +120,25 @@ export default function LoginPage() {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
+
+        {/* Publicidad del login: una sola, siempre visible */}
+        {LOGIN_AD && (
+          <a
+            href={LOGIN_AD.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="card block p-2 mt-5 mb-12 hover:border-green-400 transition"
+            aria-label={LOGIN_AD.alt || 'Publicidad'}
+          >
+            <Image
+              src={LOGIN_AD.src}
+              alt={LOGIN_AD.alt || 'Sponsor'}
+              width={600}
+              height={200}
+              className="w-full h-auto object-contain rounded-lg"
+            />
+          </a>
+        )}
       </div>
     </main>
   );

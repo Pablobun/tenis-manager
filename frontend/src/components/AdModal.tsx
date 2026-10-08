@@ -5,38 +5,29 @@ import Image from 'next/image';
 import { ADS, ADS_SUBTITLE, ADS_TITLE } from '@/ads';
 import { Close } from '@/components/icons';
 
-const STORAGE_KEY = 'ads_seen_date';
+const PENDING_KEY = 'ads_pending';
 
-function todayKey(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
-
-// Modal de sponsors (lote 3): se abre 1 vez por día al entrar al sistema,
-// solo para el rol alumno, y solo si hay banners cargados en `ads.ts`.
+// Modal de sponsors (lote 3): se abre cada vez que un alumno inicia sesión
+// (la página de login setea el flag), solo para el rol alumno, y solo si hay
+// banners cargados en `ads.ts`. El flag se consume al abrir: no vuelve a
+// aparecer hasta el próximo login.
 export default function AdModal() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (ADS.length === 0) return;
     try {
-      if (localStorage.getItem(STORAGE_KEY) !== todayKey()) {
+      if (sessionStorage.getItem(PENDING_KEY) === '1') {
+        sessionStorage.removeItem(PENDING_KEY);
         setOpen(true);
       }
     } catch {
-      // sin localStorage disponible: no molestar
+      // sin sessionStorage disponible: no molestar
     }
   }, []);
 
   const close = () => {
     setOpen(false);
-    try {
-      localStorage.setItem(STORAGE_KEY, todayKey());
-    } catch {
-      // ignorar
-    }
   };
 
   if (!open) return null;

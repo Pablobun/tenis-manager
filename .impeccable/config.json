@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "frontend/public/manual-*.html"
+        ],
+        "createdAt": "2026-10-08T22:55:05.508Z",
+        "reason": "Cal #F7F3EA es el suelo deliberado del mundo Polvo de Ladrillo (DESIGN.md)"
+      }
+    ]
+  }
+}

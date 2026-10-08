@@ -48,7 +48,7 @@ router.get('/day', authenticateToken, authorizeRoles('admin', 'profesor'), async
       p.nombre_completo as professor_name
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
-      WHERE i.fecha = ? 
+      WHERE i.fecha = ? AND i.estado <> 'archivada'
       ORDER BY i.hora_inicio`,
       [date]
     );
@@ -93,7 +93,7 @@ router.get('/week', authenticateToken, authorizeRoles('admin', 'profesor'), asyn
       p.nombre_completo as professor_name
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
-      WHERE i.fecha BETWEEN ? AND ? 
+      WHERE i.fecha BETWEEN ? AND ? AND i.estado <> 'archivada'
       ORDER BY i.fecha, i.hora_inicio`,
       [startDate, endDate]
     );
@@ -134,7 +134,7 @@ router.get('/mine', authenticateToken, authorizeRoles('alumno'), async (req, res
       JOIN grupos g ON ga.grupo_id = g.id
       JOIN instancias_clases i ON g.instancia_id = i.id
       JOIN perfiles p ON i.profesor_id = p.id
-      WHERE ga.alumno_id = ?
+      WHERE ga.alumno_id = ? AND i.estado <> 'archivada'
       ORDER BY i.fecha, i.hora_inicio`,
       [req.user.id]
     );
@@ -174,6 +174,17 @@ router.post('/enroll', authenticateToken, authorizeRoles('admin', 'profesor'), a
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
+
+    // Issue 15: clases canceladas (puntual) o archivadas (serie) no admiten inscripción
+    const [instStatus] = await connection.query('SELECT estado FROM instancias_clases WHERE id = ?', [instance_id]);
+    if (instStatus.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+    if (instStatus[0].estado !== 'programada') {
+      await connection.rollback();
+      return res.status(400).json({ error: 'Esta clase no admite inscripciones' });
+    }
 
     // Verificar si ya existe un grupo para esta instancia
     const [groups] = await connection.query('SELECT id FROM grupos WHERE instancia_id = ? LIMIT 1', [instance_id]);
@@ -236,6 +247,15 @@ router.delete('/enroll', authenticateToken, authorizeRoles('admin', 'profesor'),
   }
 
   try {
+    // Issue 15: sobre una clase cancelada/archivada la única acción es reactivarla
+    const [instRows] = await db.query('SELECT estado FROM instancias_clases WHERE id = ?', [instance_id]);
+    if (instRows.length === 0) {
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+    if (instRows[0].estado !== 'programada') {
+      return res.status(400).json({ error: 'Esta clase no admite bajas de alumnos' });
+    }
+
     await db.query(
       `DELETE ga FROM grupo_alumnos ga 
       JOIN grupos g ON ga.grupo_id = g.id 

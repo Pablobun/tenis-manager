@@ -6,21 +6,21 @@
 <title>Manual de la Profesora · Riverside Tenis</title>
 <style>
   :root {
-    --primary: #166534;
-    --primary-dark: #14532d;
-    --primary-light: #d1fae5;
-    --primary-50: #f0fdf4;
-    --red: #dc2626;
-    --red-light: #fee2e2;
+    --primary: #B65434;
+    --primary-dark: #6B301E;
+    --primary-light: #F7E3D9;
+    --primary-50: #FBF2ED;
+    --red: #C43A2A;
+    --red-light: #FBECEA;
     --amber: #b45309;
     --amber-light: #fef3c7;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-500: #6b7280;
-    --gray-700: #374151;
-    --gray-900: #111827;
+    --gray-50: #F7F3EA;
+    --gray-100: #EFE8DA;
+    --gray-200: #E4DBCB;
+    --gray-300: #C9BFAC;
+    --gray-500: #6E6357;
+    --gray-700: #4E463C;
+    --gray-900: #241C15;
     --radius: 10px;
     --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
   }
@@ -34,6 +34,10 @@
   }
   a { color: var(--primary); text-decoration: none; }
   a:hover { text-decoration: underline; }
+  h1, h2.section, h3, h4, .sidebar h2, .sidebar .logo {
+    font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif;
+    font-weight: 700;
+  }
 
   /* Layout */
   .layout { display: flex; min-height: 100vh; }
@@ -41,33 +45,34 @@
   /* Sidebar */
   .sidebar {
     width: 260px; flex-shrink: 0;
-    background: var(--primary-dark);
+    background: #B65434;
     color: #fff;
     position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 20px 0;
   }
-  .sidebar h2 { font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid rgba(255,255,255,.15); }
+  .sidebar h2 { font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid rgba(255,255,255,.35); }
   .sidebar nav a {
-    display: block; color: #d1fae5; padding: 8px 18px; font-size: 13.5px;
+    display: block; color: #fff; padding: 8px 18px; font-size: 13.5px;
     border-left: 3px solid transparent;
   }
-  .sidebar nav a:hover { background: rgba(255,255,255,.08); color:#fff; text-decoration: none; border-left-color: #fff; }
-  .sidebar nav a.sub { padding-left: 32px; font-size: 12.5px; color:#a7f3d0; }
-  .sidebar .logo { padding: 0 18px 12px; font-size: 13px; color:#86efac; }
+  .sidebar nav a:hover { background: rgba(0,0,0,.15); color:#fff; text-decoration: none; border-left-color: #fff; }
+  .sidebar nav a.sub { padding-left: 32px; font-size: 12.5px; color: #fff; }
+  .sidebar .logo { padding: 0 18px 12px; font-size: 13px; color:#fff; }
 
   /* Main */
-  .main { flex: 1; max-width: 1000px; margin: 0 auto; padding: 32px 28px 80px; min-width: 0; }
+  .main { flex: 1; max-width: 700px; margin: 0 auto; padding: 32px 28px 80px; min-width: 0; }
 
   h1 { font-size: 26px; color: var(--primary-dark); margin-bottom: 4px; }
   .lead { color: var(--gray-500); font-size: 15px; margin-bottom: 28px; }
   h2.section {
     font-size: 22px; color: var(--primary-dark);
     margin: 44px 0 6px; padding-top: 8px;
-    border-top: 3px solid var(--primary);
+    border-top: 1.5px solid var(--primary);
     scroll-margin-top: 20px;
   }
   h3 { font-size: 17px; color: var(--primary-dark); margin: 26px 0 8px; }
   h4 { font-size: 15px; margin: 18px 0 6px; color: var(--gray-700); }
+  h3.card-title { font-size: 15px; margin: 18px 0 6px; color: var(--gray-700); font-weight: 700; }
   p { margin: 8px 0; }
   ul, ol { margin: 8px 0 8px 22px; }
   li { margin: 4px 0; }
@@ -94,7 +99,7 @@
 
   .callout {
     border-radius: var(--radius); padding: 12px 16px; margin: 14px 0; font-size: 14px;
-    border-left: 4px solid;
+    border: 1.5px solid var(--gray-200);
   }
   .callout.warn { background: var(--amber-light); border-color: var(--amber); }
   .callout.danger { background: var(--red-light); border-color: var(--red); }
@@ -167,7 +172,7 @@
     <p>El sistema administra <b>clases de tenis, inscripciones de alumnos y deudas</b>. Es una aplicación <b>web responsive</b> (diseñada primero para celular) accesible desde el navegador del teléfono, la tablet o la computadora.</p>
     <div class="grid2">
       <div class="card">
-        <h4>¿Qué se puede hacer?</h4>
+        <h3 class="card-title">¿Qué se puede hacer?</h3>
         <ul>
           <li>Administrar la agenda de clases (día y semana).</li>
           <li>Crear plantillas de clases recurrentes y generar los meses automáticamente.</li>
@@ -178,7 +183,7 @@
         </ul>
       </div>
       <div class="card">
-        <h4>Los 3 tipos de usuario</h4>
+        <h3 class="card-title">Los 3 tipos de usuario</h3>
         <p><span class="badge red">Admin</span> — acceso total, todos los módulos. Al entrar va a su panel.</p>
         <p><span class="badge green">Profesora</span> — mismo alcance que admin en todos los módulos (tablero, alumnos, plantillas, facturación, pagos…). Es el rol de uso diario.</p>
         <p><span class="badge amber">Alumno</span> — solo su vista personal: sus clases, su saldo, su perfil y postularse a clases disponibles.</p>
@@ -186,7 +191,7 @@
     </div>
 
     <div class="card">
-      <h4>Acceso al sistema</h4>
+      <h3 class="card-title">Acceso al sistema</h3>
       <p>Para entrar, cada persona usa su <b>email y contraseña</b> en la pantalla de ingreso. Las cuentas las crea la profesora desde <b>Alumnos</b> (o el admin).</p>
       <p class="kv"><b>Nota:</b> las contraseñas son personales de cada usuario y no se publican en este manual. La profesora define las contraseñas al crear cada cuenta.</p>
     </div>
@@ -238,11 +243,12 @@
     <p>Es la pantalla principal de trabajo. Muestra las clases del día con la hora, la modalidad, el <b>nivel</b> (con un <b>chip de color</b>: principiante rojo, intermedio verde, avanzado ámbar), el <b>profesor/a</b> y el <b>cupo ocupado</b> (ej: <code>2/4</code>).</p>
     <ul>
       <li><b>Día / Semana:</b> botón para alternar entre las dos vistas. En el celular podés pasar de día deslizando el dedo (swipe).</li>
-      <li><b>Navegar fechas:</b> flechas ◀ ▶, botón <b>Hoy</b> y <b>Volver a hoy</b>.</li>
+      <li><b>Navegar fechas:</b> flechas ◀ ▶ (en la vista <b>Semana</b> avanzan de semana en semana), botón <b>Hoy</b> y <b>Volver a hoy</b>. En la vista Semana hay un <b>selector de fecha</b> para saltar directo a la semana de cualquier día.</li>
       <li><b>Abrir una clase:</b> tocá la clase → se abre un panel inferior con opciones:
         <ul>
           <li><b>Ver alumnos (n/m):</b> lista con el nivel de cada uno. Junto a cada alumno, botón <b>Quitar</b> (te pide confirmación).</li>
-          <li><b>+ Agregar alumno:</b> elegís un alumno de la lista y tocás <b>Inscribir Alumno</b>.</li>
+          <li><b>+ Agregar alumno:</b> elegís un alumno de la lista y tocás <b>Inscribir Alumno</b> (solo en clases programadas).</li>
+          <li><b>Cancelar clase / Reactivar clase:</b> cancela o reactiva <b>esa fecha puntual</b> desde el calendario. Una clase cancelada <b>sigue visible</b> (gris, con aviso), <b>sigue en la facturación</b> y el alumno la ve como "Cancelada"; sobre ella solo se permite reactivarla (no se inscriben alumnos, no se da de baja ni se marca asistencia).</li>
         </ul>
       </li>
     </ul>
@@ -255,8 +261,8 @@
       <li><b>La mensualidad = precio por clase × cantidad de clases del mes.</b> Ej: $10 por clase y 4 clases en el mes → $40. El formulario aclara este cálculo.</li>
       <li><b>¿Fechas ya pasadas del mes?</b> Si creás una plantilla cuando el mes ya empezó, el sistema te <b>pregunta</b> si querés generar también las fechas pasadas de ese mes o solo las futuras.</li>
       <li><b>Editar:</b> cambiás los datos de la plantilla y el sistema actualiza o regenera las instancias futuras.</li>
-      <li><b>Desactivar:</b> la plantilla deja de generar clases nuevas y las <b>instancias futuras quedan canceladas</b> (como historial, no se borran).</li>
-      <li><b>Activar:</b> vuelve a generar las instancias del mes.</li>
+      <li><b>Desactivar:</b> la plantilla deja de generar clases nuevas y las <b>instancias futuras quedan archivadas</b>: desaparecen del calendario, el alumno no las ve y <b>no entran en la facturación</b> (no se borran).</li>
+      <li><b>Activar:</b> la serie archivada vuelve a <b>programada</b> desde hoy en adelante (todos los meses ya generados) y se completan los meses que falten.</li>
     </ul>
     <div class="callout warn"><b>Reglas</b><ul>
       <li>No se pueden crear dos plantillas activas el mismo día en horarios que se superpongan: el sistema lo rechaza con "Conflicto de horario".</li>
@@ -269,7 +275,7 @@
     <ul>
       <li><b>⚙ Generar Mes:</b> crea todas las instancias del mes mostrado para las plantillas fijas activas. Es seguro repetirlo: no duplica clases. Si regenerás el mes en curso, también pregunta si querés incluir las fechas ya pasadas.</li>
       <li><b>Navegación de mes:</b> flechas ◀ ▶ y el mes en pantalla.</li>
-      <li>Cada clase muestra horario, modalidad, <b>nivel (chip de color)</b>, profesor/a, cupo, precio y estado (<b>Programada</b> o <b>Cancelada</b>).</li>
+      <li>Cada clase muestra horario, modalidad, <b>nivel (chip de color)</b>, profesor/a, cupo, precio y estado (<b>Programada</b> o <b>Cancelada</b>). Las <b>archivadas</b> no se listan (no existen en el calendario).</li>
       <li><b>Alumnos:</b> cada clase indica <b>"Alumnos: N/M"</b> y debajo la lista de los nombres de los alumnos inscriptos (o "Sin alumnos").</li>
     </ul>
 
@@ -353,14 +359,14 @@
     <h2 class="section" id="reglas">4. Reglas y restricciones de las acciones</h2>
 
     <h3 id="reglas-negocio">Reglas de negocio</h3>
-    <div class="card"><h4>Deuda como condición de ingreso</h4>
+    <div class="card"><h3 class="card-title">Deuda como condición de ingreso</h3>
       <ul>
         <li>Se evalúa la <b>deuda neta</b> = deuda pendiente − saldo a favor. Si es mayor a cero, el alumno <b>no puede postularse</b> a clases disponibles.</li>
         <li>Un alumno con <b>saldo a favor</b> que cubra su deuda <b>no queda bloqueado</b> (puede postularse).</li>
         <li>La profesora tiene dos excepciones: <b>Forzar</b> en la postulación (acepta aunque haya deuda o cupo lleno) y aceptar con <b>override</b> desde candidatos.</li>
       </ul>
     </div>
-    <div class="card"><h4>Cupos y lista de espera</h4>
+    <div class="card"><h3 class="card-title">Cupos y lista de espera</h3>
       <ul>
         <li>Clase <b>llena</b> al momento de postularse → el alumno queda <b>directo en lista de espera</b>.</li>
         <li>Al <b>aceptar</b>, se vuelve a verificar el cupo: si se llenó, pasa a lista de espera automáticamente.</li>
@@ -369,7 +375,7 @@
         <li>No se permiten inscriptos duplicados en la misma clase (un mismo alumno no aparece dos veces).</li>
       </ul>
     </div>
-    <div class="card"><h4>Cómo se genera la deuda</h4>
+    <div class="card"><h3 class="card-title">Cómo se genera la deuda</h3>
       <ul>
         <li><b>Clase fija</b> (mensualidad): al <b>inscribir</b> a un alumno se le genera la deuda de ese mes de inmediato; y la profe puede generarla en lote desde Facturación. Se debe el mes completo, asista o no.</li>
         <li><b>Clase abierta / extra</b>: al <b>marcar asistencia "asistió"</b> se le genera la deuda de esa clase (tipo <code>clase_abierta</code> / <code>clase_extra</code>). Se cobra por asistencia.</li>
@@ -377,7 +383,7 @@
         <li>Las deudas pueden <b>ajustarse</b> (cambiar el monto, incluso a 0) desde facturación. Montos negativos no están permitidos.</li>
       </ul>
     </div>
-    <div class="card"><h4>Cómo se aplican los pagos y el saldo a favor</h4>
+    <div class="card"><h3 class="card-title">Cómo se aplican los pagos y el saldo a favor</h3>
       <ul>
         <li>El pago se aplica a la deuda pendiente <b>más antigua</b> del alumno (o a una deuda puntual si se elige).</li>
         <li>Si el monto cubre la deuda → queda <b>pagada</b>; si cubre parte → queda <b>parcial</b>.</li>
@@ -386,14 +392,14 @@
         <li>El balance mostrado en todo el sistema es <b>deuda − saldo a favor</b> (si da negativo se muestra en verde "a favor").</li>
       </ul>
     </div>
-    <div class="card"><h4>Postulaciones</h4>
+    <div class="card"><h3 class="card-title">Postulaciones</h3>
       <ul>
         <li>El alumno <b>solo puede cancelar</b> su postulación si está <b>pendiente</b>. Una vez respondida (aceptada/lista de espera), no.</li>
         <li>Tras cancelar o ser rechazado, puede <b>volver a postularse</b> a la misma clase.</li>
         <li>"Rechazar" a un candidato lo manda a <b>lista de espera</b> (no se borra: puede entrar si se libera un cupo y la profe lo acepta).</li>
       </ul>
     </div>
-    <div class="card"><h4>Alumnos</h4>
+    <div class="card"><h3 class="card-title">Alumnos</h3>
       <ul>
         <li>Un alumno <b>desactivado</b> no puede ingresar al sistema.</li>
         <li>Desde su cuenta, el alumno solo edita <b>nombre y teléfono</b> y <b>cambia su contraseña</b> (email y nivel los maneja la profe).</li>
@@ -402,7 +408,7 @@
         <li>El alumno <b>no puede ver</b> las deudas/pagos de otros alumnos.</li>
       </ul>
     </div>
-    <div class="card"><h4>Apertura de mes y liberación de cupos</h4>
+    <div class="card"><h3 class="card-title">Apertura de mes y liberación de cupos</h3>
       <ul>
         <li><b>Abrir mes</b> cierra los meses anteriores y abre el nuevo; lista a los alumnos que no pagaron.</li>
         <li><b>Liberar cupos</b> saca al alumno deudor de todas las clases fijas del mes, pero <b>no anula sus deudas</b>: quedan pendientes para revisar/cobrar manualmente.</li>
@@ -414,7 +420,8 @@
       <li><b>Esquema en español:</b> todas las tablas, columnas y valores ENUM en castellano. El backend traduce a claves JSON en inglés solo en las respuestas.</li>
       <li><b>Plantilla de respaldo:</b> las clases abiertas/extras se guardan con una <b>plantilla inactiva</b> de respaldo (la columna <code>plantilla_id</code> es obligatoria). Esa plantilla no genera clases recurrentes.</li>
       <li><b>Borrar una clase</b> elimina su plantilla de respaldo y, en cascada, sus grupos, inscripciones, asistencias y postulaciones. Las <b>deudas NO se borran</b> (pierden la referencia a la clase pero siguen existiendo).</li>
-      <li><b>Desactivar plantilla</b> cancela las instancias futuras (quedan como historial, no se eliminan).</li>
+      <li><b>Desactivar plantilla</b> archiva las instancias futuras: desaparecen del calendario, el alumno no las ve y no entran en la facturación (no se eliminan). <b>Activar</b> las reactiva desde hoy en adelante.</li>
+      <li><b>Cancelar / reactivar una fecha puntual</b> se hace desde el calendario (tablero): la cancelada sigue visible y <b>sí</b> factura; solo la serie desactivada se archiva.</li>
       <li><b>Generar mes</b> es seguro de repetir (idempotente): no crea instancias duplicadas.</li>
       <li><b>Horarios:</b> el día de la semana se maneja como 0=Lunes … 6=Domingo internamente.</li>
       <li><b>Autenticación:</b> sesión de 7 días mediante cookie segura; roles verificados en el backend por cada ruta.</li>
@@ -422,14 +429,14 @@
 
     <h3 id="operacion">Operación y verificación (notas técnicas para la profesora/desarrollador)</h3>
     <div class="card">
-      <h4>Después de una actualización</h4>
+      <h3 class="card-title">Después de una actualización</h3>
       <ul>
         <li>El sitio se actualiza solo al subir cambios a <code>main</code> (frontend por GitHub Actions, backend por Render).</li>
         <li>Si algo "se ve viejo" tras una actualización, hacer <b>recarga forzada</b> (Ctrl+F5 en la computadora) o abrir en una ventana de incógnito: el navegador puede estar usando una versión cacheada.</li>
       </ul>
     </div>
     <div class="card">
-      <h4>Verificación sin pruebas automáticas</h4>
+      <h3 class="card-title">Verificación sin pruebas automáticas</h3>
       <ul>
         <li>Backend: <code>node --check</code> por archivo y arrancar <code>node server.js</code>.</li>
         <li>Frontend: <code>npm.cmd run build</code> (en Windows, <code>npm.ps1</code> está bloqueado por la política de ejecución → usar <code>npm.cmd</code>).</li>

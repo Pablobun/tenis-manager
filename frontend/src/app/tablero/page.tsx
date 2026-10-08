@@ -169,7 +169,36 @@ export default function TableroPage() {
   };
 
   const changeDay = (delta: number) => {
-    setSelectedDate((d) => shiftDate(d, delta));
+    // Issue 15 (punto 5): en vista semana se avanza/retrocede una semana entera
+    const step = view === 'week' ? 7 : 1;
+    setSelectedDate((d) => shiftDate(d, delta * step));
+  };
+
+  // Issue 15 (puntos 2-3): cancelar / reactivar UNA clase desde el calendario
+  const handleToggleStatus = async () => {
+    if (!selectedInstance) return;
+    const target = selectedInstance.status === 'programada' ? 'cancelada' : 'programada';
+    const verb = target === 'cancelada' ? '¿Cancelar esta clase?' : '¿Reactivar esta clase?';
+    if (!confirm(verb)) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(`${apiUrl}/api/instances/${selectedInstance.id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: target })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al cambiar el estado de la clase');
+        return;
+      }
+      closeSheet();
+      fetchData(selectedDate, view);
+    } catch (err) {
+      alert('Error de conexión');
+    }
   };
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -340,7 +369,7 @@ export default function TableroPage() {
       <Navigation title="Tablero" />
 
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
           <div className="flex bg-ficha border border-line rounded-xl shadow-sm overflow-hidden">
             <button
               onClick={() => setView('day')}
@@ -355,7 +384,20 @@ export default function TableroPage() {
               Semana
             </button>
           </div>
-          {isToday && <span className="chip bg-polvo text-white">Hoy</span>}
+          <div className="flex items-center gap-2">
+            {view === 'week' && (
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  if (e.target.value) setSelectedDate(e.target.value);
+                }}
+                aria-label="Ir a la semana de una fecha"
+                className="bg-ficha border border-line rounded-xl px-3 py-2 text-sm font-medium text-ink tabular-nums shadow-sm"
+              />
+            )}
+            {isToday && <span className="chip bg-polvo text-white">Hoy</span>}
+          </div>
         </div>
 
         {/* Tira de días: línea de base del día (swipe cambia de día) */}
@@ -571,16 +613,42 @@ export default function TableroPage() {
               <div className="space-y-2">
                 <button
                   onClick={() => setSheetView('students')}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium"
+                  className={
+                    selectedInstance.status === 'cancelada'
+                      ? 'w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium'
+                      : 'w-full btn-primary py-3 text-sm'
+                  }
                 >
                   Ver alumnos ({selectedInstance.students.length}/{selectedInstance.max_students})
                 </button>
-                <button
-                  onClick={() => setSheetView('add')}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium text-polvo font-semibold"
-                >
-                  + Agregar alumno
-                </button>
+                {selectedInstance.status === 'programada' && (
+                  <button
+                    onClick={() => setSheetView('add')}
+                    className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium text-polvo-dark font-semibold"
+                  >
+                    + Agregar alumno
+                  </button>
+                )}
+                {selectedInstance.status === 'programada' ? (
+                  <button
+                    onClick={handleToggleStatus}
+                    className="w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-semibold text-red-700"
+                  >
+                    Cancelar clase
+                  </button>
+                ) : selectedInstance.status === 'cancelada' ? (
+                  <>
+                    <p className="text-xs text-muted bg-cal border border-line rounded-xl px-4 py-2">
+                      Clase cancelada. Sigue visible en el calendario y forma parte de la facturación.
+                    </p>
+                    <button
+                      onClick={handleToggleStatus}
+                      className="w-full btn-primary py-3 text-sm"
+                    >
+                      Reactivar clase
+                    </button>
+                  </>
+                ) : null}
               </div>
             )}
         </Modal>

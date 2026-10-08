@@ -309,12 +309,17 @@ export default function MisClasesPage() {
                 const dropOk = canDropSelf(c.instance_date, c.start_hour, c.status);
 
                 return (
-                  <div key={c.id} className={`card ${c.modality === 'extra' ? 'card-extra' : 'card-accent border-l-polvo'}`}>
+                  <div key={c.id} className={`card ${c.modality === 'extra' ? 'card-extra' : 'card-accent border-l-polvo'} ${c.status === 'cancelada' ? 'opacity-70' : ''}`}>
                     <div className="flex justify-between items-start gap-2">
                       <h4 className="font-bold text-lg">{capitalizedLabel}</h4>
-                      <span className={`chip whitespace-nowrap ${MODALITY_CHIP[c.modality] || 'bg-cal text-muted'}`}>
-                        {MODALITY_LABEL[c.modality] || c.modality}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {c.status === 'cancelada' && (
+                          <span className="chip whitespace-nowrap bg-cal text-muted border border-line">Cancelada</span>
+                        )}
+                        <span className={`chip whitespace-nowrap ${MODALITY_CHIP[c.modality] || 'bg-cal text-muted'}`}>
+                          {MODALITY_LABEL[c.modality] || c.modality}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-sm text-muted">
@@ -331,9 +336,15 @@ export default function MisClasesPage() {
                     )}
                     <div className="mt-3 pt-3 border-t border-line flex items-center justify-between gap-2">
                       <span className="text-xs text-muted">
-                        {c.modality === 'fija' ? 'La baja es solo de esta fecha' : 'Inscripto'}
+                        {c.status === 'cancelada'
+                          ? c.modality === 'fija'
+                            ? 'Cancelada — no se dicta, sigue en tu facturación'
+                            : 'Cancelada — no se dicta'
+                          : c.modality === 'fija'
+                            ? 'La baja es solo de esta fecha'
+                            : 'Inscripto'}
                       </span>
-                      {dropOk ? (
+                      {c.status === 'cancelada' ? null : dropOk ? (
                         <button
                           onClick={() => handleDrop(c.id, capitalizedLabel)}
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition"

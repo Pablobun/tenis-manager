@@ -151,18 +151,32 @@ async function generateInstancesForMonth(yearMonth, { includePast = true } = {})
   return generatedCount;
 }
 
-// Cancelar futuras instancias de una plantilla desactivada
+// Archivar las instancias futuras de una plantilla desactivada (issue 15):
+// la serie se guarda como 'archivada' → no se ve en el calendario, no factura.
 async function cancelFutureInstances(templateId) {
   const today = new Date().toISOString().split('T')[0];
   await db.query(
-    "UPDATE instancias_clases SET estado = 'cancelada' WHERE plantilla_id = ? AND fecha >= ? AND estado = 'programada'",
+    "UPDATE instancias_clases SET estado = 'archivada' WHERE plantilla_id = ? AND fecha >= ? AND estado = 'programada'",
     [templateId, today]
   );
+}
+
+// Reactivar la serie archivada de una plantilla (issue 15): desde HOY en adelante,
+// todas las filas ya generadas (todos los meses) vuelven a 'programada'.
+// No toca fechas canceladas puntualmente (esas son estado 'cancelada').
+async function reactivateFutureInstances(templateId) {
+  const today = new Date().toISOString().split('T')[0];
+  const [result] = await db.query(
+    "UPDATE instancias_clases SET estado = 'programada' WHERE plantilla_id = ? AND fecha >= ? AND estado = 'archivada'",
+    [templateId, today]
+  );
+  return result.affectedRows;
 }
 
 module.exports = {
   generateInstancesForMonth,
   cancelFutureInstances,
+  reactivateFutureInstances,
   enrichInstancesWithStudents,
   attachStudents
 };

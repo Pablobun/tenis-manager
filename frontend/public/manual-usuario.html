@@ -6,21 +6,21 @@
 <title>Manual del Usuario · Riverside Tenis</title>
 <style>
   :root {
-    --primary: #166534;
-    --primary-dark: #14532d;
-    --primary-light: #d1fae5;
-    --primary-50: #f0fdf4;
-    --red: #dc2626;
-    --red-light: #fee2e2;
+    --primary: #B65434;
+    --primary-dark: #6B301E;
+    --primary-light: #F7E3D9;
+    --primary-50: #FBF2ED;
+    --red: #C43A2A;
+    --red-light: #FBECEA;
     --amber: #b45309;
     --amber-light: #fef3c7;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-500: #6b7280;
-    --gray-700: #374151;
-    --gray-900: #111827;
+    --gray-50: #F7F3EA;
+    --gray-100: #EFE8DA;
+    --gray-200: #E4DBCB;
+    --gray-300: #C9BFAC;
+    --gray-500: #6E6357;
+    --gray-700: #4E463C;
+    --gray-900: #241C15;
     --radius: 10px;
     --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
   }
@@ -34,6 +34,10 @@
   }
   a { color: var(--primary); text-decoration: none; }
   a:hover { text-decoration: underline; }
+  h1, h2.section, h3, h4, .sidebar h2, .sidebar .logo {
+    font-family: 'Archivo Narrow', 'Arial Narrow', ui-sans-serif, sans-serif;
+    font-weight: 700;
+  }
 
   /* Layout */
   .layout { display: flex; min-height: 100vh; }
@@ -41,33 +45,34 @@
   /* Sidebar */
   .sidebar {
     width: 260px; flex-shrink: 0;
-    background: var(--primary-dark);
+    background: #B65434;
     color: #fff;
     position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 20px 0;
   }
-  .sidebar h2 { font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid rgba(255,255,255,.15); }
+  .sidebar h2 { font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid rgba(255,255,255,.35); }
   .sidebar nav a {
-    display: block; color: #d1fae5; padding: 8px 18px; font-size: 13.5px;
+    display: block; color: #fff; padding: 8px 18px; font-size: 13.5px;
     border-left: 3px solid transparent;
   }
-  .sidebar nav a:hover { background: rgba(255,255,255,.08); color:#fff; text-decoration: none; border-left-color: #fff; }
-  .sidebar nav a.sub { padding-left: 32px; font-size: 12.5px; color:#a7f3d0; }
-  .sidebar .logo { padding: 0 18px 12px; font-size: 13px; color:#86efac; }
+  .sidebar nav a:hover { background: rgba(0,0,0,.15); color:#fff; text-decoration: none; border-left-color: #fff; }
+  .sidebar nav a.sub { padding-left: 32px; font-size: 12.5px; color: #fff; }
+  .sidebar .logo { padding: 0 18px 12px; font-size: 13px; color:#fff; }
 
   /* Main */
-  .main { flex: 1; max-width: 1000px; margin: 0 auto; padding: 32px 28px 80px; min-width: 0; }
+  .main { flex: 1; max-width: 700px; margin: 0 auto; padding: 32px 28px 80px; min-width: 0; }
 
   h1 { font-size: 26px; color: var(--primary-dark); margin-bottom: 4px; }
   .lead { color: var(--gray-500); font-size: 15px; margin-bottom: 28px; }
   h2.section {
     font-size: 22px; color: var(--primary-dark);
     margin: 44px 0 6px; padding-top: 8px;
-    border-top: 3px solid var(--primary);
+    border-top: 1.5px solid var(--primary);
     scroll-margin-top: 20px;
   }
   h3 { font-size: 17px; color: var(--primary-dark); margin: 26px 0 8px; }
   h4 { font-size: 15px; margin: 18px 0 6px; color: var(--gray-700); }
+  h3.card-title { font-size: 15px; margin: 18px 0 6px; color: var(--gray-700); font-weight: 700; }
   p { margin: 8px 0; }
   ul, ol { margin: 8px 0 8px 22px; }
   li { margin: 4px 0; }
@@ -94,7 +99,7 @@
 
   .callout {
     border-radius: var(--radius); padding: 12px 16px; margin: 14px 0; font-size: 14px;
-    border-left: 4px solid;
+    border: 1.5px solid var(--gray-200);
   }
   .callout.warn { background: var(--amber-light); border-color: var(--amber); }
   .callout.danger { background: var(--red-light); border-color: var(--red); }
@@ -159,7 +164,7 @@
     <p>Este sistema administra las <b>clases de tenis, las inscripciones y las deudas</b> de la academia. Es una aplicación <b>web responsive</b>: se usa desde el celular, la tablet o la computadora con el navegador (no hay que instalar nada).</p>
     <div class="grid2">
       <div class="card">
-        <h4>¿Qué podés hacer vos como alumno?</h4>
+        <h3 class="card-title">¿Qué podés hacer vos como alumno?</h3>
         <ul>
           <li>Ver tus clases y tu saldo de deuda en un solo lugar.</li>
           <li>Postularte (o cancelar tu postulación) a las clases abiertas y extras.</li>
@@ -167,7 +172,7 @@
         </ul>
       </div>
       <div class="card">
-        <h4>Los 3 tipos de usuario</h4>
+        <h3 class="card-title">Los 3 tipos de usuario</h3>
         <p><span class="badge red">Admin</span> — acceso total al sistema.</p>
         <p><span class="badge green">Profesora</span> — administra clases, alumnos, facturación y pagos.</p>
         <p><span class="badge amber">Alumno</span> — es tu caso: solo ves tu propia información.</p>
@@ -175,7 +180,7 @@
     </div>
 
     <div class="card">
-      <h4>Acceso al sistema</h4>
+      <h3 class="card-title">Acceso al sistema</h3>
       <p>Entrás con tu <b>email y contraseña</b> en la pantalla de ingreso. La cuenta te la crea la profesora; si olvidaste la contraseña, pedile que te la resetee.</p>
     </div>
 
@@ -215,6 +220,7 @@
 
     <h3 id="mis-clases">Mis Clases</h3>
     <p>La lista de tus clases (fijas, abiertas aceptadas y extras) con día, horario, <b>nivel</b> (identificado con un color: principiante rojo, intermedio verde, avanzado ámbar), modalidad y profesora.</p>
+    <div class="callout warn"><b>Clases canceladas</b>Si la profesora canceló una fecha, la clase aparece igual en Mis Clases con el aviso <span class="badge gray">Cancelada</span>: no se dicta, pero en las clases fijas <b>sigue formando parte de tu facturación</b>. Sobre una clase cancelada no podés darte de baja.</div>
 
     <h3 id="mi-perfil">Mi Perfil</h3>
     <p>Tu página de datos personales, enlazada desde la barra de navegación:</p>
@@ -226,14 +232,14 @@
     <div class="callout warn"><b>No podés cambiar tu nivel ni tu email</b>desde tu cuenta: son datos que administra la profesora. Si creés que hay un error, avisale.</div>
 
     <h3 id="clases-disponibles">Clases Disponibles</h3>
-    <p>Las clases abiertas/rotativas y extras a las que te podés anotar. Cada tarjeta muestra <b>fecha, horario, nivel, profesora, precio y cupo</b> (<code>X/Y</code> = alumnos inscriptos / cupo máximo).</p>
+    <p>Las clases abiertas/rotativas y extras a las que te podés anotar. Cada tarjeta muestra <b>fecha, horario, nivel, profesora, precio y cupo</b> (<code>X/Y</code> = alumnos inscriptos / cupo máximo). <b>Las clases en las que ya estás inscripto no se listan acá</b>: las ves en Mis Clases.</p>
     <ul>
       <li><b>Postularme:</b> envía tu solicitud a la profesora. Queda <span class="badge amber">Pendiente</span> hasta que ella la responda.</li>
       <li>Estados posibles de tu postulación:
         <span class="badge amber">Postulado (Pendiente)</span> ·
-        <span class="badge green">Inscripto</span> ·
         <span class="badge gray">Lista de espera</span> ·
         <span class="badge gray">Lleno</span>.
+        Cuando la profesora te <b>acepta</b>, la clase deja de figurar en Disponibles y pasa a Mis Clases (vas a ver el aviso <span class="badge green">Inscripto</span> ahí).
       </li>
       <li><b>Cancelar:</b> podés cancelar tu postulación mientras esté pendiente. Una vez respondida (aceptada o en lista de espera), ya no.</li>
     </ul>
@@ -242,21 +248,21 @@
     <!-- ============ 3. REGLAS ============ -->
     <h2 class="section" id="reglas">3. Reglas que te afectan</h2>
 
-    <div class="card"><h4>Cómo se genera tu deuda</h4>
+    <div class="card"><h3 class="card-title">Cómo se genera tu deuda</h3>
       <ul>
         <li><b>Clase fija (mensualidad):</b> se cobra el <b>mes completo</b>, asistas o no (ocupaste un cupo). El total del mes = precio por clase × cantidad de clases del mes.</li>
         <li><b>Clase abierta / extra:</b> se cobra por <b>asistencia</b>. Solo se te genera la deuda si la profesora marca que asististe. Si te anotaste pero no fuiste, no debés esa clase.</li>
       </ul>
     </div>
 
-    <div class="card"><h4>Pagás y saldo a favor</h4>
+    <div class="card"><h3 class="card-title">Pagás y saldo a favor</h3>
       <ul>
         <li>El pago se aplica a tu deuda pendiente <b>más antigua</b>.</li>
         <li>Si pagás de más, el excedente queda como <b>saldo a favor</b> y se aplica solo a tu próxima deuda.</li>
       </ul>
     </div>
 
-    <div class="card"><h4>Postulaciones a clases abiertas y extras</h4>
+    <div class="card"><h3 class="card-title">Postulaciones a clases abiertas y extras</h3>
       <ul>
         <li>Si la clase está <b>llena</b> al postularte, quedás <b>directo en lista de espera</b>.</li>
         <li>Podés <b>cancelar</b> tu postulación solo mientras esté <b>pendiente</b>.</li>
@@ -265,7 +271,7 @@
       </ul>
     </div>
 
-    <div class="card"><h4>Tu cuenta</h4>
+    <div class="card"><h3 class="card-title">Tu cuenta</h3>
       <ul>
         <li>Desde tu cuenta <b>no ves</b> la información de otros alumnos.</li>
         <li>Solo editás <b>nombre, teléfono</b> y <b>contraseña</b>. Email y nivel los maneja la profesora.</li>

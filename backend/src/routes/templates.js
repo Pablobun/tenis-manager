@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const { generateInstancesForMonth, cancelFutureInstances } = require('../services/instances');
+const { generateInstancesForMonth, cancelFutureInstances, reactivateFutureInstances } = require('../services/instances');
 
 const router = express.Router();
 
@@ -137,19 +137,21 @@ router.put('/:id', authenticateToken, authorizeRoles('admin', 'profesor'), async
 
     const current = rows[0];
 
-    // Si se desactiva
+    // Si se desactiva: la serie futura se ARCHIVA (desaparece del calendario, no factura)
     if (is_active !== undefined && is_active === 0 && current.activa === 1) {
       await db.query('UPDATE plantillas_clases SET activa = 0 WHERE id = ?', [req.params.id]);
       await cancelFutureInstances(req.params.id);
-      return res.json({ message: 'Plantilla desactivada e instancias futuras canceladas' });
+      return res.json({ message: 'Plantilla desactivada e instancias futuras archivadas' });
     }
 
-    // Si se activa
+    // Si se activa: la serie archivada vuelve a programada desde hoy en adelante
+    // (todos los meses ya generados) + se completan los meses que falten (issue 15)
     if (is_active !== undefined && is_active === 1 && current.activa === 0) {
       await db.query('UPDATE plantillas_clases SET activa = 1 WHERE id = ?', [req.params.id]);
+      const reactivated = await reactivateFutureInstances(req.params.id);
       const currentMonth = new Date().toISOString().slice(0, 7);
       await generateInstancesForMonth(currentMonth, { includePast: include_past !== false });
-      return res.json({ message: 'Plantilla activada e instancias regeneradas' });
+      return res.json({ message: `Plantilla activada. ${reactivated} instancias reactivadas` });
     }
 
     // Actualización de campos

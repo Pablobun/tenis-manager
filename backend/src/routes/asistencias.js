@@ -35,12 +35,17 @@ router.post('/:instanceId', authenticateToken, authorizeRoles('admin', 'profesor
   }
 
   try {
-    // Obtener modalidad y precio de la instancia
-    const [instRows] = await db.query('SELECT modalidad, precio FROM instancias_clases WHERE id = ?', [req.params.instanceId]);
+    // Obtener modalidad, precio y estado de la instancia
+    const [instRows] = await db.query('SELECT modalidad, precio, estado FROM instancias_clases WHERE id = ?', [req.params.instanceId]);
     if (instRows.length === 0) {
       return res.status(404).json({ error: 'Instancia no encontrada' });
     }
-    const { modalidad, precio } = instRows[0];
+    const { modalidad, precio, estado } = instRows[0];
+
+    // Issue 15: sobre cancelada/archivada la única acción es reactivar (si aplica)
+    if (estado !== 'programada') {
+      return res.status(400).json({ error: 'Esta clase no admite registro de asistencia' });
+    }
 
     for (const item of attendance) {
       if (!item.student_id) continue;

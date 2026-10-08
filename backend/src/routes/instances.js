@@ -21,7 +21,7 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'profesor'), async (r
       p.nombre_completo as professor_name
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
-      WHERE DATE_FORMAT(i.fecha, '%Y-%m') = ? 
+      WHERE DATE_FORMAT(i.fecha, '%Y-%m') = ? AND i.estado <> 'archivada'
       ORDER BY i.fecha, i.hora_inicio`,
       [month]
     );
@@ -51,6 +51,44 @@ router.post('/generate', authenticateToken, authorizeRoles('admin', 'profesor'),
   }
 });
 
+// Cancelar / reactivar UNA clase desde el calendario (issue 15, puntos 2-3).
+// Transiciones válidas: programada <-> cancelada.
+// 'archivada' es exclusiva del panel de clases fijas (desactivar/activar plantilla).
+router.put('/:id/status', authenticateToken, authorizeRoles('admin', 'profesor'), async (req, res) => {
+  const { status } = req.body;
+  if (status !== 'programada' && status !== 'cancelada') {
+    return res.status(400).json({ error: "status debe ser 'programada' o 'cancelada'" });
+  }
+
+  try {
+    const [insts] = await db.query('SELECT estado FROM instancias_clases WHERE id = ?', [req.params.id]);
+    if (insts.length === 0) {
+      return res.status(404).json({ error: 'Clase no encontrada' });
+    }
+
+    const current = insts[0].estado;
+
+    if (current === 'archivada') {
+      return res.status(400).json({ error: 'Esta clase está archivada por su serie; reactivala desde el panel de clases fijas' });
+    }
+    if (current === status) {
+      return res.json({ message: 'Sin cambios' });
+    }
+    const validTransition =
+      (current === 'programada' && status === 'cancelada') ||
+      (current === 'cancelada' && status === 'programada');
+    if (!validTransition) {
+      return res.status(400).json({ error: 'Transición de estado no válida' });
+    }
+
+    await db.query('UPDATE instancias_clases SET estado = ? WHERE id = ?', [status, req.params.id]);
+    res.json({ message: status === 'cancelada' ? 'Clase cancelada' : 'Clase reactivada' });
+  } catch (err) {
+    console.error('Error cambiando estado de instancia:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Listar todas las clases abiertas (disponibles para postularse)
 router.get('/open', authenticateToken, async (req, res) => {
   try {
@@ -64,7 +102,7 @@ router.get('/open', authenticateToken, async (req, res) => {
              (SELECT estado FROM postulaciones WHERE alumno_id = ? AND instancia_id = i.id) as postulation_status
       FROM instancias_clases i
       JOIN perfiles p ON i.profesor_id = p.id
-      WHERE i.modalidad IN ('abierta', 'extra')
+      WHERE i.modalidad IN ('abierta', 'extra') AND i.estado <> 'archivada'
     `;
 
     const params = [req.user.id];
@@ -73,6 +111,12 @@ router.get('/open', authenticateToken, async (req, res) => {
     if (req.user.rol === 'alumno') {
       query += ` AND i.estado = 'programada' AND i.fecha >= ?`;
       params.push(new Date().toISOString().split('T')[0]);
+      // Issue 15 (punto 1): no listar donde ya está inscripto (postulación aceptada
+      // o integrante del grupo) — ya aparece en "Mis Clases". Pendientes, lista de
+      // espera y rechazadas/canceladas siguen visibles.
+      query += ` AND NOT EXISTS (SELECT 1 FROM postulaciones pa WHERE pa.instancia_id = i.id AND pa.alumno_id = ? AND pa.estado = 'aceptada')`;
+      query += ` AND NOT EXISTS (SELECT 1 FROM grupos g2 JOIN grupo_alumnos ga2 ON ga2.grupo_id = g2.id WHERE g2.instancia_id = i.id AND ga2.alumno_id = ?)`;
+      params.push(req.user.id, req.user.id);
     }
 
     query += ` ORDER BY i.fecha, i.hora_inicio`;

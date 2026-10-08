@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS instancias_clases (
   modalidad ENUM('fija', 'extra', 'abierta') NOT NULL,
   cupo_maximo INT NOT NULL,
   precio DECIMAL(10,2) NOT NULL,
-  estado ENUM('programada', 'completada', 'cancelada') DEFAULT 'programada',
+  estado ENUM('programada', 'completada', 'cancelada', 'archivada') DEFAULT 'programada',
   creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uk_plantilla_fecha (plantilla_id, fecha),
   FOREIGN KEY (plantilla_id) REFERENCES plantillas_clases(id) ON DELETE CASCADE,

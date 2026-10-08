@@ -25,9 +25,9 @@ async function computeMonthlyBilling(yearMonth) {
      JOIN grupos g ON ga.grupo_id = g.id
      JOIN instancias_clases i ON g.instancia_id = i.id
      JOIN perfiles a ON ga.alumno_id = a.id
-     WHERE i.modalidad = 'fija'
-       AND i.fecha BETWEEN ? AND ?
-       AND i.estado <> 'cancelada'
+       WHERE i.modalidad = 'fija'
+         AND i.fecha BETWEEN ? AND ?
+         AND i.estado <> 'archivada'
      GROUP BY a.id, a.nombre_completo
      ORDER BY a.nombre_completo`,
     [start, end]
@@ -46,7 +46,7 @@ async function computeMonthlyDetail(yearMonth) {
      JOIN instancias_clases i ON g.instancia_id = i.id
      WHERE i.modalidad = 'fija'
        AND i.fecha BETWEEN ? AND ?
-       AND i.estado <> 'cancelada'
+       AND i.estado <> 'archivada'
      ORDER BY ga.alumno_id, i.fecha, i.hora_inicio`,
     [start, end]
   );

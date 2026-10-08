@@ -23,7 +23,7 @@ export const ADS: AdBanner[] = [
   // Ejemplo:
   // { src: '/banners/mitienda.jpg', href: 'https://instagram.com/mitienda.riocuarto', alt: 'Mi Tienda Río Cuarto' },
   { src: '/banners/casamadre.jpg', href: 'https://www.instagram.com/casamadre.r4/', alt: 'Casa madre Río Cuarto' },
-  { src: '/banners/Victoria.jpg', href: 'https://www.instagram.com/victoriagrunigevt/', alt: 'Viajes Río Cuarto' },
+  { src: '/banners/victoria.jpg', href: 'https://www.instagram.com/victoriagrunigevt/', alt: 'Viajes Río Cuarto' },
   { src: '/banners/itec.jpg', href: 'https://www.instagram.com/itecriocuarto/', alt: 'Itec Río Cuarto' },
-  { src: '/banners/kevin.jpg', href: 'https://www.instagram.com/kevingstonriocuarto/', alt: 'Kevingston Río Cuarto' },
+  { src: '/banners/Kevin.jpg', href: 'https://www.instagram.com/kevingstonriocuarto/', alt: 'Kevingston Río Cuarto' },
 ];

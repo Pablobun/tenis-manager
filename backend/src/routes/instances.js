@@ -133,7 +133,6 @@ router.get('/open', authenticateToken, async (req, res) => {
 
 // Alumno se postula a una clase abierta/rotativa
 router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), async (req, res) => {
-  const { force } = req.body; // force: la profe autorizó postularse con deuda (override)
   let connection = null;
   try {
     // Verificar si ya está inscripto
@@ -161,23 +160,31 @@ router.post('/open/:id/postulate', authenticateToken, authorizeRoles('alumno'), 
       }
     }
 
-    // Regla de deuda (CONTEXT): deuda pendiente bloquea la postulación; se puede forzar por override.
-    // item 15: el bloqueo usa el balance neto (deuda − saldo a favor).
-    if (!force) {
-      const [debtRows] = await db.query(
-        `SELECT COALESCE(SUM(monto - monto_pagado), 0) as balance
-         FROM deudas
-         WHERE alumno_id = ? AND estado IN ('pendiente', 'parcial')`,
-        [req.user.id]
-      );
-      const [saldoRows] = await db.query(
-        'SELECT COALESCE(saldo_a_favor, 0) as saldo FROM perfiles WHERE id = ?',
-        [req.user.id]
-      );
-      const balanceNeto = Number(debtRows[0].balance) - Number(saldoRows[0].saldo);
-      if (balanceNeto > 0) {
-        return res.status(400).json({ error: 'Tenés una deuda pendiente. Consultá a la profesora para postularte.' });
-      }
+    // Regla de deuda (CONTEXT): la deuda del MES EN CURSO no bloquea hasta el día 20 inclusive;
+    // del 21 en adelante bloquea. La de meses anteriores bloquea siempre.
+    // El bloqueo usa el balance neto (deuda − saldo a favor); el saldo cubre primero la deuda vieja.
+    // Fix: el override "force" ya NO se acepta desde el body del alumno (solo endpoints de la profe).
+    const hoyUtc = new Date(Date.now() - 3 * 3600 * 1000).toISOString(); // hora Argentina (UTC−3, sin DST)
+    const mesActual = hoyUtc.slice(0, 7);
+    const diaDelMes = Number(hoyUtc.slice(8, 10));
+    const [debtRows] = await db.query(
+      `SELECT COALESCE(SUM(CASE WHEN mes_facturacion = ? THEN monto - monto_pagado ELSE 0 END), 0) as deuda_mes,
+              COALESCE(SUM(CASE WHEN mes_facturacion = ? THEN 0 ELSE monto - monto_pagado END), 0) as deuda_vieja
+       FROM deudas
+       WHERE alumno_id = ? AND estado IN ('pendiente', 'parcial')`,
+      [mesActual, mesActual, req.user.id]
+    );
+    const [saldoRows] = await db.query(
+      'SELECT COALESCE(saldo_a_favor, 0) AS saldo FROM perfiles WHERE id = ?',
+      [req.user.id]
+    );
+    const saldo = Number(saldoRows[0].saldo);
+    const deudaMes = Number(debtRows[0].deuda_mes);
+    const deudaVieja = Number(debtRows[0].deuda_vieja);
+    const viejaNeta = deudaVieja - saldo;
+    const mesNeta = deudaMes - Math.max(saldo - deudaVieja, 0);
+    if (viejaNeta > 0 || (mesNeta > 0 && diaDelMes > 20)) {
+      return res.status(400).json({ error: 'Tenés una deuda pendiente. Consultá a la profesora para postularte.' });
     }
 
     // Verificar cupo e inscripción directa para extras (item 2/3 de cambios.txt)

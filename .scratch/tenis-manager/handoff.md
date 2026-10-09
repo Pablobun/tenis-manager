@@ -18,6 +18,8 @@ VerificaciÃ³n: `node --check` (7 archivos) OK, `npm.cmd run build` OK, detect 
 
 **AcciÃ³n del usuario (sigue pendiente)**: (1) correr `backend/sql/migrations/003_archivada.sql` en SQLYog; (2) git add/commit/push de lotes 3 + 3.5 + issue 15; tras push, hard refresh (Ctrl+F5) en droplet/Render. `backend/sql/estadoactual.sql` (dump del punto 3) puede borrarse ya que sirviÃ³ al diagnÃ³stico.
 
+**Issue 16 (2026-10-09, IMPLEMENTADO, sin commitear)**: `16-deuda-mes-en-curse-hasta-20.md` — gracia de deuda del mes en curso hasta el día 20 inclusive (hora Argentina; el 21 bloquea con el mensaje actual sin cambios); deuda de meses anteriores bloquea siempre; saldo a favor cubre primero la vieja. Fix de seguridad: `POST /open/:id/postulate` ya NO acepta `force` del body del alumno (antes permitía saltarse el chequeo de deuda); override legítimo solo en endpoints de la profe. Archivos: `backend/src/routes/instances.js`, `CONTEXT.md`. Verificado: `node --check` sweep OK + test de lógica 11/11; flujos reales en Render tras push. Falta commit del usuario.
+
 **Pendientes menores conocidos**: seed-demo.sql sin ejecutar; SMTP sin credenciales; fase 5 (centrado calendario PC); confirm() nativos; gray/emerald/amber fuera de paleta en pÃ¡ginas no capturadas; registro pÃºblico acepta role del body.
 
 ---

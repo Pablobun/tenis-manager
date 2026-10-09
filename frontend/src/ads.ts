@@ -34,7 +34,7 @@ export const ADS: AdBanner[] = [
 // Publicidad de la pantalla de login: UNA sola, debajo del formulario,
 // visible siempre. Si está vacía (undefined), no se muestra nada.
 export const LOGIN_AD: AdBanner | undefined = {
-  src: '/banners/casamadre.jpg',
-  href: 'https://www.instagram.com/casamadre.r4/',
-  alt: 'Casa madre Río Cuarto',
+  src: '/banners/itec.jpg',
+  href: 'https://www.instagram.com/itecriocuarto/',
+  alt: 'Itec Río Cuarto',
 };

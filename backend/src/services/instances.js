@@ -35,6 +35,43 @@ async function attachStudents(rows) {
   return rows;
 }
 
+// Postulaciones pendientes por instancia (issue 17): el tablero le muestra al profe
+// que hay postulantes esperando confirmación y puede aceptarlos desde el calendario.
+// Va solo en enrichInstancesWithStudents (NO en attachStudents, para no pisar el
+// contador pending_candidates que /open calcula en su propio SELECT).
+async function attachPendingCandidates(rows) {
+  if (rows.length === 0) return rows;
+
+  const instanceIds = rows.map((r) => r.id);
+  const placeholders = instanceIds.map(() => '?').join(',');
+
+  const [links] = await db.query(
+    `SELECT p.instancia_id, p.id as postulation_id, a.id as student_id, a.nombre_completo as full_name
+     FROM postulaciones p
+     JOIN perfiles a ON p.alumno_id = a.id
+     WHERE p.instancia_id IN (${placeholders}) AND p.estado = 'pendiente'
+     ORDER BY p.postulada_en ASC`,
+    instanceIds
+  );
+
+  const pendingByInstance = {};
+  for (const link of links) {
+    if (!pendingByInstance[link.instancia_id]) {
+      pendingByInstance[link.instancia_id] = [];
+    }
+    pendingByInstance[link.instancia_id].push({
+      postulation_id: link.postulation_id,
+      student_id: link.student_id,
+      full_name: link.full_name
+    });
+  }
+
+  for (const row of rows) {
+    row.pending = pendingByInstance[row.id] || [];
+  }
+  return rows;
+}
+
 // Enriquecer instancias con sus alumnos (y profesor). Reutilizado por tablero e instancias.
 async function enrichInstancesWithStudents(instances) {
   if (instances.length === 0) return [];
@@ -54,7 +91,8 @@ async function enrichInstancesWithStudents(instances) {
     status: inst.status
   }));
 
-  return attachStudents(mapped);
+  await attachStudents(mapped);
+  return attachPendingCandidates(mapped);
 }
 
 // Genera instancias para un mes dado (YYYY-MM) basándose en las plantillas activas.

@@ -21,6 +21,12 @@ interface Student {
   level: string | null;
 }
 
+interface PendingCandidate {
+  postulation_id: number;
+  student_id: number;
+  full_name: string;
+}
+
 interface Instance {
   id: number;
   template_id: number;
@@ -35,6 +41,7 @@ interface Instance {
   price: string;
   status: string;
   students: Student[];
+  pending?: PendingCandidate[];
 }
 
 const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -88,7 +95,7 @@ export default function TableroPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedInstance, setSelectedInstance] = useState<Instance | null>(null);
-  const [sheetView, setSheetView] = useState<'options' | 'students' | 'add'>('options');
+  const [sheetView, setSheetView] = useState<'options' | 'students' | 'add' | 'candidates'>('options');
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [selectedStudentToAdd, setSelectedStudentToAdd] = useState('');
   const touchStartX = useRef<number | null>(null);
@@ -201,6 +208,37 @@ export default function TableroPage() {
     }
   };
 
+  // Issue 17: aceptar / rechazar / forzar un postulante desde el calendario
+  const handleCandidateAction = async (
+    postulationId: number,
+    action: 'accept' | 'reject' | 'override'
+  ) => {
+    if (!selectedInstance) return;
+    if (action !== 'reject' && !confirm('¿Confirmar la decisión sobre este postulante?')) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const res = await fetch(
+        `${apiUrl}/api/instances/open/${selectedInstance.id}/candidates/${postulationId}/${action}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al responder la postulación');
+        return;
+      }
+      alert(data.message || 'Listo');
+      closeSheet();
+      fetchData(selectedDate, view);
+    } catch (err) {
+      alert('Error de conexión');
+    }
+  };
+
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -297,6 +335,8 @@ export default function TableroPage() {
     instancesByHour[instance.start_hour].push(instance);
   }
 
+  const pendingCount = (instance: Instance) => instance.pending?.length ?? 0;
+
   // Borde de tarjeta = cupo. Extras (lote 3): contorno verde uniforme por rama
   // propia en el render; acá solo cupo/cancelada.
   const cupoColor = (instance: Instance) => {
@@ -356,6 +396,11 @@ export default function TableroPage() {
             {MODALITIES[instance.modality] || instance.modality}
           </span>
           <LevelChip level={instance.level} />
+          {pendingCount(instance) > 0 && instance.status !== 'cancelada' && (
+            <span className="chip bg-primary-50 text-primary-700 font-semibold">
+              {pendingCount(instance)} postulante{pendingCount(instance) > 1 ? 's' : ''}
+            </span>
+          )}
           {instance.professor_name && (
             <span className="text-xs text-muted">· {instance.professor_name}</span>
           )}
@@ -498,6 +543,11 @@ export default function TableroPage() {
                           <span className={`ml-2 chip ${badge.className}`}>
                             {badge.text}
                           </span>
+                          {pendingCount(instance) > 0 && instance.status !== 'cancelada' && (
+                            <span className="ml-2 chip bg-primary-50 text-primary-700 font-semibold">
+                              {pendingCount(instance)} post.
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -609,12 +659,71 @@ export default function TableroPage() {
                   </button>
                 </form>
               </div>
+            ) : sheetView === 'candidates' ? (
+              <div>
+                <button
+                  onClick={() => setSheetView('options')}
+                  className="flex items-center gap-1 text-sm text-polvo font-semibold mb-3 hover:underline"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Volver
+                </button>
+                <p className="font-semibold mb-2">
+                  Postulantes ({selectedInstance.pending?.length ?? 0})
+                </p>
+                {(selectedInstance.pending?.length ?? 0) === 0 ? (
+                  <p className="text-sm text-muted">No hay postulaciones pendientes.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {(selectedInstance.pending || []).map((c) => (
+                      <li key={c.postulation_id} className="bg-cal rounded-xl p-3 border border-line">
+                        <p className="text-sm font-semibold">{c.full_name}</p>
+                        <p className="text-xs text-muted mb-2">Esperando confirmación</p>
+                        <div className="flex gap-2 flex-wrap">
+                          <button
+                            onClick={() => handleCandidateAction(c.postulation_id, 'accept')}
+                            className="bg-green-600 text-white text-xs font-semibold px-3 py-2.5 rounded hover:bg-green-700"
+                          >
+                            Aceptar
+                          </button>
+                          <button
+                            onClick={() => handleCandidateAction(c.postulation_id, 'reject')}
+                            className="bg-red-500 text-white text-xs font-semibold px-3 py-2.5 rounded hover:bg-red-600"
+                          >
+                            Rechazar
+                          </button>
+                          {selectedInstance.students.length >= selectedInstance.max_students && (
+                            <button
+                              onClick={() => handleCandidateAction(c.postulation_id, 'override')}
+                              title="Forzar aceptación a pesar de cupo lleno"
+                              className="bg-ink text-white text-xs font-semibold px-3 py-2.5 rounded hover:bg-black"
+                            >
+                              Forzar
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             ) : (
               <div className="space-y-2">
+                {selectedInstance.status === 'programada' &&
+                  (selectedInstance.pending?.length ?? 0) > 0 && (
+                    <button
+                      onClick={() => setSheetView('candidates')}
+                      className="w-full btn-primary py-3 text-sm"
+                    >
+                      Ver postulantes ({selectedInstance.pending?.length ?? 0})
+                    </button>
+                  )}
                 <button
                   onClick={() => setSheetView('students')}
                   className={
-                    selectedInstance.status === 'cancelada'
+                    selectedInstance.status === 'cancelada' ||
+                    (selectedInstance.status === 'programada' &&
+                      (selectedInstance.pending?.length ?? 0) > 0)
                       ? 'w-full text-left px-4 py-3 rounded-xl bg-cal hover:bg-line/60 text-sm font-medium'
                       : 'w-full btn-primary py-3 text-sm'
                   }

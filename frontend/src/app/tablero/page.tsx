@@ -6,87 +6,29 @@ import Navigation from '@/components/Navigation';
 import Modal from '@/components/Modal';
 import LevelChip from '@/components/LevelChip';
 import { ChevronLeft, ChevronRight, Close } from '@/components/icons';
-
-interface User {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-}
-
-interface Student {
-  id: number;
-  email: string;
-  full_name: string;
-  level: string | null;
-}
-
-interface PendingCandidate {
-  postulation_id: number;
-  student_id: number;
-  full_name: string;
-}
-
-interface Instance {
-  id: number;
-  template_id: number;
-  profesor_id?: number;
-  professor_name?: string;
-  instance_date: string;
-  start_hour: string;
-  end_hour: string;
-  level: string;
-  modality: string;
-  max_students: number;
-  price: string;
-  status: string;
-  students: Student[];
-  pending?: PendingCandidate[];
-}
-
-const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
-const MODALITIES: Record<string, string> = {
-  fija: 'Fija',
-  abierta: 'Abierta',
-  extra: 'Extra'
-};
-
-function formatDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function todayISO(): string {
-  return formatDate(new Date());
-}
-
-function shiftDate(dateStr: string, delta: number): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d + delta);
-  return formatDate(date);
-}
-
-function weekdayOf(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return WEEKDAYS[(new Date(y, m - 1, d).getDay() + 6) % 7];
-}
-
-function formatDayLabel(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const label = date.toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  });
-  return `${label[0].toUpperCase()}${label.slice(1)}`;
-}
+import { useVariante } from '@/components/prototipo/useVariante';
+import TableroA from '@/components/prototipo/tablero/TableroA';
+import TableroB from '@/components/prototipo/tablero/TableroB';
+import TableroC from '@/components/prototipo/tablero/TableroC';
+import {
+  type Instance,
+  type Student,
+  type TableroVistaProps,
+  type User,
+  MODALITIES,
+  cupoBadge,
+  cupoColor,
+  formatDayLabel,
+  isInProgress,
+  pendingCount,
+  shiftDate,
+  todayISO,
+  weekdayOf
+} from '@/components/prototipo/tablero/comun';
 
 export default function TableroPage() {
   const router = useRouter();
+  const variante = useVariante();
   const [user, setUser] = useState<User | null>(null);
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [view, setView] = useState<'day' | 'week'>('day');
@@ -314,17 +256,8 @@ export default function TableroPage() {
   const isToday = selectedDate === todayISO();
 
   // La clase en curso (hoy, dentro de su franja) va arriba — momento "ahora"
-  const nowMs = Date.now();
-  const isInProgress = (instance: Instance): boolean => {
-    if (!isToday || instance.status !== 'programada') return false;
-    const s = Date.parse(`${selectedDate}T${instance.start_hour.slice(0, 8)}-03:00`);
-    const e = Date.parse(`${selectedDate}T${instance.end_hour.slice(0, 8)}-03:00`);
-    if (Number.isNaN(s) || Number.isNaN(e)) return false;
-    return nowMs >= s && nowMs < e;
-  };
-
   let dayRows = Array.from(new Set(dayData.map((i) => i.start_hour))).sort();
-  const liveHour = dayData.find((i) => isInProgress(i))?.start_hour;
+  const liveHour = dayData.find((i) => isInProgress(i, isToday, selectedDate))?.start_hour;
   if (liveHour) {
     dayRows = [liveHour, ...dayRows.filter((h) => h !== liveHour)];
   }
@@ -335,36 +268,10 @@ export default function TableroPage() {
     instancesByHour[instance.start_hour].push(instance);
   }
 
-  const pendingCount = (instance: Instance) => instance.pending?.length ?? 0;
-
-  // Borde de tarjeta = cupo. Extras (lote 3): contorno verde uniforme por rama
-  // propia en el render; acá solo cupo/cancelada.
-  const cupoColor = (instance: Instance) => {
-    const used = instance.students.length;
-    if (instance.status === 'cancelada') return 'border-l-gray-300 opacity-60';
-    if (instance.modality === 'extra') return '';
-    if (used >= instance.max_students) return 'border-l-red-500';
-    return 'border-l-polvo';
-  };
-
-  const cupoBadge = (instance: Instance) => {
-    const used = instance.students.length;
-    if (instance.status === 'cancelada') {
-      return { text: 'Cancelada', className: 'bg-cal text-muted border border-line' };
-    }
-    if (used >= instance.max_students) {
-      return { text: `${used}/${instance.max_students} Lleno`, className: 'bg-red-50 text-red-700' };
-    }
-    if (used === 0) {
-      return { text: `${used}/${instance.max_students}`, className: 'bg-cal text-muted border border-line' };
-    }
-    return { text: `${used}/${instance.max_students}`, className: 'bg-green-50 text-green-700' };
-  };
-
   const renderInstanceCell = (instance: Instance) => {
     const names = instance.students.map((s) => s.full_name.toUpperCase()).join(' / ');
     const badge = cupoBadge(instance);
-    const live = isInProgress(instance);
+    const live = isInProgress(instance, isToday, selectedDate);
     return (
       <button
         key={instance.id}
@@ -409,10 +316,35 @@ export default function TableroPage() {
     );
   };
 
+  const vista: TableroVistaProps = {
+    view,
+    setView,
+    selectedDate,
+    setSelectedDate,
+    changeDay,
+    dayData,
+    weekData,
+    loading,
+    error,
+    isToday,
+    openSheet,
+    onTouchStart,
+    onTouchEnd,
+    dayRows,
+    instancesByHour
+  };
+
   return (
     <main className="min-h-screen pb-24 md:pb-8">
       <Navigation title="Tablero" />
 
+      {variante === 'a' ? (
+        <TableroA {...vista} />
+      ) : variante === 'b' ? (
+        <TableroB {...vista} />
+      ) : variante === 'c' ? (
+        <TableroC {...vista} />
+      ) : (
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
           <div className="flex bg-ficha border border-line rounded-xl shadow-sm overflow-hidden">
@@ -558,6 +490,7 @@ export default function TableroPage() {
           </div>
         )}
       </div>
+      )}
 
       {selectedInstance && (
         <Modal onClose={closeSheet} ariaLabel="Detalle de la clase">

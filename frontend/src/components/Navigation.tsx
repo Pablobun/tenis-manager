@@ -6,6 +6,9 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp } from '@/components/icons';
 import AdModal from '@/components/AdModal';
+import { useVariante } from '@/components/prototipo/useVariante';
+import NavA from '@/components/prototipo/nav/NavA';
+import NavC from '@/components/prototipo/nav/NavC';
 
 interface NavUser {
   full_name?: string;
@@ -20,6 +23,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const variante = useVariante();
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -40,6 +44,8 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
       : user?.role === 'profesor'
         ? '/manual-profesor.html'
         : '/manual-usuario.html';
+
+  const homeHref = isAdminOrProfesor ? '/tablero' : '/mis-clases';
 
   const mainLinks = isAdminOrProfesor
     ? [
@@ -82,9 +88,23 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
       {user?.role === 'alumno' && <AdModal />}
 
       {/* Header polvo con wordmark condensado + keyline de cancha */}
-      <header className="bg-polvo text-white shadow-md sticky top-0 z-40 court-line">
+      {variante === 'c' ? (
+        <NavC
+          title={title}
+          homeHref={homeHref}
+          mainLinks={mainLinks}
+          menuLinks={menuLinks}
+          isActive={isActive}
+          manualHref={manualHref}
+          userName={user?.full_name}
+          onLogout={handleLogout}
+        />
+      ) : (
+      <header
+        className={`bg-polvo text-white shadow-md sticky top-0 z-40 court-line${variante === 'a' ? ' md:hidden' : ''}`}
+      >
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <Link href={isAdminOrProfesor ? '/tablero' : '/mis-clases'} className="flex items-center gap-2 min-w-0">
+          <Link href={homeHref} className="flex items-center gap-2 min-w-0">
             <Image
               src="/logo.png"
               alt=""
@@ -95,7 +115,8 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
             <span className="font-display font-bold text-lg uppercase tracking-wide truncate">{title}</span>
           </Link>
 
-          {/* Enlaces en PC */}
+          {/* Enlaces en PC (ausentes en el mundo B: manda el dock inferior) */}
+          {variante !== 'b' && (
           <nav className="hidden md:flex items-center gap-5 text-sm">
             {mainLinks.map((l) => (
               <Link
@@ -119,6 +140,7 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
               Manual
             </a>
           </nav>
+          )}
 
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline text-sm text-white">{user?.full_name}</span>
@@ -131,9 +153,26 @@ export default function Navigation({ title = 'Riverside Tenis' }: { title?: stri
           </div>
         </div>
       </header>
+      )}
 
-      {/* Placa polvo: barra inferior fija (mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-polvo text-white border-t-2 border-white/35">
+      {variante === 'a' && (
+        <NavA
+          title={title}
+          homeHref={homeHref}
+          mainLinks={mainLinks}
+          menuLinks={menuLinks}
+          isActive={isActive}
+          manualHref={manualHref}
+          userName={user?.full_name}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {/* Placa polvo: barra inferior fija (mobile; siempre visible en el mundo B) */}
+      <nav
+        data-prototipo-dock
+        className={`${variante === 'b' ? '' : 'md:hidden'} fixed bottom-0 left-0 right-0 z-40 bg-polvo text-white border-t-2 border-white/35`}
+      >
         <div className="flex items-stretch">
           {mainLinks.slice(0, 4).map((l) => (
             <Link

@@ -50,6 +50,9 @@ function aplicar(v: Variante | null) {
   if (v) url.searchParams.set('variant', v);
   else url.searchParams.delete('variant');
   window.history.replaceState(null, '', url.toString());
+  // Sincroniza a los componentes React que cambian estructura por variante
+  // (useVariante → Navigation / tablero).
+  window.dispatchEvent(new Event('prototipo:mundo'));
 }
 
 export default function VariantSwitcher() {
@@ -97,7 +100,7 @@ export default function VariantSwitcher() {
   const etiqueta = variante ? VARIANTES.find((v) => v.id === variante)!.etiqueta : ETIQUETA_ACTUAL;
 
   return (
-    <div className="fixed z-50 bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-ink text-white border border-white/25 shadow-lg px-2 py-1.5 select-none">
+    <div data-prototipo-switcher className="fixed z-50 bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-ink text-white border border-white/25 shadow-lg px-2 py-1.5 select-none">
       <button
         type="button"
         aria-label="Mundo visual anterior"

@@ -790,3 +790,47 @@ html[data-mundo="c"] .shadow-lg {
 html[data-mundo="c"] .shadow-2xl {
   box-shadow: 0 24px 56px -20px rgba(24, 24, 27, 0.2);
 }
+
+/* ============================================================
+   ESTRUCTURA — cambia la disposición, no solo la piel.
+   Nav: NavA (sidebar md+) / NavB (dock inferior siempre visible) /
+   NavC (masthead editorial) vía delegación condicional en Navigation.tsx.
+   ============================================================ */
+
+/* MUNDO A — sidebar fija: el contenido cede 15rem (w-60) en md+.
+   Solo aplica donde Navigation montó el aside (la página de login no lo tiene). */
+@media (min-width: 768px) {
+  html[data-mundo="a"] main:has(aside[data-proto-nav]) {
+    padding-left: 15rem;
+  }
+}
+html[data-mundo="a"] aside[data-proto-nav] {
+  background-color: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* MUNDO B — el dock inferior queda visible también en md+: el main cede
+   5.5rem de padding (gana por especificidad a .md\:pb-8). */
+@media (min-width: 768px) {
+  html[data-mundo="b"] main {
+    padding-bottom: 5.5rem;
+  }
+}
+/* MUNDO B — en md+ la barra inferior flota como dock centrado (max-w-6xl) */
+@media (min-width: 768px) {
+  html[data-mundo="b"] [data-prototipo-dock] {
+    left: 50%;
+    right: auto;
+    bottom: 0.75rem;
+    width: min(100%, 72rem);
+    transform: translateX(-50%);
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    border-radius: 1.75rem;
+    overflow: hidden;
+  }
+  /* El switcher no debe encimarse con el dock: sube sobre él */
+  html[data-mundo="b"] [data-prototipo-switcher] {
+    bottom: 5.5rem;
+  }
+}

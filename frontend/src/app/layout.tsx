@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { Archivo_Narrow } from 'next/font/google';
 import './globals.css';
+// PROTOTYPE — borrar al plegar el mundo ganador. Issue: .scratch/prototipo-mundo-visual/
+import '../styles/prototipo/variantes.css';
+import VariantSwitcher from '@/components/prototipo/VariantSwitcher';
 
 // Display condensed (eco del logo del club): headers en Archivo Narrow.
 // UI: system stack (definido en tailwind.config → fontFamily.sans).
@@ -22,7 +25,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${archivo.variable} font-sans`}>{children}</body>
+      <body className={`${archivo.variable} font-sans`}>
+        {process.env.NODE_ENV !== 'production' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "try{var v=new URLSearchParams(location.search).get('variant')||localStorage.getItem('prototipo-mundo');if(v==='a'||v==='b'||v==='c')document.documentElement.setAttribute('data-mundo',v)}catch(e){}",
+            }}
+          />
+        )}
+        {children}
+        <VariantSwitcher />
+      </body>
     </html>
   );
 }

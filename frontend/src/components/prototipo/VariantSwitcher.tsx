@@ -54,13 +54,16 @@ function aplicar(v: Variante | null) {
 
 export default function VariantSwitcher() {
   const [variante, setVariante] = useState<Variante | null>(null);
+  // El modo prototipo solo se activa por opt-in: ?variant= o localStorage previo.
+  // Sin eso la barra no se renderiza (los usuarios del sitio no ven nada).
+  const [activo, setActivo] = useState(false);
 
   // Restauración: ?variant= manda; si no, localStorage; si no, Polvo (sin atributo).
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
     const param = new URLSearchParams(window.location.search).get('variant');
     const guardada = localStorage.getItem(CLAVE_LS);
     const inicial = esVariante(param) ? param : esVariante(guardada) ? guardada : null;
+    setActivo(esVariante(param) || esVariante(guardada));
     if (inicial) aplicar(inicial);
     setVariante(inicial);
   }, []);
@@ -75,9 +78,10 @@ export default function VariantSwitcher() {
     });
   }, []);
 
-  // Flechas del teclado: ciclar mundos, salvo cuando se escribe en un campo.
+  // Flechas del teclado: ciclar mundos solo con el modo prototipo activo,
+  // salvo cuando se escribe en un campo.
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
+    if (!activo) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
       const t = e.target as HTMLElement | null;
@@ -86,9 +90,9 @@ export default function VariantSwitcher() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [ciclar]);
+  }, [ciclar, activo]);
 
-  if (process.env.NODE_ENV === 'production') return null;
+  if (!activo) return null;
 
   const etiqueta = variante ? VARIANTES.find((v) => v.id === variante)!.etiqueta : ETIQUETA_ACTUAL;
 

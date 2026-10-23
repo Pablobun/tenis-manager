@@ -68,7 +68,7 @@ export default function LoginPage() {
         <div className="inline-flex mb-4">
           <Image
             src="/logo.png"
-            alt="Riverside Tenis"
+            alt="Tenis Riverside"
             width={90}
             height={64}
             priority
@@ -76,7 +76,7 @@ export default function LoginPage() {
           />
         </div>
         <h1 className="font-display text-white text-4xl font-bold uppercase tracking-wide">
-          Riverside Tenis
+          Tenis Riverside 
         </h1>
         <p className="text-white text-sm mt-2">Sistema de gestión de clases</p>
       </div>

@@ -71,6 +71,8 @@ Sistema para una profesora de tenis que administra clases, inscripciones y deuda
 - **Nivel y color (grilling)**: el nivel de una clase se indica con un **chip de color** (principiante=rojo, intermedio=verde, avanzado=ámbar). El borde de la tarjeta de clase NO se usa para el nivel: sigue significando cupo (rojo=lleno) en el tablero.
 - **Cambio de nivel del alumno (grilling)**: al cambiarle el nivel desde Alumnos, el sistema **informa las clases (fecha >= hoy) donde el alumno quedó con nivel discrepante** (solo informa, no modifica).
 - **Perfil de usuario (grilling)**: cada usuario tiene su perfil (todos los roles): edita nombre y teléfono; el email y el nivel son solo lectura. Cada usuario **cambia su contraseña** (actual + nueva). La profe/admin puede **resetear la contraseña** de un alumno desde Alumnos.
+- **Filtro de nivel del alumno (DIFERIDO — issue 18, no implementar hasta aviso)**: el alumno solo **ve y postula** a clases abiertas/extra **de su nivel**; sin nivel asignado no ve ninguna (aviso: "consultá a la profesora"). Las postulaciones previas siguen visibles. La **profesora no tiene esa restricción** (inscribe/acepta el nivel que sea; el roster de fijas no se toca).
+- **Indicadores del tablero de la profe (DIFERIDO — issue 18, no implementar hasta aviso)**: cada tarjeta (vista día y semana) muestra **dos indicadores**: tipo de clase (fija=terracota · abierta=neutra cal · extra=tinta **sólida**, el verde de extra es **solo para el alumno**) y nivel con chip **sólido** (principiante=rojo, intermedio=verde, avanzado=ámbar).
 
 ## Términos en disputa
 
